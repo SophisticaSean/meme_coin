@@ -21,10 +21,12 @@ var (
 	Email string
 	PW    string
 	BotID string
+	db    *sqlx.DB
 )
 
 type User struct {
 	ID        string `db:"id"`
+	DID       string `db:"discord_id"`
 	Username  string `db:"name"`
 	CurMoney  int    `db:"current_money"`
 	TotMoney  int    `db:"total_money"`
@@ -47,7 +49,7 @@ func init() {
 	Token, _ = os.LookupEnv("bot_token")
 	Email, _ = os.LookupEnv("email")
 	PW, _ = os.LookupEnv("pw")
-
+	db = db_get()
 }
 
 func main() {
