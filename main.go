@@ -35,7 +35,7 @@ type User struct {
 }
 
 func db_get() *sqlx.DB {
-	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=l85CbxTP4MVvpQ9M&SxN sslmode=disable parseTime=true")
+	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
 	if err != nil {
 		log.Fatal(err)
 	}

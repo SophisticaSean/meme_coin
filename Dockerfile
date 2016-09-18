@@ -5,7 +5,7 @@ ENV TYPE repo
 ENV TERM xterm
 
 RUN apt-get -y update
-RUN apt-get -y install wget
+RUN apt-get -y install wget vim
 # install postgres 9.5.2
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ `cat /etc/lsb-release | grep CODENAME | awk -F'=' '{print $2}'`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 RUN wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | apt-key add -
