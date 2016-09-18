@@ -81,25 +81,45 @@ func main() {
 	return
 }
 
+func createUser(DID string) {
+	var new_user User
+	new_user.Username = ""
+	new_user.DID = DID
+	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:DID,:Username)`, new_user)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func userGet(DID string) User {
+	var users []User
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, DID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var user User
+	if len(users) == 0 {
+		createUser(DID)
+		user = userGet(DID)
+	} else {
+		user = users[0]
+	}
+	return user
+}
+
 func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) > 3 {
 		amount := args[1]
-		from := m.Author
+		from := userGet(m.Author.ID)
 		var users []User
 		for _, to := range m.Mentions {
-			err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, to.ID)
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, m.Author.ID)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(len(users))
+			toUser := userGet(to.ID)
+			users = append(users, toUser)
 			_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" dankmemes to "+to.Username+" from: "+from.Username)
 
 		}
+		fmt.Println(len(users))
 	} else {
 		return
 	}
