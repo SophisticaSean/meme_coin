@@ -133,7 +133,7 @@ func moneyDeduct(user *User, amount int, deduction string) bool {
 		}
 
 		if db_string != `` && deduction_record != -1 && new_deduction_amount != -1 {
-      db_string = db_string + `'`+user.DID+`'`
+			db_string = db_string + `'` + user.DID + `'`
 			db.MustExec(db_string, new_current_money, new_deduction_amount)
 			return true
 		}
@@ -165,8 +165,8 @@ func moneyAdd(user *User, amount int, addition string) {
 	}
 
 	if db_string != `` && addition_record != -1 && new_addition_amount != -1 {
-    // bindvars can only be used as values
-    db_string = db_string + `'`+user.DID+`'`
+		// bindvars can only be used as values
+		db_string = db_string + `'` + user.DID + `'`
 		db.MustExec(db_string, new_current_money, new_addition_amount)
 	}
 }
@@ -188,6 +188,7 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			for _, to := range m.Mentions {
 				toUser := userGet(to)
+				moneyAdd(&toUser, int_amount, "tip")
 				_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" dankmemes to "+toUser.Username+" from: "+from.Username)
 
 			}
