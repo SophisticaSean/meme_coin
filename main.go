@@ -110,19 +110,85 @@ func userGet(discord_user *discordgo.User) User {
 	return user
 }
 
+func moneyDeduct(user *User, amount int, deduction string) bool {
+	if amount <= user.CurMoney {
+		new_current_money := user.CurMoney - amount
+		new_deduction_amount := -1
+		db_string := ``
+		deduction_record := -1
+
+		if deduction == "tip" {
+			db_string = `UPDATE money SET (current_money, given_money) = (?, ?) WHERE discord_id = ?`
+			deduction_record = user.GiveMoney
+			new_deduction_amount = user.GiveMoney + amount
+			user.CurMoney = new_current_money
+			user.GiveMoney = new_deduction_amount
+		}
+		if deduction == "gamble" {
+			db_string = `UPDATE money SET (current_money, lost_money) = (?, ?) WHERE discord_id = ?`
+			deduction_record = user.LostMoney
+			new_deduction_amount = user.LostMoney + amount
+			user.CurMoney = new_current_money
+			user.LostMoney = new_deduction_amount
+		}
+
+		if db_string != `` && deduction_record != -1 && new_deduction_amount != -1 {
+			db.MustExec(db_string, new_current_money, new_deduction_amount, user.DID)
+			return true
+		}
+		return false
+	} else {
+		return false
+	}
+}
+
+func moneyAdd(user *User, amount int, addition string) {
+	new_current_money := user.CurMoney - amount
+	new_addition_amount := -1
+	db_string := ``
+	addition_record := -1
+
+	if addition == "tip" {
+		db_string = `UPDATE money SET (current_money, received_money) = (?, ?) WHERE discord_id = ?`
+		addition_record = user.RecMoney
+		new_addition_amount = user.RecMoney + amount
+		user.CurMoney = new_current_money
+		user.RecMoney = new_addition_amount
+	}
+	if addition == "gamble" {
+		db_string = `UPDATE money SET (current_money, won_money) = (?, ?) WHERE discord_id = ?`
+		addition_record = user.WonMoney
+		new_addition_amount = user.WonMoney + amount
+		user.CurMoney = new_current_money
+		user.WonMoney = new_addition_amount
+	}
+
+	if db_string != `` && addition_record != -1 && new_addition_amount != -1 {
+		db.MustExec(db_string, new_current_money, new_addition_amount, user.DID)
+	}
+}
+
 func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) > 3 && args[0] == "!tip" {
-		amount := args[1]
-		from := userGet(m.Author)
-		var users []User
-		for _, to := range m.Mentions {
-			toUser := userGet(to)
-			users = append(users, toUser)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" dankmemes to "+to.Username+" from: "+from.Username)
-
+		int_amount, err := strconv.Atoi(args[1])
+		if err != nil {
+			fmt.Println(err)
 		}
-		fmt.Println(len(users))
+		amount := args[1]
+		total_deduct := int_amount * len(m.Mentions)
+		from := userGet(m.Author)
+		proceed := moneyDeduct(&from, total_deduct, "tip")
+		if proceed != true {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(total_deduct))
+			return
+		} else {
+			for _, to := range m.Mentions {
+				toUser := userGet(to)
+				_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" dankmemes to "+toUser.Username+" from: "+from.Username)
+
+			}
+		}
 	} else {
 		return
 	}
@@ -133,6 +199,18 @@ func handleBalance(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(args) == 1 {
 		author := userGet(m.Author)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "total balance is :"+strconv.Itoa(author.CurMoney))
+	}
+}
+
+func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
+	args := strings.Split(m.Content, " ")
+	if len(args) == 4 {
+		//author := userGet(m.Author)
+		//bet, err := strconv.Atoi(args[1])
+		//game := args[2]
+		//game_input := args[3]
+	} else if args[0] == "!gamble" {
+		_, _ = s.ChannelMessageSend(m.ChannelID, "Gamble command is used as follows: '!gamble <amount> <game> <game_input>")
 	}
 }
 
@@ -147,6 +225,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.Contains(m.Content, "!balance") || strings.Contains(m.Content, "!memes") {
 		handleBalance(s, m)
+	}
+
+	if strings.Contains(m.Content, "!gamble") {
+		handleGamble(s, m)
 	}
 
 	if m.Content == "meme" {
