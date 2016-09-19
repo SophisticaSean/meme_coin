@@ -81,13 +81,13 @@ func main() {
 	return
 }
 
-func createUser(DID string) {
+func createUser(discord_id string) {
 	var new_user User
-  new_user.ID = 0
+  //new_user.ID = 0
 	new_user.Username = "idk"
-	new_user.DID = DID
+	new_user.DID = discord_id
   fmt.Println(new_user)
-	_, err := db.NamedExec(`INSERT INTO money (id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money) VALUES (:ID,:DID,:Username,:CurMoney,:TotMoney,:WonMoney,:LostMoney,:GiveMoney)`, new_user)
+	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id,:name)`, new_user)
 	if err != nil {
 		log.Fatal(err)
 	}
