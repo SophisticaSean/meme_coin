@@ -7,7 +7,8 @@ su -c "/usr/lib/postgresql/9.5/bin/pg_ctl -D /mnt/containers/meme_coin/pg/ -l /m
 su -c "createdb money" -m postgres
 su -c "createuser -d -s memebot" -m postgres
 su -c "psql -c 'alter user memebot password \$\$password\$\$;'" -m postgres
-su -c "psql -c 'create table money(id SERIAL, discord_id VARCHAR(100) not null, name VARCHAR(100) not null, current_money numeric DEFAULT 1000, total_money numeric DEFAULT 0, won_money numeric DEFAULT 0, lost_money numeric DEFAULT 0, given_money numeric DEFAULT 0, received_money numeric DEFAULT 0);' money" -m postgres
+su -c "psql -c 'drop table money'" -m postgres
+su -c "psql -c 'create table money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0));' money" -m postgres
 
 
 /meme_coin
