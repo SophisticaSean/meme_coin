@@ -173,16 +173,22 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		int_amount, err := strconv.Atoi(args[1])
 		if err != nil {
 			fmt.Println(err)
+      _, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
+      return
 		}
+    if int_amount <= 0 {
+      _, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
+      return
+    }
 		amount := args[1]
 		currency_name := args[2]
 		total_deduct := int_amount * len(m.Mentions)
 		from := userGet(m.Author)
-		moneyDeduct(&from, total_deduct, "tip")
 		if total_deduct > from.CurMoney {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(total_deduct))
 			return
 		} else {
+		moneyDeduct(&from, total_deduct, "tip")
 			for _, to := range m.Mentions {
 				toUser := userGet(to)
 				moneyAdd(&toUser, int_amount, "tip")
@@ -214,8 +220,13 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 		author := userGet(m.Author)
 		bet, err := strconv.Atoi(args[1])
 		if err != nil {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "your bet could not be processed, it needs to be a number.")
+      _, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
+      return
 		}
+    if bet <= 0 {
+      _, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
+      return
+    }
 		game := args[2]
 		game_input := args[3]
 
