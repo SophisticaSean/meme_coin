@@ -175,6 +175,7 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(err)
 		}
 		amount := args[1]
+		currency_name := args[2]
 		total_deduct := int_amount * len(m.Mentions)
 		from := userGet(m.Author)
 		moneyDeduct(&from, total_deduct, "tip")
@@ -185,7 +186,7 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 			for _, to := range m.Mentions {
 				toUser := userGet(to)
 				moneyAdd(&toUser, int_amount, "tip")
-				_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" dankmemes to "+toUser.Username+" from: "+from.Username)
+				_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" "+currency_name+" to "+to.Username+" from: "+m.Author.Username)
 
 			}
 		}
