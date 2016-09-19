@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	_ "database/sql"
@@ -84,7 +85,7 @@ func main() {
 func createUser(user *discordgo.User) {
 	var new_user User
 	new_user.DID = user.ID
-  new_user.Username = user.Username
+	new_user.Username = user.Username
 	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id, :name)`, new_user)
 	if err != nil {
 		log.Fatal(err)
@@ -111,7 +112,7 @@ func userGet(discord_user *discordgo.User) User {
 
 func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
-	if len(args) > 3 {
+	if len(args) > 3 && args[0] == "!tip" {
 		amount := args[1]
 		from := userGet(m.Author)
 		var users []User
@@ -127,6 +128,14 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func handleBalance(s *discordgo.Session, m *discordgo.MessageCreate) {
+	args := strings.Split(m.Content, " ")
+	if len(args) == 1 {
+		author := userGet(m.Author)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "total balance is :"+strconv.Itoa(author.CurMoney))
+	}
+}
+
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == BotID {
 		return
@@ -134,6 +143,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.Contains(m.Content, "!tip") == true {
 		handleTip(s, m)
+	}
+
+	if strings.Contains(m.Content, "!balance") || strings.Contains(m.Content, "!memes") {
+		handleBalance(s, m)
 	}
 
 	if m.Content == "meme" {
