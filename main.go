@@ -144,7 +144,7 @@ func moneyDeduct(user *User, amount int, deduction string) bool {
 }
 
 func moneyAdd(user *User, amount int, addition string) {
-	new_current_money := user.CurMoney - amount
+	new_current_money := user.CurMoney + amount
 	new_addition_amount := -1
 	db_string := ``
 	addition_record := -1
