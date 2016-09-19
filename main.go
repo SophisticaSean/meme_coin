@@ -229,13 +229,13 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 				answer := answers[rand.Intn(len(answers))]
 
 				if answer == game_input {
-					// 0.5x payout
-					payout := betToPayout(bet, 0.5)
+					// 1x payout
+					payout := betToPayout(bet, 1.0)
 					moneyAdd(&author, payout, "gamble")
-					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was :"+answer+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
+					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+answer+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
 				} else {
 					moneyDeduct(&author, bet, "gamble")
-					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was :"+answer+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
+					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+answer+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
 				}
 			} else {
 				_, _ = s.ChannelMessageSend(m.ChannelID, "pick heads or tails bud. `!gamble <amount> coin heads|tails`")
@@ -243,7 +243,7 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	} else if args[0] == "!gamble" {
 		_, _ = s.ChannelMessageSend(m.ChannelID,
-			`Gamble command is used as follows: '!gamble <amount> <game> <game_input>\n
+			`Gamble command is used as follows: '!gamble <amount> <game> <game_input>
 			 '!gamble <amount> coin|flip heads|tails' payout is 0.5x`,
 		)
 	}
