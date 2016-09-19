@@ -25,7 +25,7 @@ var (
 )
 
 type User struct {
-	ID        int `db:"id"`
+	ID        int    `db:"id"`
 	DID       string `db:"discord_id"`
 	Username  string `db:"name"`
 	CurMoney  int    `db:"current_money"`
@@ -83,11 +83,9 @@ func main() {
 
 func createUser(discord_id string) {
 	var new_user User
-  //new_user.ID = 0
-	new_user.Username = "idk"
 	new_user.DID = discord_id
-  fmt.Println(new_user)
-	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id,:name)`, new_user)
+	fmt.Println(new_user)
+	_, err := db.NamedExec(`INSERT INTO money (discord_id) VALUES (:discord_id)`, new_user)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,14 +93,14 @@ func createUser(discord_id string) {
 
 func userGet(DID string) User {
 	var users []User
-  fmt.Println(DID)
+	fmt.Println(DID)
 	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, DID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var user User
 	if len(users) == 0 {
-    fmt.Println("creating user: " + DID)
+		fmt.Println("creating user: " + DID)
 		createUser(DID)
 		user = userGet(DID)
 	} else {
