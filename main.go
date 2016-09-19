@@ -118,14 +118,14 @@ func moneyDeduct(user *User, amount int, deduction string) bool {
 		deduction_record := -1
 
 		if deduction == "tip" {
-			db_string = `UPDATE money SET (current_money, given_money) = (?, ?) WHERE discord_id = '?'`
+			db_string = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
 			deduction_record = user.GiveMoney
 			new_deduction_amount = user.GiveMoney + amount
 			user.CurMoney = new_current_money
 			user.GiveMoney = new_deduction_amount
 		}
 		if deduction == "gamble" {
-			db_string = `UPDATE money SET (current_money, lost_money) = (?, ?) WHERE discord_id = '?'`
+			db_string = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
 			deduction_record = user.LostMoney
 			new_deduction_amount = user.LostMoney + amount
 			user.CurMoney = new_current_money
@@ -133,7 +133,8 @@ func moneyDeduct(user *User, amount int, deduction string) bool {
 		}
 
 		if db_string != `` && deduction_record != -1 && new_deduction_amount != -1 {
-			db.MustExec(db_string, new_current_money, new_deduction_amount, user.DID)
+      db_string = db_string + `'`+user.DID+`'`
+			db.MustExec(db_string, new_current_money, new_deduction_amount)
 			return true
 		}
 		return false
@@ -149,14 +150,14 @@ func moneyAdd(user *User, amount int, addition string) {
 	addition_record := -1
 
 	if addition == "tip" {
-		db_string = `UPDATE money SET (current_money, received_money) = (?, ?) WHERE discord_id = '?'`
+		db_string = `UPDATE money SET (current_money, received_money) = ($1, $2) WHERE discord_id = `
 		addition_record = user.RecMoney
 		new_addition_amount = user.RecMoney + amount
 		user.CurMoney = new_current_money
 		user.RecMoney = new_addition_amount
 	}
 	if addition == "gamble" {
-		db_string = `UPDATE money SET (current_money, won_money) = (?, ?) WHERE discord_id = '?'`
+		db_string = `UPDATE money SET (current_money, won_money) = ($1, $2) WHERE discord_id = `
 		addition_record = user.WonMoney
 		new_addition_amount = user.WonMoney + amount
 		user.CurMoney = new_current_money
@@ -164,7 +165,9 @@ func moneyAdd(user *User, amount int, addition string) {
 	}
 
 	if db_string != `` && addition_record != -1 && new_addition_amount != -1 {
-		db.MustExec(db_string, new_current_money, new_addition_amount, user.DID)
+    // bindvars can only be used as values
+    db_string = db_string + `'`+user.DID+`'`
+		db.MustExec(db_string, new_current_money, new_addition_amount)
 	}
 }
 
