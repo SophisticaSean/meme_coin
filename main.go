@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -110,36 +112,30 @@ func userGet(discord_user *discordgo.User) User {
 	return user
 }
 
-func moneyDeduct(user *User, amount int, deduction string) bool {
-	if amount <= user.CurMoney {
-		new_current_money := user.CurMoney - amount
-		new_deduction_amount := -1
-		db_string := ``
-		deduction_record := -1
+func moneyDeduct(user *User, amount int, deduction string) {
+	new_current_money := user.CurMoney - amount
+	new_deduction_amount := -1
+	db_string := ``
+	deduction_record := -1
 
-		if deduction == "tip" {
-			db_string = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
-			deduction_record = user.GiveMoney
-			new_deduction_amount = user.GiveMoney + amount
-			user.CurMoney = new_current_money
-			user.GiveMoney = new_deduction_amount
-		}
-		if deduction == "gamble" {
-			db_string = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
-			deduction_record = user.LostMoney
-			new_deduction_amount = user.LostMoney + amount
-			user.CurMoney = new_current_money
-			user.LostMoney = new_deduction_amount
-		}
+	if deduction == "tip" {
+		db_string = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
+		deduction_record = user.GiveMoney
+		new_deduction_amount = user.GiveMoney + amount
+		user.CurMoney = new_current_money
+		user.GiveMoney = new_deduction_amount
+	}
+	if deduction == "gamble" {
+		db_string = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
+		deduction_record = user.LostMoney
+		new_deduction_amount = user.LostMoney + amount
+		user.CurMoney = new_current_money
+		user.LostMoney = new_deduction_amount
+	}
 
-		if db_string != `` && deduction_record != -1 && new_deduction_amount != -1 {
-			db_string = db_string + `'` + user.DID + `'`
-			db.MustExec(db_string, new_current_money, new_deduction_amount)
-			return true
-		}
-		return false
-	} else {
-		return false
+	if db_string != `` && deduction_record != -1 && new_deduction_amount != -1 {
+		db_string = db_string + `'` + user.DID + `'`
+		db.MustExec(db_string, new_current_money, new_deduction_amount)
 	}
 }
 
@@ -181,8 +177,8 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		amount := args[1]
 		total_deduct := int_amount * len(m.Mentions)
 		from := userGet(m.Author)
-		proceed := moneyDeduct(&from, total_deduct, "tip")
-		if proceed != true {
+		moneyDeduct(&from, total_deduct, "tip")
+		if total_deduct > from.CurMoney {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(total_deduct))
 			return
 		} else {
@@ -206,15 +202,50 @@ func handleBalance(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func betToPayout(bet int, payout_multiplier float64) int {
+	payout := int(math.Floor(float64(bet) * payout_multiplier))
+	return payout
+}
+
 func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 4 {
-		//author := userGet(m.Author)
-		//bet, err := strconv.Atoi(args[1])
-		//game := args[2]
-		//game_input := args[3]
+		author := userGet(m.Author)
+		bet, err := strconv.Atoi(args[1])
+		if err != nil {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "your bet could not be processed, it needs to be a number.")
+		}
+		game := args[2]
+		game_input := args[3]
+
+		if bet > author.CurMoney {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(author.CurMoney)+" needed:"+strconv.Itoa(bet))
+			return
+		}
+
+		if game == "coin" || game == "flip" {
+			if game_input != "heads" || game_input != "tails" {
+				answers := []string{"heads", "tails"}
+				answer := answers[rand.Intn(len(answers))]
+
+				if answer == game_input {
+					// 0.5x payout
+					payout := betToPayout(bet, 0.5)
+					moneyAdd(&author, payout, "gamble")
+					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was :"+answer+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
+				} else {
+					moneyDeduct(&author, bet, "gamble")
+					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was :"+answer+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
+				}
+			} else {
+				_, _ = s.ChannelMessageSend(m.ChannelID, "pick heads or tails bud. `!gamble <amount> coin heads|tails`")
+			}
+		}
 	} else if args[0] == "!gamble" {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "Gamble command is used as follows: '!gamble <amount> <game> <game_input>")
+		_, _ = s.ChannelMessageSend(m.ChannelID,
+			`Gamble command is used as follows: '!gamble <amount> <game> <game_input>\n
+			 '!gamble <amount> coin|flip heads|tails' payout is 0.5x`,
+		)
 	}
 }
 
