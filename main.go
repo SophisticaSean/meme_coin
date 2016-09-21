@@ -236,7 +236,7 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		if game == "coin" || game == "flip" {
-			if game_input != "heads" || game_input != "tails" {
+			if game_input == "heads" || game_input == "tails" {
 				answers := []string{"heads", "tails"}
 				answer := answers[rand.Intn(len(answers))]
 
