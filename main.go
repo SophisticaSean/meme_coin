@@ -27,6 +27,7 @@ var (
 	db    *sqlx.DB
 )
 
+// User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
 	ID        int    `db:"id"`
 	DID       string `db:"discord_id"`
@@ -39,7 +40,7 @@ type User struct {
 	RecMoney  int    `db:"received_money"`
 }
 
-func db_get() *sqlx.DB {
+func dbGet() *sqlx.DB {
 	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
 	if err != nil {
 		log.Fatal(err)
@@ -52,7 +53,7 @@ func init() {
 	Token, _ = os.LookupEnv("bot_token")
 	Email, _ = os.LookupEnv("email")
 	PW, _ = os.LookupEnv("pw")
-	db = db_get()
+	db = dbGet()
 }
 
 func main() {
@@ -85,27 +86,27 @@ func main() {
 }
 
 func createUser(user *discordgo.User) {
-	var new_user User
-	new_user.DID = user.ID
-	new_user.Username = user.Username
-	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id, :name)`, new_user)
+	var newUser User
+	newUser.DID = user.ID
+	newUser.Username = user.Username
+	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id, :name)`, newUser)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func userGet(discord_user *discordgo.User) User {
+func userGet(discordUser *discordgo.User) User {
 	var users []User
-	fmt.Println(discord_user.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, discord_user.ID)
+	fmt.Println(discordUser.ID)
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var user User
 	if len(users) == 0 {
-		fmt.Println("creating user: " + discord_user.ID)
-		createUser(discord_user)
-		user = userGet(discord_user)
+		fmt.Println("creating user: " + discordUser.ID)
+		createUser(discordUser)
+		user = userGet(discordUser)
 	} else {
 		user = users[0]
 	}
@@ -113,88 +114,87 @@ func userGet(discord_user *discordgo.User) User {
 }
 
 func moneyDeduct(user *User, amount int, deduction string) {
-	new_current_money := user.CurMoney - amount
-	new_deduction_amount := -1
-	db_string := ``
-	deduction_record := -1
+	newCurrentMoney := user.CurMoney - amount
+	newDeductionAmount := -1
+	dbString := ``
+	deductionRecord := -1
 
 	if deduction == "tip" {
-		db_string = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
-		deduction_record = user.GiveMoney
-		new_deduction_amount = user.GiveMoney + amount
-		user.CurMoney = new_current_money
-		user.GiveMoney = new_deduction_amount
+		dbString = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
+		deductionRecord = user.GiveMoney
+		newDeductionAmount = user.GiveMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.GiveMoney = newDeductionAmount
 	}
 	if deduction == "gamble" {
-		db_string = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
-		deduction_record = user.LostMoney
-		new_deduction_amount = user.LostMoney + amount
-		user.CurMoney = new_current_money
-		user.LostMoney = new_deduction_amount
+		dbString = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
+		deductionRecord = user.LostMoney
+		newDeductionAmount = user.LostMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.LostMoney = newDeductionAmount
 	}
 
-	if db_string != `` && deduction_record != -1 && new_deduction_amount != -1 {
-		db_string = db_string + `'` + user.DID + `'`
-		db.MustExec(db_string, new_current_money, new_deduction_amount)
+	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
+		dbString = dbString + `'` + user.DID + `'`
+		db.MustExec(dbString, newCurrentMoney, newDeductionAmount)
 	}
 }
 
 func moneyAdd(user *User, amount int, addition string) {
-	new_current_money := user.CurMoney + amount
-	new_addition_amount := -1
-	db_string := ``
-	addition_record := -1
+	newCurrentMoney := user.CurMoney + amount
+	newAdditionAmount := -1
+	dbString := ``
+	additionRecord := -1
 
 	if addition == "tip" {
-		db_string = `UPDATE money SET (current_money, received_money) = ($1, $2) WHERE discord_id = `
-		addition_record = user.RecMoney
-		new_addition_amount = user.RecMoney + amount
-		user.CurMoney = new_current_money
-		user.RecMoney = new_addition_amount
+		dbString = `UPDATE money SET (current_money, received_money) = ($1, $2) WHERE discord_id = `
+		additionRecord = user.RecMoney
+		newAdditionAmount = user.RecMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.RecMoney = newAdditionAmount
 	}
 	if addition == "gamble" {
-		db_string = `UPDATE money SET (current_money, won_money) = ($1, $2) WHERE discord_id = `
-		addition_record = user.WonMoney
-		new_addition_amount = user.WonMoney + amount
-		user.CurMoney = new_current_money
-		user.WonMoney = new_addition_amount
+		dbString = `UPDATE money SET (current_money, won_money) = ($1, $2) WHERE discord_id = `
+		additionRecord = user.WonMoney
+		newAdditionAmount = user.WonMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.WonMoney = newAdditionAmount
 	}
 
-	if db_string != `` && addition_record != -1 && new_addition_amount != -1 {
+	if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
 		// bindvars can only be used as values
-		db_string = db_string + `'` + user.DID + `'`
-		db.MustExec(db_string, new_current_money, new_addition_amount)
+		dbString = dbString + `'` + user.DID + `'`
+		db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
 	}
 }
 
 func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) > 3 && args[0] == "!tip" {
-		int_amount, err := strconv.Atoi(args[1])
+		intAmount, err := strconv.Atoi(args[1])
 		if err != nil {
 			fmt.Println(err)
-      _, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
-      return
-		}
-    if int_amount <= 0 {
-      _, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
-      return
-    }
-		amount := args[1]
-		currency_name := args[2]
-		total_deduct := int_amount * len(m.Mentions)
-		from := userGet(m.Author)
-		if total_deduct > from.CurMoney {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(total_deduct))
+			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
 			return
-		} else {
-		moneyDeduct(&from, total_deduct, "tip")
-			for _, to := range m.Mentions {
-				toUser := userGet(to)
-				moneyAdd(&toUser, int_amount, "tip")
-				_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" "+currency_name+" to "+to.Username+" from: "+m.Author.Username)
+		}
+		if intAmount <= 0 {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
+			return
+		}
+		amount := args[1]
+		currencyName := args[2]
+		totalDeduct := intAmount * len(m.Mentions)
+		from := userGet(m.Author)
+		if totalDeduct > from.CurMoney {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(totalDeduct))
+			return
+		}
+		moneyDeduct(&from, totalDeduct, "tip")
+		for _, to := range m.Mentions {
+			toUser := userGet(to)
+			moneyAdd(&toUser, intAmount, "tip")
+			_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" "+currencyName+" to "+to.Username+" from: "+m.Author.Username)
 
-			}
 		}
 	} else {
 		return
@@ -205,12 +205,12 @@ func handleBalance(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
 		author := userGet(m.Author)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "total balance is :"+strconv.Itoa(author.CurMoney))
+		_, _ = s.ChannelMessageSend(m.ChannelID, "total balance is: "+strconv.Itoa(author.CurMoney))
 	}
 }
 
-func betToPayout(bet int, payout_multiplier float64) int {
-	payout := int(math.Floor(float64(bet) * payout_multiplier))
+func betToPayout(bet int, payoutMultiplier float64) int {
+	payout := int(math.Floor(float64(bet) * payoutMultiplier))
 	return payout
 }
 
@@ -220,15 +220,15 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 		author := userGet(m.Author)
 		bet, err := strconv.Atoi(args[1])
 		if err != nil {
-      _, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
-      return
+			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
+			return
 		}
-    if bet <= 0 {
-      _, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
-      return
-    }
+		if bet <= 0 {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
+			return
+		}
 		game := args[2]
-		game_input := args[3]
+		gameInput := args[3]
 
 		if bet > author.CurMoney {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(author.CurMoney)+" needed:"+strconv.Itoa(bet))
@@ -236,11 +236,11 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		if game == "coin" || game == "flip" {
-			if game_input == "heads" || game_input == "tails" {
+			if gameInput == "heads" || gameInput == "tails" {
 				answers := []string{"heads", "tails"}
 				answer := answers[rand.Intn(len(answers))]
 
-				if answer == game_input {
+				if answer == gameInput {
 					// 1x payout
 					payout := betToPayout(bet, 1.0)
 					moneyAdd(&author, payout, "gamble")
@@ -255,7 +255,7 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	} else if args[0] == "!gamble" {
 		_, _ = s.ChannelMessageSend(m.ChannelID,
-			`Gamble command is used as follows: '!gamble <amount> <game> <game_input>
+			`Gamble command is used as follows: '!gamble <amount> <game> <gameInput>
 			 '!gamble <amount> coin|flip heads|tails' payout is 0.5x`,
 		)
 	}
