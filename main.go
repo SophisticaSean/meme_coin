@@ -235,6 +235,35 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
+		// Pick a number game
+		if game == "number" {
+			numberErrMessage := "!gamble <amount> number <numberToGuess>:<highestNumberInRange>. So !gamble 100 number 10:100 will run a pick a number game between 1 and 100 and the payout will be x100, because you have a 1  in 100 chance to win."
+			gameInputs := strings.Split(gameInput, ":")
+
+			if len(gameInputs) != 2 {
+				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
+			}
+			pickedNumber, err := strconv.Atoi(gameInputs[0])
+			if err != nil {
+				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
+			}
+			rangeNumber, err := strconv.Atoi(gameInputs[1])
+			if err != nil || rangeNumber < pickedNumber {
+				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
+			}
+
+			answer := rand.Intn(rangeNumber)
+			if answer == pickedNumber {
+				payout := betToPayout(bet, float64(rangeNumber))
+				moneyAdd(&author, payout, "gamble")
+				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
+			} else {
+				moneyDeduct(&author, bet, "gamble")
+				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
+			}
+		}
+
+		// Coin flip game
 		if game == "coin" || game == "flip" {
 			if gameInput == "heads" || gameInput == "tails" {
 				answers := []string{"heads", "tails"}
@@ -256,7 +285,8 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else if args[0] == "!gamble" {
 		_, _ = s.ChannelMessageSend(m.ChannelID,
 			`Gamble command is used as follows: '!gamble <amount> <game> <gameInput>
-			 '!gamble <amount> coin|flip heads|tails' payout is 0.5x`,
+			 '!gamble <amount> coin|flip heads|tails' payout is 1x
+			 '!gamble <amount> number <numberToGuess>:<highestNumberInRange>' payout is whatever the <highestNumberInRange> is.`,
 		)
 	}
 }
