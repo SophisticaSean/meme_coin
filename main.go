@@ -242,19 +242,26 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 			if len(gameInputs) != 2 {
 				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
+				return
 			}
 			pickedNumber, err := strconv.Atoi(gameInputs[0])
 			if err != nil {
 				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
+				return
 			}
 			rangeNumber, err := strconv.Atoi(gameInputs[1])
 			if err != nil || rangeNumber < pickedNumber {
 				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
+				return
+			}
+			if rangeNumber <= 1 {
+				_, _ = s.ChannelMessageSend(m.ChannelID, "your highestNumberInRange needs to be greater than 1")
+				return
 			}
 
 			answer := rand.Intn(rangeNumber)
 			if answer == pickedNumber {
-				payout := betToPayout(bet, float64(rangeNumber))
+				payout := betToPayout(bet, float64(rangeNumber+1))
 				moneyAdd(&author, payout, "gamble")
 				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
 			} else {
