@@ -304,8 +304,13 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 func handleMemeMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	author := userGet(m.Author)
 	lastMineTime := author.MineTime
+	fmt.Println(lastMineTime)
 	now := time.Now()
+	fmt.Println(now)
 	difference := now.Sub(lastMineTime)
+	fmt.Println(difference)
+	fmt.Println(difference.Seconds())
+	fmt.Println(difference.Minutes())
 	roundDiffMinute := math.Ceil(difference.Minutes())
 	_, _ = s.ChannelMessageSend(m.ChannelID, "the difference is: "+strconv.Itoa(int(roundDiffMinute)))
 }
