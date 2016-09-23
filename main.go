@@ -43,6 +43,12 @@ type User struct {
 	MineTime  time.Time `db:"mine_time"`
 }
 
+type MineResponse struct {
+	amount   int
+	response string
+	chance   int
+}
+
 func dbGet() *sqlx.DB {
 	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
 	if err != nil {
@@ -321,15 +327,58 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	lastMineTime := author.MineTime
 	now := time.Now()
 	difference := now.Sub(lastMineTime)
-	mineAmount := 100
-	timeLimit := 10
+	timeLimit := 1
+
+	mineResponses := []MineResponse{
+		MineResponse{
+			amount:   100,
+			response: "you mined for a while and managed to scrounge up 100 dusty memes",
+			chance:   50,
+		},
+		MineResponse{
+			amount:   300,
+			response: "you mined for a bit and found an uncommon pepe worth 300 memes!",
+			chance:   30,
+		},
+		MineResponse{
+			amount:   1000,
+			response: "you fell down a meme-shaft and found a very dank rare pepe worth 1000 memes!",
+			chance:   15,
+		},
+		MineResponse{
+			amount:   5000,
+			response: "you wandered in the meme mine for what seems like forever, eventually stumbling upon a vintage 1980's pepe worth 5000 memes!",
+			chance:   5,
+		},
+		MineResponse{
+			amount:   25000,
+			response: "your meme mining has made the Maymay gods happy, they rewarded you with an MLG-shiny-holofoil-dankasfuck Pepe Diamond worth 25000 memes!",
+			chance:   1,
+		}}
+
 	if difference.Minutes() < float64(timeLimit) {
 		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
 		_, _ = s.ChannelMessageSend(m.ChannelID, "cannot mine yet, please wait "+waitTime+" more minute(s)")
 		return
+	} else {
+		responseList := []MineResponse{}
+		for _, response := range mineResponses {
+			counter := response.chance
+			for counter > 0 {
+				responseList = append(responseList, response)
+				counter--
+			}
+		}
+		// pick a response out of the responses in responseList
+		// len(responseList) is 1 more than we want, so we need to subtract 1
+		// then rand.Intn returns 0-n, 0 won't work so we pad it with 1
+		fmt.Println(len(responseList))
+		mineResponse := responseList[(rand.Intn(len(responseList)))]
+		fmt.Println(mineResponse)
+		moneyAdd(&author, mineResponse.amount, "mined")
+		_, _ = s.ChannelMessageSend(m.ChannelID, mineResponse.response)
+		return
 	}
-	moneyAdd(&author, mineAmount, "mined")
-	_, _ = s.ChannelMessageSend(m.ChannelID, "you mined "+strconv.Itoa(mineAmount)+" dank memes bruv!")
 	return
 }
 
