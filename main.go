@@ -388,7 +388,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handleTip(s, m)
 	}
 
-	if strings.Contains(m.Content, "!balance") || strings.Contains(m.Content, "!memes") {
+	if m.Content == "!balance" || m.Content == "!memes" {
 		handleBalance(s, m)
 	}
 
@@ -396,7 +396,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handleGamble(s, m)
 	}
 
-	if strings.Contains(m.Content, "!mine") {
+	if m.Content == "!mine" {
 		handleMine(s, m)
 	}
 
