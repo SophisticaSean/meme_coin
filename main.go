@@ -163,11 +163,21 @@ func moneyAdd(user *User, amount int, addition string) {
 		user.CurMoney = newCurrentMoney
 		user.WonMoney = newAdditionAmount
 	}
-
-	if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
+	if addition == "mined" {
+		dbString = `UPDATE money SET (current_money, earned_money, mine_time) = ($1, $2, $3) WHERE discord_id = `
+		additionRecord = user.EarMoney
+		newAdditionAmount = user.EarMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.EarMoney = newAdditionAmount
 		// bindvars can only be used as values so we have to concat the user.DID onto the db string
 		dbString = dbString + `'` + user.DID + `'`
-		db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
+		db.MustExec(dbString, newCurrentMoney, newAdditionAmount, time.Now())
+	} else {
+		if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
+			// bindvars can only be used as values so we have to concat the user.DID onto the db string
+			dbString = dbString + `'` + user.DID + `'`
+			db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
+		}
 	}
 }
 
@@ -196,7 +206,7 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, to := range m.Mentions {
 			toUser := userGet(to)
 			moneyAdd(&toUser, intAmount, "tip")
-			_, _ = s.ChannelMessageSend(m.ChannelID, "tip "+amount+" "+currencyName+" to "+to.Username+" from: "+m.Author.Username)
+			_, _ = s.ChannelMessageSend(m.ChannelID, "you mined "+amount+" "+currencyName+" to "+to.Username+" from: "+m.Author.Username)
 
 		}
 	} else {
@@ -301,18 +311,23 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func handleMemeMine(s *discordgo.Session, m *discordgo.MessageCreate) {
+func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	author := userGet(m.Author)
 	lastMineTime := author.MineTime
-	fmt.Println(lastMineTime)
 	now := time.Now()
-	fmt.Println(now)
 	difference := now.Sub(lastMineTime)
-	fmt.Println(difference)
-	fmt.Println(difference.Seconds())
-	fmt.Println(difference.Minutes())
+	mineAmount := 100
+	timeLimit := 30
+	if difference.Minutes() < float64(timeLimit) {
+		waitTime := strconv.Itoa(int(math.Ceil((30 - difference.Minutes()))))
+		_, _ = s.ChannelMessageSend(m.ChannelID, "cannot mine yet, please wait "+waitTime+" more minute(s)")
+		return
+	}
 	roundDiffMinute := math.Ceil(difference.Minutes())
 	_, _ = s.ChannelMessageSend(m.ChannelID, "the difference is: "+strconv.Itoa(int(roundDiffMinute)))
+	moneyAdd(&author, mineAmount, "mined")
+	_, _ = s.ChannelMessageSend(m.ChannelID, "you mined "+strconv.Itoa(mineAmount)+" dank memes bruv!")
+	return
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -333,7 +348,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.Contains(m.Content, "!mine") {
-		handleMemeMine(s, m)
+		handleMine(s, m)
 	}
 
 	if m.Content == "meme" {
