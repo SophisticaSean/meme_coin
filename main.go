@@ -183,7 +183,7 @@ func moneyAdd(user *User, amount int, addition string) {
 
 func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
-	if len(args) > 3 && args[0] == "!tip" {
+	if len(args) >= 3 && args[0] == "!tip" {
 		intAmount, err := strconv.Atoi(args[1])
 		if err != nil {
 			fmt.Println(err)
@@ -195,7 +195,10 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		amount := args[1]
-		currencyName := args[2]
+		currencyName := "super dank memes"
+		if len(args) > 3 {
+			currencyName = args[2]
+		}
 		totalDeduct := intAmount * len(m.Mentions)
 		from := userGet(m.Author)
 		if totalDeduct > from.CurMoney {
@@ -206,9 +209,10 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, to := range m.Mentions {
 			toUser := userGet(to)
 			moneyAdd(&toUser, intAmount, "tip")
-			_, _ = s.ChannelMessageSend(m.ChannelID, "you mined "+amount+" "+currencyName+" to "+to.Username+" from: "+m.Author.Username)
+			_, _ = s.ChannelMessageSend(m.ChannelID, "you gave "+amount+" "+currencyName+" to "+to.Username+" from: "+m.Author.Username)
 
 		}
+		return
 	} else {
 		return
 	}
