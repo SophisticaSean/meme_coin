@@ -106,7 +106,7 @@ func createUser(user *discordgo.User) {
 
 func userGet(discordUser *discordgo.User) User {
 	var users []User
-	fmt.Println(discordUser.ID)
+	//fmt.Println(discordUser.ID)
 	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, mine_time FROM money WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
@@ -327,7 +327,7 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	lastMineTime := author.MineTime
 	now := time.Now()
 	difference := now.Sub(lastMineTime)
-	timeLimit := 1
+	timeLimit := 5
 
 	mineResponses := []MineResponse{
 		MineResponse{
@@ -370,13 +370,10 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 		// pick a response out of the responses in responseList
-		// len(responseList) is 1 more than we want, so we need to subtract 1
-		// then rand.Intn returns 0-n, 0 won't work so we pad it with 1
-		fmt.Println(len(responseList))
 		mineResponse := responseList[(rand.Intn(len(responseList)))]
-		fmt.Println(mineResponse)
 		moneyAdd(&author, mineResponse.amount, "mined")
 		_, _ = s.ChannelMessageSend(m.ChannelID, mineResponse.response)
+		fmt.Println(author.Username + " mined " + strconv.Itoa(mineResponse.amount))
 		return
 	}
 	return
