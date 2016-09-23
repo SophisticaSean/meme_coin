@@ -358,7 +358,7 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if difference.Minutes() < float64(timeLimit) {
 		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
-		_, _ = s.ChannelMessageSend(m.ChannelID, "cannot mine yet, please wait "+waitTime+" more minute(s)")
+		_, _ = s.ChannelMessageSend(m.ChannelID, "you're too tired to mine, you must rest your meme muscles for "+waitTime+" more minute(s)")
 		return
 	} else {
 		responseList := []MineResponse{}
