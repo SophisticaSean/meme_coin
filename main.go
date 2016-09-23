@@ -209,8 +209,9 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, to := range m.Mentions {
 			toUser := userGet(to)
 			moneyAdd(&toUser, intAmount, "tip")
-			_, _ = s.ChannelMessageSend(m.ChannelID, "you gave "+amount+" "+currencyName+" to "+to.Username+" from: "+m.Author.Username)
-
+			message := "you gave " + amount + " " + currencyName + " to " + to.Username
+			_, _ = s.ChannelMessageSend(m.ChannelID, message)
+			fmt.Println(message + " from " + from.Username)
 		}
 		return
 	} else {
