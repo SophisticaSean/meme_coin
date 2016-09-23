@@ -49,6 +49,10 @@ type MineResponse struct {
 	chance   int
 }
 
+var (
+	responseList []MineResponse
+)
+
 func dbGet() *sqlx.DB {
 	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
 	if err != nil {
@@ -215,9 +219,9 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, to := range m.Mentions {
 			toUser := userGet(to)
 			moneyAdd(&toUser, intAmount, "tip")
-			message := "you gave " + amount + " " + currencyName + " to " + to.Username
+			message := from.Username + " gave " + amount + " " + currencyName + " to " + to.Username
 			_, _ = s.ChannelMessageSend(m.ChannelID, message)
-			fmt.Println(message + " from " + from.Username)
+			fmt.Println(message)
 		}
 		return
 	} else {
@@ -332,47 +336,50 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	mineResponses := []MineResponse{
 		MineResponse{
 			amount:   100,
-			response: "you mined for a while and managed to scrounge up 100 dusty memes",
+			response: " mined for a while and managed to scrounge up 100 dusty memes",
 			chance:   50,
 		},
 		MineResponse{
 			amount:   300,
-			response: "you mined for a bit and found an uncommon pepe worth 300 memes!",
+			response: " mined for a bit and found an uncommon pepe worth 300 memes!",
 			chance:   30,
 		},
 		MineResponse{
 			amount:   1000,
-			response: "you fell down a meme-shaft and found a very dank rare pepe worth 1000 memes!",
+			response: " fell down a meme-shaft and found a very dank rare pepe worth 1000 memes!",
 			chance:   15,
 		},
 		MineResponse{
 			amount:   5000,
-			response: "you wandered in the meme mine for what seems like forever, eventually stumbling upon a vintage 1980's pepe worth 5000 memes!",
+			response: " wandered in the meme mine for what seems like forever, eventually stumbling upon a vintage 1980's pepe worth 5000 memes!",
 			chance:   5,
 		},
 		MineResponse{
 			amount:   25000,
-			response: "your meme mining has made the Maymay gods happy, they rewarded you with an MLG-shiny-holofoil-dankasfuck Pepe Diamond worth 25000 memes!",
+			response: "'s meme mining has made the Maymay gods happy, they rewarded them with a MLG-shiny-holofoil-dankasfuck Pepe Diamond worth 25000 memes!",
 			chance:   1,
 		}}
 
 	if difference.Minutes() < float64(timeLimit) {
 		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
-		_, _ = s.ChannelMessageSend(m.ChannelID, "you're too tired to mine, you must rest your meme muscles for "+waitTime+" more minute(s)")
+		_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+" is too tired to mine, they must rest your meme muscles for "+waitTime+" more minute(s)")
 		return
 	} else {
-		responseList := []MineResponse{}
-		for _, response := range mineResponses {
-			counter := response.chance
-			for counter > 0 {
-				responseList = append(responseList, response)
-				counter--
+		// generate the responseList, and hopefully cache it in the global var
+		fmt.Println(len(responseList))
+		if len(responseList) == 0 {
+			for _, response := range mineResponses {
+				counter := response.chance
+				for counter > 0 {
+					responseList = append(responseList, response)
+					counter--
+				}
 			}
 		}
 		// pick a response out of the responses in responseList
 		mineResponse := responseList[(rand.Intn(len(responseList)))]
 		moneyAdd(&author, mineResponse.amount, "mined")
-		_, _ = s.ChannelMessageSend(m.ChannelID, mineResponse.response)
+		_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+mineResponse.response)
 		fmt.Println(author.Username + " mined " + strconv.Itoa(mineResponse.amount))
 		return
 	}
