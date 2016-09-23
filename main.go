@@ -317,7 +317,7 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	now := time.Now()
 	difference := now.Sub(lastMineTime)
 	mineAmount := 100
-	timeLimit := 30
+	timeLimit := 10
 	if difference.Minutes() < float64(timeLimit) {
 		waitTime := strconv.Itoa(int(math.Ceil((30 - difference.Minutes()))))
 		_, _ = s.ChannelMessageSend(m.ChannelID, "cannot mine yet, please wait "+waitTime+" more minute(s)")
