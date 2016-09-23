@@ -306,7 +306,8 @@ func handleMemeMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 	lastMineTime := author.MineTime
 	now := time.Now()
 	difference := now.Sub(lastMineTime)
-	_, _ = s.ChannelMessageSend(m.ChannelID, "the difference is: "+strconv.Itoa(int((difference.Minutes()))))
+	roundDiffMinute := math.Ceil(difference.Minutes())
+	_, _ = s.ChannelMessageSend(m.ChannelID, "the difference is: "+strconv.Itoa(int(roundDiffMinute)))
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
