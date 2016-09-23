@@ -323,8 +323,6 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "cannot mine yet, please wait "+waitTime+" more minute(s)")
 		return
 	}
-	roundDiffMinute := math.Ceil(difference.Minutes())
-	_, _ = s.ChannelMessageSend(m.ChannelID, "the difference is: "+strconv.Itoa(int(roundDiffMinute)))
 	moneyAdd(&author, mineAmount, "mined")
 	_, _ = s.ChannelMessageSend(m.ChannelID, "you mined "+strconv.Itoa(mineAmount)+" dank memes bruv!")
 	return
