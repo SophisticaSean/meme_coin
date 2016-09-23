@@ -101,7 +101,7 @@ func createUser(user *discordgo.User) {
 func userGet(discordUser *discordgo.User) User {
 	var users []User
 	fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money FROM money WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, mine_time FROM money WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
