@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "database/sql"
 	_ "strings"
@@ -29,15 +30,17 @@ var (
 
 // User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
-	ID        int    `db:"id"`
-	DID       string `db:"discord_id"`
-	Username  string `db:"name"`
-	CurMoney  int    `db:"current_money"`
-	TotMoney  int    `db:"total_money"`
-	WonMoney  int    `db:"won_money"`
-	LostMoney int    `db:"lost_money"`
-	GiveMoney int    `db:"given_money"`
-	RecMoney  int    `db:"received_money"`
+	ID        int       `db:"id"`
+	DID       string    `db:"discord_id"`
+	Username  string    `db:"name"`
+	CurMoney  int       `db:"current_money"`
+	TotMoney  int       `db:"total_money"`
+	WonMoney  int       `db:"won_money"`
+	LostMoney int       `db:"lost_money"`
+	GiveMoney int       `db:"given_money"`
+	RecMoney  int       `db:"received_money"`
+	EarMoney  int       `db:"earned_money"`
+	MineTime  time.Time `db:"mine_time"`
 }
 
 func dbGet() *sqlx.DB {
@@ -162,7 +165,7 @@ func moneyAdd(user *User, amount int, addition string) {
 	}
 
 	if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
-		// bindvars can only be used as values
+		// bindvars can only be used as values so we have to concat the user.DID onto the db string
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
 	}
@@ -298,6 +301,14 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func handleMemeMine(s *discordgo.Session, m *discordgo.MessageCreate) {
+	author := userGet(m.Author)
+	lastMineTime := author.MineTime
+	now := time.Now()
+	difference := now.Sub(lastMineTime)
+	_, _ = s.ChannelMessageSend(m.ChannelID, "the difference is: "+strconv.Itoa(int((difference.Minutes()))))
+}
+
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == BotID {
 		return
@@ -313,6 +324,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.Contains(m.Content, "!gamble") {
 		handleGamble(s, m)
+	}
+
+	if strings.Contains(m.Content, "!mine") {
+		handleMemeMine(s, m)
 	}
 
 	if m.Content == "meme" {
