@@ -46,6 +46,6 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if m.Content == "meme" {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "!mine")
+		_, _ = s.ChannelMessageSend(m.ChannelID, "you're a dank maymay-er, harry")
 	}
 }
