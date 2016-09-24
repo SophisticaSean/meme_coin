@@ -3,35 +3,27 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	_ "database/sql"
 	_ "strings"
 
-	"github.com/sophisticasean/meme_coin/dbHandler"
-	"github.com/sophisticasean/meme_coin/handlers"
+	"github.com/sophisticasean/meme_coin/events"
 
 	_ "github.com/bmizerany/pq"
 	"github.com/bwmarrin/discordgo"
-	"github.com/jmoiron/sqlx"
 )
 
 // Import vars and init vars
 var (
-	Token        string
-	Email        string
-	PW           string
-	BotID        string
-	db           *sqlx.DB
-	responseList []handlers.MineResponse
+	Token string
+	Email string
+	PW    string
 )
 
 func init() {
 	Token, _ = os.LookupEnv("bot_token")
 	Email, _ = os.LookupEnv("email")
 	PW, _ = os.LookupEnv("pw")
-	db = dbHandler.DbGet()
-	responseList = handlers.GenerateResponseList()
 }
 
 func main() {
@@ -47,9 +39,10 @@ func main() {
 		fmt.Println("error obtaining account details,", err)
 	}
 
-	BotID = u.ID
+	// set var BotID so events know the ID of the bot
+	os.Setenv("BotID", u.ID)
 
-	dg.AddHandler(messageCreate)
+	dg.AddHandler(events.MessageCreate)
 
 	err = dg.Open()
 	if err != nil {
@@ -61,30 +54,4 @@ func main() {
 	// do some busy work indefinitely
 	<-make(chan struct{})
 	return
-}
-
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == BotID {
-		return
-	}
-
-	if strings.Contains(m.Content, "!tip") == true {
-		handlers.Tip(s, m, db)
-	}
-
-	if m.Content == "!balance" || m.Content == "!memes" {
-		handlers.Balance(s, m, db)
-	}
-
-	if strings.Contains(m.Content, "!gamble") {
-		handlers.Gamble(s, m, db)
-	}
-
-	if m.Content == "!mine" {
-		handlers.Mine(s, m, responseList, db)
-	}
-
-	if m.Content == "meme" {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "you're a memestar harry")
-	}
 }
