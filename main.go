@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
 	"os"
@@ -13,10 +12,11 @@ import (
 	_ "database/sql"
 	_ "strings"
 
-	"github.com/bwmarrin/discordgo"
-	"github.com/jmoiron/sqlx"
+	"github.com/sophisticasean/meme_coin/dbHandler"
 
 	_ "github.com/bmizerany/pq"
+	"github.com/bwmarrin/discordgo"
+	"github.com/jmoiron/sqlx"
 )
 
 // Variables used for command line parameters
@@ -28,21 +28,7 @@ var (
 	db    *sqlx.DB
 )
 
-// User is a struct that maps 1 to 1 with 'money' db table
-type User struct {
-	ID        int       `db:"id"`
-	DID       string    `db:"discord_id"`
-	Username  string    `db:"name"`
-	CurMoney  int       `db:"current_money"`
-	TotMoney  int       `db:"total_money"`
-	WonMoney  int       `db:"won_money"`
-	LostMoney int       `db:"lost_money"`
-	GiveMoney int       `db:"given_money"`
-	RecMoney  int       `db:"received_money"`
-	EarMoney  int       `db:"earned_money"`
-	MineTime  time.Time `db:"mine_time"`
-}
-
+// MineResponse is a struct for possible events to the !mine action
 type MineResponse struct {
 	amount   int
 	response string
@@ -53,20 +39,11 @@ var (
 	responseList []MineResponse
 )
 
-func dbGet() *sqlx.DB {
-	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return db
-}
-
 func init() {
 	Token, _ = os.LookupEnv("bot_token")
 	Email, _ = os.LookupEnv("email")
 	PW, _ = os.LookupEnv("pw")
-	db = dbGet()
+	db = dbHandler.DbGet()
 }
 
 func main() {
@@ -98,99 +75,6 @@ func main() {
 	return
 }
 
-func createUser(user *discordgo.User) {
-	var newUser User
-	newUser.DID = user.ID
-	newUser.Username = user.Username
-	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id, :name)`, newUser)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func userGet(discordUser *discordgo.User) User {
-	var users []User
-	//fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, mine_time FROM money WHERE discord_id = $1`, discordUser.ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var user User
-	if len(users) == 0 {
-		fmt.Println("creating user: " + discordUser.ID)
-		createUser(discordUser)
-		user = userGet(discordUser)
-	} else {
-		user = users[0]
-	}
-	return user
-}
-
-func moneyDeduct(user *User, amount int, deduction string) {
-	newCurrentMoney := user.CurMoney - amount
-	newDeductionAmount := -1
-	dbString := ``
-	deductionRecord := -1
-
-	if deduction == "tip" {
-		dbString = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
-		deductionRecord = user.GiveMoney
-		newDeductionAmount = user.GiveMoney + amount
-		user.CurMoney = newCurrentMoney
-		user.GiveMoney = newDeductionAmount
-	}
-	if deduction == "gamble" {
-		dbString = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
-		deductionRecord = user.LostMoney
-		newDeductionAmount = user.LostMoney + amount
-		user.CurMoney = newCurrentMoney
-		user.LostMoney = newDeductionAmount
-	}
-
-	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
-		dbString = dbString + `'` + user.DID + `'`
-		db.MustExec(dbString, newCurrentMoney, newDeductionAmount)
-	}
-}
-
-func moneyAdd(user *User, amount int, addition string) {
-	newCurrentMoney := user.CurMoney + amount
-	newAdditionAmount := -1
-	dbString := ``
-	additionRecord := -1
-
-	if addition == "tip" {
-		dbString = `UPDATE money SET (current_money, received_money) = ($1, $2) WHERE discord_id = `
-		additionRecord = user.RecMoney
-		newAdditionAmount = user.RecMoney + amount
-		user.CurMoney = newCurrentMoney
-		user.RecMoney = newAdditionAmount
-	}
-	if addition == "gamble" {
-		dbString = `UPDATE money SET (current_money, won_money) = ($1, $2) WHERE discord_id = `
-		additionRecord = user.WonMoney
-		newAdditionAmount = user.WonMoney + amount
-		user.CurMoney = newCurrentMoney
-		user.WonMoney = newAdditionAmount
-	}
-	if addition == "mined" {
-		dbString = `UPDATE money SET (current_money, earned_money, mine_time) = ($1, $2, $3) WHERE discord_id = `
-		additionRecord = user.EarMoney
-		newAdditionAmount = user.EarMoney + amount
-		user.CurMoney = newCurrentMoney
-		user.EarMoney = newAdditionAmount
-		// bindvars can only be used as values so we have to concat the user.DID onto the db string
-		dbString = dbString + `'` + user.DID + `'`
-		db.MustExec(dbString, newCurrentMoney, newAdditionAmount, time.Now())
-	} else {
-		if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
-			// bindvars can only be used as values so we have to concat the user.DID onto the db string
-			dbString = dbString + `'` + user.DID + `'`
-			db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
-		}
-	}
-}
-
 func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) >= 3 && args[0] == "!tip" {
@@ -210,29 +94,28 @@ func handleTip(s *discordgo.Session, m *discordgo.MessageCreate) {
 			currencyName = args[2]
 		}
 		totalDeduct := intAmount * len(m.Mentions)
-		from := userGet(m.Author)
+		from := dbHandler.UserGet(m.Author, db)
 		if totalDeduct > from.CurMoney {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(totalDeduct))
 			return
 		}
-		moneyDeduct(&from, totalDeduct, "tip")
+		dbHandler.MoneyDeduct(&from, totalDeduct, "tip", db)
 		for _, to := range m.Mentions {
-			toUser := userGet(to)
-			moneyAdd(&toUser, intAmount, "tip")
+			toUser := dbHandler.UserGet(to, db)
+			dbHandler.MoneyAdd(&toUser, intAmount, "tip", db)
 			message := from.Username + " gave " + amount + " " + currencyName + " to " + to.Username
 			_, _ = s.ChannelMessageSend(m.ChannelID, message)
 			fmt.Println(message)
 		}
 		return
-	} else {
-		return
 	}
+	return
 }
 
 func handleBalance(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
-		author := userGet(m.Author)
+		author := dbHandler.UserGet(m.Author, db)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "total balance is: "+strconv.Itoa(author.CurMoney))
 	}
 }
@@ -245,7 +128,7 @@ func betToPayout(bet int, payoutMultiplier float64) int {
 func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 4 {
-		author := userGet(m.Author)
+		author := dbHandler.UserGet(m.Author, db)
 		bet, err := strconv.Atoi(args[1])
 		if err != nil {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
@@ -290,10 +173,10 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 			answer := rand.Intn(rangeNumber)
 			if answer == pickedNumber {
 				payout := betToPayout(bet, float64(rangeNumber+1))
-				moneyAdd(&author, payout, "gamble")
+				dbHandler.MoneyAdd(&author, payout, "gamble", db)
 				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
 			} else {
-				moneyDeduct(&author, bet, "gamble")
+				dbHandler.MoneyDeduct(&author, bet, "gamble", db)
 				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
 			}
 		}
@@ -307,10 +190,10 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 				if answer == gameInput {
 					// 1x payout
 					payout := betToPayout(bet, 1.0)
-					moneyAdd(&author, payout, "gamble")
+					dbHandler.MoneyAdd(&author, payout, "gamble", db)
 					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+answer+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
 				} else {
-					moneyDeduct(&author, bet, "gamble")
+					dbHandler.MoneyDeduct(&author, bet, "gamble", db)
 					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+answer+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
 				}
 			} else {
@@ -327,7 +210,7 @@ func handleGamble(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
-	author := userGet(m.Author)
+	author := dbHandler.UserGet(m.Author, db)
 	lastMineTime := author.MineTime
 	now := time.Now()
 	difference := now.Sub(lastMineTime)
@@ -364,25 +247,23 @@ func handleMine(s *discordgo.Session, m *discordgo.MessageCreate) {
 		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
 		_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+" is too tired to mine, they must rest your meme muscles for "+waitTime+" more minute(s)")
 		return
-	} else {
-		// generate the responseList, and hopefully cache it in the global var
-		fmt.Println(len(responseList))
-		if len(responseList) == 0 {
-			for _, response := range mineResponses {
-				counter := response.chance
-				for counter > 0 {
-					responseList = append(responseList, response)
-					counter--
-				}
+	}
+	// generate the responseList, and hopefully cache it in the global var
+	fmt.Println(len(responseList))
+	if len(responseList) == 0 {
+		for _, response := range mineResponses {
+			counter := response.chance
+			for counter > 0 {
+				responseList = append(responseList, response)
+				counter--
 			}
 		}
-		// pick a response out of the responses in responseList
-		mineResponse := responseList[(rand.Intn(len(responseList)))]
-		moneyAdd(&author, mineResponse.amount, "mined")
-		_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+mineResponse.response)
-		fmt.Println(author.Username + " mined " + strconv.Itoa(mineResponse.amount))
-		return
 	}
+	// pick a response out of the responses in responseList
+	mineResponse := responseList[(rand.Intn(len(responseList)))]
+	dbHandler.MoneyAdd(&author, mineResponse.amount, "mined", db)
+	_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+mineResponse.response)
+	fmt.Println(author.Username + " mined " + strconv.Itoa(mineResponse.amount))
 	return
 }
 
