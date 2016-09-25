@@ -69,7 +69,7 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	// check to make sure user is not trying to mine before timeLimit has passed
 	if difference.Minutes() < float64(timeLimit) {
 		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
-		_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+" is too tired to mine, they must rest your meme muscles for "+waitTime+" more minute(s)")
+		_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
 		return
 	}
 
