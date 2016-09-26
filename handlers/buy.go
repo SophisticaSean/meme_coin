@@ -70,22 +70,22 @@ func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	for _, unit := range tempUnitList {
 		if unit.name == "miner" {
 			unit.amount = userUnits.Miner
-			production = (unit.amount * unit.production)
+			production = production + (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "robot" {
 			unit.amount = userUnits.Robot
-			production = (unit.amount * unit.production)
+			production = production + (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "swarm" {
 			unit.amount = userUnits.Swarm
-			production = (unit.amount * unit.production)
+			production = production + (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "fracker" {
 			unit.amount = userUnits.Fracker
-			production = (unit.amount * unit.production)
+			production = production + (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 	}
@@ -145,7 +145,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	if unit.name == "swarm" {
 		userUnits.Swarm = userUnits.Swarm + amount
 	}
-	if unit.name == "fraker" {
+	if unit.name == "fracker" {
 		userUnits.Fracker = userUnits.Fracker + amount
 	}
 	dbHandler.UpdateUnits(&userUnits, db)
