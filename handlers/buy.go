@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -67,21 +68,22 @@ func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	tempUnitList := UnitList()
 	message := ""
 	for _, unit := range tempUnitList {
+		fmt.Println(unit.name)
 		if unit.name == "miner" {
 			unit.amount = userUnits.Miner
-			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "robot" {
 			unit.amount = userUnits.Robot
-			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "swarm" {
 			unit.amount = userUnits.Swarm
-			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "fraker" {
 			unit.amount = userUnits.Fracker
-			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 	}
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
@@ -95,7 +97,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	if len(args) == 1 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, infoMessage)
-    return
+		return
 	}
 
 	amount, err := strconv.Atoi(args[1])
