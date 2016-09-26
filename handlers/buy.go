@@ -66,24 +66,30 @@ func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	userUnits := dbHandler.UnitsGet(m.Author, db)
 	tempUnitList := UnitList()
 	message := ""
+	production := 0
 	for _, unit := range tempUnitList {
 		if unit.name == "miner" {
 			unit.amount = userUnits.Miner
+			production = (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "robot" {
 			unit.amount = userUnits.Robot
+			production = (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "swarm" {
 			unit.amount = userUnits.Swarm
+			production = (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "fracker" {
 			unit.amount = userUnits.Fracker
+			production = (unit.amount * unit.production)
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 	}
+	message = message + "total memes per 10 minutes: " + strconv.Itoa(production)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
