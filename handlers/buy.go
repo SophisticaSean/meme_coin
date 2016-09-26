@@ -90,7 +90,7 @@ func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		diffMinutes = maxDifference
 	}
 	roundedDifference := math.Floor(diffMinutes)
-	productionPerMinute := math.Floor(float64(production) / 10.0)
+	productionPerMinute := float64(production) / 10.0
 	fmt.Println(productionPerMinute)
 	fmt.Println(roundedDifference)
 	totalMemesEarned := int(roundedDifference * productionPerMinute)
