@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -149,6 +150,8 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		userUnits.Fracker = userUnits.Fracker + amount
 	}
 	dbHandler.UpdateUnits(&userUnits, db)
-	_, _ = s.ChannelMessageSend(m.ChannelID, "You successfully bought "+strconv.Itoa(amount)+" "+args[2]+"(s)")
+	message := m.Author.Username + " successfully bought " + strconv.Itoa(amount) + " " + args[2] + "(s)"
+	fmt.Println(message)
+	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
