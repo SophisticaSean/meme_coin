@@ -69,17 +69,19 @@ func UnitList() []Unit {
 
 func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	_, production, userUnits := ProductionSum(m.Author, db)
-	difference := time.Now().Sub(userUnits.CollectTime).Minutes()
+	difference := time.Now().Sub(userUnits.CollectTime)
+	diffMinutes := difference.Minutes()
 	fmt.Println(difference)
+	fmt.Println(diffMinutes)
 	if difference < 1.0 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "have to wait at least 1 minute between collections. \r its better to wait longer between collections, as we round down when computing how much memes you earned.")
 		return
 	}
 	maxDifference := float64(24 * 60) //max difference is 1 days worth of minutes
-	if difference > maxDifference {
-		difference = maxDifference
+	if diffMinutes > maxDifference {
+		diffMinutes = maxDifference
 	}
-	roundedDifference := math.Floor(difference)
+	roundedDifference := math.Floor(diffMinutes)
 	productionPerMinute := math.Floor(float64(production) / 10.0)
 	totalMemesEarned := int(roundedDifference * productionPerMinute)
 	if totalMemesEarned < 1.0 {
