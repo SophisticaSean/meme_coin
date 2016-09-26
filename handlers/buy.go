@@ -70,6 +70,7 @@ func UnitList() []Unit {
 func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	_, production, userUnits := ProductionSum(m.Author, db)
 	difference := time.Now().Sub(userUnits.CollectTime).Minutes()
+	fmt.Println(difference)
 	if difference < 1.0 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "have to wait at least 1 minute between collections. \r its better to wait longer between collections, as we round down when computing how much memes you earned.")
 		return
