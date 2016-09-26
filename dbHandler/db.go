@@ -160,7 +160,7 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 
 func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 	var units []UserUnits
-	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker FROM units WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
