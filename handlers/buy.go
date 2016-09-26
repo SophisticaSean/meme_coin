@@ -13,6 +13,7 @@ type Unit struct {
 	name       string
 	cost       int
 	production int
+	amount     int
 }
 
 var (
@@ -59,6 +60,32 @@ func UnitList() []Unit {
 		},
 	}
 	return unitList
+}
+
+func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	userUnits := dbHandler.UnitsGet(m.Author, db)
+	tempUnitList := UnitList()
+	message := ""
+	for _, unit := range tempUnitList {
+		if unit.name == "miner" {
+			unit.amount = userUnits.Miner
+			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+		}
+		if unit.name == "robot" {
+			unit.amount = userUnits.Robot
+			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+		}
+		if unit.name == "swarm" {
+			unit.amount = userUnits.Swarm
+			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+		}
+		if unit.name == "fraker" {
+			unit.amount = userUnits.Fracker
+			message = message + strconv.Itoa(unit.amount) + " " + unit.name + "(s)"
+		}
+	}
+	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	return
 }
 
 func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
