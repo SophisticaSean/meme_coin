@@ -95,6 +95,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	if len(args) == 1 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, infoMessage)
+    return
 	}
 
 	amount, err := strconv.Atoi(args[1])
