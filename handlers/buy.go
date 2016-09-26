@@ -188,7 +188,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	dbHandler.UpdateUnits(&userUnits, db)
 	dbHandler.UpdateUnitsTimestamp(&userUnits, db)
-	message := m.Author.Username + " successfully bought " + strconv.Itoa(amount) + " " + args[2] + "(s)"
+	message := m.Author.Username + " successfully bought " + strconv.Itoa(amount) + " " + unit.name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
