@@ -68,24 +68,28 @@ func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	tempUnitList := UnitList()
 	message := ""
 	for _, unit := range tempUnitList {
-		fmt.Println(unit.name)
 		if unit.name == "miner" {
+			fmt.Println(unit.name)
 			unit.amount = userUnits.Miner
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "robot" {
+			fmt.Println(unit.name)
 			unit.amount = userUnits.Robot
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "swarm" {
+			fmt.Println(unit.name)
 			unit.amount = userUnits.Swarm
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "fraker" {
+			fmt.Println(unit.name)
 			unit.amount = userUnits.Fracker
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 	}
+	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
