@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -62,13 +63,20 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			}
 
 			answer := rand.Intn(rangeNumber)
+			message := "The result was " + strconv.Itoa(answer)
 			if answer == pickedNumber {
 				payout := BetToPayout(bet, float64(rangeNumber+1))
 				dbHandler.MoneyAdd(&author, payout, "gamble", db)
-				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
+				message = message + " Congrats, " + m.Author.Username + "won " + strconv.Itoa(payout) + " memes."
+				fmt.Println(message)
+				_, _ = s.ChannelMessageSend(m.ChannelID, message)
+				return
 			} else {
 				dbHandler.MoneyDeduct(&author, bet, "gamble", db)
-				_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+strconv.Itoa(answer)+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
+				message = message + " Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+				fmt.Println(message)
+				_, _ = s.ChannelMessageSend(m.ChannelID, message)
+				return
 			}
 		}
 
@@ -77,15 +85,22 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			if gameInput == "heads" || gameInput == "tails" {
 				answers := []string{"heads", "tails"}
 				answer := answers[rand.Intn(len(answers))]
+				message := "The result was " + answer
 
 				if answer == gameInput {
 					// 1x payout
 					payout := BetToPayout(bet, 1.0)
 					dbHandler.MoneyAdd(&author, payout, "gamble", db)
-					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+answer+". Congrats, you won "+strconv.Itoa(payout)+" memes.")
+					message = message + " Congrats, " + m.Author.Username + "won " + strconv.Itoa(payout) + " memes."
+					fmt.Println(message)
+					_, _ = s.ChannelMessageSend(m.ChannelID, message)
+					return
 				} else {
 					dbHandler.MoneyDeduct(&author, bet, "gamble", db)
-					_, _ = s.ChannelMessageSend(m.ChannelID, "The result was "+answer+". Bummer, you lost "+strconv.Itoa(bet)+" memes. :(")
+					message = message + " Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+					fmt.Println(message)
+					_, _ = s.ChannelMessageSend(m.ChannelID, message)
+					return
 				}
 			} else {
 				_, _ = s.ChannelMessageSend(m.ChannelID, "pick heads or tails bud. `!gamble <amount> coin heads|tails`")
