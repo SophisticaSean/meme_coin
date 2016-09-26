@@ -91,6 +91,8 @@ func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	roundedDifference := math.Floor(diffMinutes)
 	productionPerMinute := math.Floor(float64(production) / 10.0)
+	fmt.Println(productionPerMinute)
+	fmt.Println(roundedDifference)
 	totalMemesEarned := int(roundedDifference * productionPerMinute)
 	if totalMemesEarned < 1.0 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you don't have enough memes to collect right now.")
