@@ -151,7 +151,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	unit := Unit{}
 	validUnit := false
 	for _, i := range unitList {
-		if args[2] == i.name {
+		if args[2] == i.name || args[2] == i.name+"s" {
 			unit = i
 			validUnit = true
 		}
