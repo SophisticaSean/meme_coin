@@ -14,17 +14,27 @@ import (
 
 // User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
-	ID        int       `db:"id"`
-	DID       string    `db:"discord_id"`
-	Username  string    `db:"name"`
-	CurMoney  int       `db:"current_money"`
-	TotMoney  int       `db:"total_money"`
-	WonMoney  int       `db:"won_money"`
-	LostMoney int       `db:"lost_money"`
-	GiveMoney int       `db:"given_money"`
-	RecMoney  int       `db:"received_money"`
-	EarMoney  int       `db:"earned_money"`
-	MineTime  time.Time `db:"mine_time"`
+	ID         int       `db:"id"`
+	DID        string    `db:"discord_id"`
+	Username   string    `db:"name"`
+	CurMoney   int       `db:"current_money"`
+	TotMoney   int       `db:"total_money"`
+	WonMoney   int       `db:"won_money"`
+	LostMoney  int       `db:"lost_money"`
+	GiveMoney  int       `db:"given_money"`
+	RecMoney   int       `db:"received_money"`
+	EarMoney   int       `db:"earned_money"`
+	SpentMoney int       `db:"spent_money"`
+	MineTime   time.Time `db:"mine_time"`
+}
+
+// UserUnits is a struct that maps 1 to 1 with units db table, keeps track of what units users have purchased
+type UserUnits struct {
+	DID     string `db:"discord_id"`
+	Miner   int    `db:"miner"`
+	Robot   int    `db:"robot"`
+	Swarm   int    `db:"swarm"`
+	Fracker int    `db:"fracker"`
 }
 
 func DbGet() *sqlx.DB {
@@ -49,7 +59,7 @@ func createUser(user *discordgo.User, db *sqlx.DB) {
 func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 	var users []User
 	//fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, mine_time FROM money WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, mine_time FROM money WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,6 +93,14 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 		newDeductionAmount = user.LostMoney + amount
 		user.CurMoney = newCurrentMoney
 		user.LostMoney = newDeductionAmount
+	}
+
+	if deduction == "buy" {
+		dbString = `UPDATE money SET (current_money, spent_money) = ($1, $2) WHERE discord_id = `
+		deductionRecord = user.SpentMoney
+		newDeductionAmount = user.SpentMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.SpentMoney = newDeductionAmount
 	}
 
 	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
@@ -126,5 +144,39 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 			dbString = dbString + `'` + user.DID + `'`
 			db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
 		}
+	}
+}
+
+// units functionality
+
+func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
+	var units []UserUnits
+	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker FROM units WHERE discord_id = $1`, discordUser.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var unitObj UserUnits
+	if len(units) == 0 {
+		fmt.Println("creating user in units table: " + discordUser.ID)
+		createUserUnits(discordUser, db)
+		unitObj = UnitsGet(discordUser, db)
+	} else {
+		unitObj = units[0]
+	}
+	return unitObj
+}
+
+func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker) = ($1, $2, $3, $4) WHERE discord_id = `
+	dbString = dbString + `'` + userUnits.DID + `'`
+	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker)
+}
+
+func createUserUnits(user *discordgo.User, db *sqlx.DB) {
+	var newUser UserUnits
+	newUser.DID = user.ID
+	_, err := db.NamedExec(`INSERT INTO units (discord_id) VALUES (:discord_id)`, newUser)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

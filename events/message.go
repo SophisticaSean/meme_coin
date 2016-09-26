@@ -45,6 +45,10 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handlers.Mine(s, m, responseList, db)
 	}
 
+	if strings.Contains(m.Content, "!buy") {
+		handlers.Buy(s, m, db)
+	}
+
 	if m.Content == "meme" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you're a dank maymay-er, harry")
 	}
