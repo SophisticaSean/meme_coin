@@ -67,6 +67,16 @@ func UnitList() []Unit {
 	return unitList
 }
 
+func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	args := strings.Split(m.Content, " ")
+	if len(args) == 1 {
+		author := dbHandler.UserGet(m.Author, db)
+		message := "total balance is: " + strconv.Itoa(author.CurMoney)
+		_, production, _ := ProductionSum(m.Author, db)
+		message = message + "\ntotal memes per 10 minutes: " + strconv.Itoa(production)
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
+}
 func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	_, production, userUnits := ProductionSum(m.Author, db)
 	difference := time.Now().Sub(userUnits.CollectTime)
