@@ -53,6 +53,10 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handlers.UnitInfo(s, m, db)
 	}
 
+	if m.Content == "!collect" {
+		handlers.Collect(s, m, db)
+	}
+
 	if m.Content == "meme" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you're a dank maymay-er, harry")
 	}

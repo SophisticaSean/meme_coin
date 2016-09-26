@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
@@ -26,7 +28,9 @@ func init() {
 	infoMessage = `
 	usage: !buy <amount> <unitType>
 	!buy 10 miners
-	(passively generated memes are only added to your account every 10 minutes)
+	(passively generated memes are added to your account with !collect command)
+	(buying units resets the time on your generated memes, so remember to collect before
+	you buy!)
 	Unit list:
 	Unit          Cost           Memes per 10 minutes
 	miner         1k             1 m/m
@@ -63,8 +67,26 @@ func UnitList() []Unit {
 	return unitList
 }
 
-func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
-	userUnits := dbHandler.UnitsGet(m.Author, db)
+func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	_, production, userUnits := ProductionSum(m.Author, db)
+	difference := time.Now().Sub(userUnits.CollectTime).Minutes()
+	if difference < 1.0 {
+		_, _ = s.ChannelMessageSend(m.ChannelID, "have to wait at least 1 minute between collections. \r its better to wait longer between collections, as we round down when computing how much memes you earned.")
+	}
+	maxDifference := float64(24 * 60) //max difference is 1 days worth of minutes
+	if difference > maxDifference {
+		difference = maxDifference
+	}
+	roundedDifference := math.Floor(difference)
+	productionPerMinute := math.Floor(float64(production) / 10.0)
+	totalMemesEarned := int(roundedDifference * productionPerMinute)
+	user := dbHandler.UserGet(m.Author, db)
+	dbHandler.MoneyAdd(&user, totalMemesEarned, "collected", db)
+	dbHandler.UpdateUnitsTimestamp(&userUnits, db)
+}
+
+func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, dbHandler.UserUnits) {
+	userUnits := dbHandler.UnitsGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
 	production := 0
@@ -91,6 +113,11 @@ func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		}
 	}
 	message = message + "total memes per 10 minutes: " + strconv.Itoa(production)
+	return message, production, userUnits
+}
+
+func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	message, _, _ := ProductionSum(m.Author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
@@ -150,6 +177,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		userUnits.Fracker = userUnits.Fracker + amount
 	}
 	dbHandler.UpdateUnits(&userUnits, db)
+	dbHandler.UpdateUnitsTimestamp(&userUnits, db)
 	message := m.Author.Username + " successfully bought " + strconv.Itoa(amount) + " " + args[2] + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)

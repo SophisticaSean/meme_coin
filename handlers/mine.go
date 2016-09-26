@@ -61,9 +61,7 @@ func GenerateResponseList() []MineResponse {
 
 func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineResponse, db *sqlx.DB) {
 	author := dbHandler.UserGet(m.Author, db)
-	lastMineTime := author.MineTime
-	now := time.Now()
-	difference := now.Sub(lastMineTime)
+	difference := time.Now().Sub(author.MineTime)
 	timeLimit := 5
 
 	// check to make sure user is not trying to mine before timeLimit has passed

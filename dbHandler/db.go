@@ -14,27 +14,29 @@ import (
 
 // User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
-	ID         int       `db:"id"`
-	DID        string    `db:"discord_id"`
-	Username   string    `db:"name"`
-	CurMoney   int       `db:"current_money"`
-	TotMoney   int       `db:"total_money"`
-	WonMoney   int       `db:"won_money"`
-	LostMoney  int       `db:"lost_money"`
-	GiveMoney  int       `db:"given_money"`
-	RecMoney   int       `db:"received_money"`
-	EarMoney   int       `db:"earned_money"`
-	SpentMoney int       `db:"spent_money"`
-	MineTime   time.Time `db:"mine_time"`
+	ID             int       `db:"id"`
+	DID            string    `db:"discord_id"`
+	Username       string    `db:"name"`
+	CurMoney       int       `db:"current_money"`
+	TotMoney       int       `db:"total_money"`
+	WonMoney       int       `db:"won_money"`
+	LostMoney      int       `db:"lost_money"`
+	GiveMoney      int       `db:"given_money"`
+	RecMoney       int       `db:"received_money"`
+	EarMoney       int       `db:"earned_money"`
+	SpentMoney     int       `db:"spent_money"`
+	CollectedMoney int       `db:"collected_money"`
+	MineTime       time.Time `db:"mine_time"`
 }
 
 // UserUnits is a struct that maps 1 to 1 with units db table, keeps track of what units users have purchased
 type UserUnits struct {
-	DID     string `db:"discord_id"`
-	Miner   int    `db:"miner"`
-	Robot   int    `db:"robot"`
-	Swarm   int    `db:"swarm"`
-	Fracker int    `db:"fracker"`
+	DID         string    `db:"discord_id"`
+	Miner       int       `db:"miner"`
+	Robot       int       `db:"robot"`
+	Swarm       int       `db:"swarm"`
+	Fracker     int       `db:"fracker"`
+	CollectTime time.Time `db:"collect_time"`
 }
 
 func DbGet() *sqlx.DB {
@@ -129,6 +131,13 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 		user.CurMoney = newCurrentMoney
 		user.WonMoney = newAdditionAmount
 	}
+	if addition == "collected" {
+		dbString = `UPDATE money SET (current_money, collected_money) = ($1, $2) WHERE discord_id = `
+		additionRecord = user.CollectedMoney
+		newAdditionAmount = user.CollectedMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.CollectedMoney = newAdditionAmount
+	}
 	if addition == "mined" {
 		dbString = `UPDATE money SET (current_money, earned_money, mine_time) = ($1, $2, $3) WHERE discord_id = `
 		additionRecord = user.EarMoney
@@ -170,6 +179,12 @@ func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
 	dbString := `UPDATE units SET (miner, robot, swarm, fracker) = ($1, $2, $3, $4) WHERE discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
 	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker)
+}
+
+func UpdateUnitsTimestamp(userUnits *UserUnits, db *sqlx.DB) {
+	dbString := `UPDATE units SET (collect_time) = ($1) WHERE discord_id = `
+	dbString = dbString + `'` + userUnits.DID + `'`
+	db.MustExec(dbString, time.Now())
 }
 
 func createUserUnits(user *discordgo.User, db *sqlx.DB) {
