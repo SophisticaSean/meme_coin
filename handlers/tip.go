@@ -41,6 +41,7 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			currencyName = processedContent
 		}
 
+		fmt.Println(amount)
 		intAmount, err := strconv.Atoi(amount)
 		if err != nil {
 			fmt.Println(err)
