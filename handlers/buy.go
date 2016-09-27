@@ -73,7 +73,7 @@ func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		author := dbHandler.UserGet(m.Author, db)
 		message := "total balance is: " + strconv.Itoa(author.CurMoney)
 		_, production, _ := ProductionSum(m.Author, db)
-		message = message + "\ntotal memes per minute: " + strconv.Itoa(production/10)
+		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 }
@@ -132,7 +132,7 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, dbHandler.Us
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 	}
-	message = message + "total memes per minute: " + strconv.Itoa(production/10)
+	message = message + "total memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
 	return message, production, userUnits
 }
 
