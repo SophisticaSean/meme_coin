@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -13,7 +14,29 @@ import (
 func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) >= 3 && args[0] == "!tip" {
-		intAmount, err := strconv.Atoi(args[1])
+		amount := "-1"
+		currencyName := "super dank memes"
+
+		amountRegex := regexp.MustCompile(` \d+`)
+		currencyRegex := regexp.MustCompile(`^[a-z]+$`)
+		tipRegex := regexp.MustCompile(`!tip `)
+		nameRegex := regexp.MustCompile(`@\w+`)
+		spaceStartRegex := regexp.MustCompile(`^ *`)
+		spaceEndRegex := regexp.MustCompile(` *$`)
+
+		// find amount via some regex
+		amount = amountRegex.FindAllString(m.Content, -1)[0]
+		// bunch of regex replacement to support all types of currencies
+		processedContent := amountRegex.ReplaceAllString(m.Content, "")
+		processedContent = tipRegex.ReplaceAllString(processedContent, "")
+		processedContent = nameRegex.ReplaceAllString(processedContent, "")
+		processedContent = spaceStartRegex.ReplaceAllString(processedContent, "")
+		processedContent = spaceEndRegex.ReplaceAllString(processedContent, "")
+		if len(currencyRegex.FindAllString(processedContent, -1)) > 0 {
+			currencyName = processedContent
+		}
+
+		intAmount, err := strconv.Atoi(amount)
 		if err != nil {
 			fmt.Println(err)
 			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
@@ -22,11 +45,6 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		if intAmount <= 0 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
 			return
-		}
-		amount := args[1]
-		currencyName := "super dank memes"
-		if len(args) > 3 {
-			currencyName = args[2]
 		}
 		totalDeduct := intAmount * len(m.Mentions)
 		from := dbHandler.UserGet(m.Author, db)

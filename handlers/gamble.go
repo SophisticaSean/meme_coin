@@ -67,13 +67,13 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			if answer == pickedNumber {
 				payout := BetToPayout(bet, float64(rangeNumber+1))
 				dbHandler.MoneyAdd(&author, payout, "gamble", db)
-				message = message + " Congrats, " + m.Author.Username + "won " + strconv.Itoa(payout) + " memes."
+				message = message + ". Congrats, " + m.Author.Username + "won " + strconv.Itoa(payout) + " memes."
 				fmt.Println(message)
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)
 				return
 			} else {
 				dbHandler.MoneyDeduct(&author, bet, "gamble", db)
-				message = message + " Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+				message = message + ". Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
 				fmt.Println(message)
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)
 				return
@@ -91,13 +91,13 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 					// 1x payout
 					payout := BetToPayout(bet, 1.0)
 					dbHandler.MoneyAdd(&author, payout, "gamble", db)
-					message = message + " Congrats, " + m.Author.Username + "won " + strconv.Itoa(payout) + " memes."
+					message = message + ". Congrats, " + m.Author.Username + "won " + strconv.Itoa(payout) + " memes."
 					fmt.Println(message)
 					_, _ = s.ChannelMessageSend(m.ChannelID, message)
 					return
 				} else {
 					dbHandler.MoneyDeduct(&author, bet, "gamble", db)
-					message = message + " Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+					message = message + ". Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
 					fmt.Println(message)
 					_, _ = s.ChannelMessageSend(m.ChannelID, message)
 					return
