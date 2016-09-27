@@ -21,6 +21,9 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		tipRegex := regexp.MustCompile(`!tip `)
 		nameRegex := regexp.MustCompile(`@\w+`)
 		carrotRegex := regexp.MustCompile(`<|>`)
+    spaceReplaceRegex := regexp.MustCompile(` `)
+		symbolRegex := regexp.MustCompile(`\W+`)
+    twelveRegex := regexp.MustCompile(`12ww12ww12`)
 		spaceRegex := regexp.MustCompile(`^ *| *$`)
 
 		// find amount via some regex
@@ -31,6 +34,9 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		processedContent = tipRegex.ReplaceAllString(processedContent, "")
 		processedContent = nameRegex.ReplaceAllString(processedContent, "")
 		processedContent = carrotRegex.ReplaceAllString(processedContent, "")
+		processedContent = spaceReplaceRegex.ReplaceAllString(processedContent, "12ww12ww12")
+		processedContent = symbolRegex.ReplaceAllString(processedContent, "")
+		processedContent = twelveRegex.ReplaceAllString(processedContent, " ")
 		processedContent = spaceRegex.ReplaceAllString(processedContent, "")
 		if len(processedContent) > 0 {
 			currencyName = processedContent
