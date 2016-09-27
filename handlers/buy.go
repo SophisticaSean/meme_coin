@@ -32,11 +32,11 @@ func init() {
 	(buying units resets the time on your generated memes, so remember to collect before
 	you buy!)
 	Unit list:
-	Unit          Cost           Memes per 10 minutes
-	miner         1k             1 m/m
-	robot         50k            60 m/m
-	swarm         2,500k         360 m/m
-	fracker       125,000k       2160 m/m
+	Unit          Cost           Memes minute
+	miner         1k             0.1 m/m
+	robot         50k            6 m/m
+	swarm         2.5mil         36 m/m
+	fracker       125mil         216 m/m
 	`
 	unitList = UnitList()
 }
@@ -55,12 +55,12 @@ func UnitList() []Unit {
 		},
 		Unit{
 			name:       "swarm",
-			cost:       250000,
+			cost:       2500000,
 			production: 360,
 		},
 		Unit{
 			name:       "fracker",
-			cost:       1250000,
+			cost:       125000000,
 			production: 2160,
 		},
 	}
@@ -73,7 +73,7 @@ func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		author := dbHandler.UserGet(m.Author, db)
 		message := "total balance is: " + strconv.Itoa(author.CurMoney)
 		_, production, _ := ProductionSum(m.Author, db)
-		message = message + "\ntotal memes per 10 minutes: " + strconv.Itoa(production)
+		message = message + "\ntotal memes per minute: " + strconv.Itoa(production/10)
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 }
@@ -132,7 +132,7 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, dbHandler.Us
 			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 	}
-	message = message + "total memes per 10 minutes: " + strconv.Itoa(production)
+	message = message + "total memes per minute: " + strconv.Itoa(production/10)
 	return message, production, userUnits
 }
 
