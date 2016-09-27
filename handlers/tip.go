@@ -19,7 +19,7 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 
 		amountRegex := regexp.MustCompile(` \d+`)
 		tipRegex := regexp.MustCompile(`!tip `)
-		nameRegex := regexp.MustCompile(`@\w+`)
+		nameRegex := regexp.MustCompile(`@!*\w+`)
 		carrotRegex := regexp.MustCompile(`<|>`)
     spaceReplaceRegex := regexp.MustCompile(` `)
 		symbolRegex := regexp.MustCompile(`\W+`)
