@@ -33,6 +33,7 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		processedContent = nameRegex.ReplaceAllString(processedContent, "")
 		processedContent = spaceStartRegex.ReplaceAllString(processedContent, "")
 		processedContent = spaceEndRegex.ReplaceAllString(processedContent, "")
+		fmt.Println(processedContent)
 		if len(currencyRegex.FindAllString(processedContent, -1)) > 0 {
 			currencyName = processedContent
 		}
