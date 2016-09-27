@@ -14,29 +14,26 @@ import (
 func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) >= 3 && args[0] == "!tip" {
+		amountInContent := []string{}
 		amount := "-1"
 		currencyName := "super dank memes"
 
 		amountRegex := regexp.MustCompile(` \d+`)
 		tipRegex := regexp.MustCompile(`!tip `)
-		nameRegex := regexp.MustCompile(`@!*\w+`)
+		nameRegex := regexp.MustCompile(`@\w+`)
 		carrotRegex := regexp.MustCompile(`<|>`)
-    spaceReplaceRegex := regexp.MustCompile(` `)
-		symbolRegex := regexp.MustCompile(`\W+`)
-    twelveRegex := regexp.MustCompile(`12ww12ww12`)
 		spaceRegex := regexp.MustCompile(`^ *| *$`)
 
 		// find amount via some regex
-		amount = amountRegex.FindAllString(m.Content, -1)[0]
-		amount = spaceRegex.ReplaceAllString(amount, "")
+		amountInContent = amountRegex.FindAllString(m.Content, -1)
+		if len(amountInContent) > 0 {
+			amount = spaceRegex.ReplaceAllString(string(amount[0]), "")
+		}
 		// bunch of regex replacement to support all types of currencies
 		processedContent := amountRegex.ReplaceAllString(m.Content, "")
 		processedContent = tipRegex.ReplaceAllString(processedContent, "")
 		processedContent = nameRegex.ReplaceAllString(processedContent, "")
 		processedContent = carrotRegex.ReplaceAllString(processedContent, "")
-		processedContent = spaceReplaceRegex.ReplaceAllString(processedContent, "12ww12ww12")
-		processedContent = symbolRegex.ReplaceAllString(processedContent, "")
-		processedContent = twelveRegex.ReplaceAllString(processedContent, " ")
 		processedContent = spaceRegex.ReplaceAllString(processedContent, "")
 		if len(processedContent) > 0 {
 			currencyName = processedContent
