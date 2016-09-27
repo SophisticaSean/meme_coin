@@ -153,8 +153,8 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 
 	amount, err := strconv.Atoi(args[1])
-	if err != nil {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "1st argument needs to be a number. `!buy 10 miners`")
+	if err != nil || amount < 1 {
+		_, _ = s.ChannelMessageSend(m.ChannelID, "1st argument needs to be a number, and it needs to be greater than 0. `!buy 10 miners`")
 		return
 	}
 
