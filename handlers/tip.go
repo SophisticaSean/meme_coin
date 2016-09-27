@@ -18,23 +18,22 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		currencyName := "super dank memes"
 
 		amountRegex := regexp.MustCompile(` \d+`)
-		currencyRegex := regexp.MustCompile(`^[a-z]+$`)
 		tipRegex := regexp.MustCompile(`!tip `)
 		nameRegex := regexp.MustCompile(`@\w+`)
-		spaceStartRegex := regexp.MustCompile(`^ *`)
-		spaceEndRegex := regexp.MustCompile(` *$`)
+		carrotRegex := regexp.MustCompile(`<|>`)
+		spaceRegex := regexp.MustCompile(`^ *| *$`)
 
 		// find amount via some regex
 		amount = amountRegex.FindAllString(m.Content, -1)[0]
-		amount = spaceStartRegex.ReplaceAllString(amount, "")
+		amount = spaceRegex.ReplaceAllString(amount, "")
 		// bunch of regex replacement to support all types of currencies
 		processedContent := amountRegex.ReplaceAllString(m.Content, "")
 		processedContent = tipRegex.ReplaceAllString(processedContent, "")
 		processedContent = nameRegex.ReplaceAllString(processedContent, "")
-		processedContent = spaceStartRegex.ReplaceAllString(processedContent, "")
-		processedContent = spaceEndRegex.ReplaceAllString(processedContent, "")
+		processedContent = carrotRegex.ReplaceAllString(processedContent, "")
+		processedContent = spaceRegex.ReplaceAllString(processedContent, "")
 		fmt.Println(processedContent)
-		if len(currencyRegex.FindAllString(processedContent, -1)) > 0 {
+		if len(processedContent) > 0 {
 			currencyName = processedContent
 		}
 
