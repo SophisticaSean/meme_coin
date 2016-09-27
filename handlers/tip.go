@@ -26,8 +26,10 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 
 		// find amount via some regex
 		amountInContent = amountRegex.FindAllString(m.Content, -1)
+		fmt.Println(amountInContent)
+		fmt.Println(len(amountInContent))
 		if len(amountInContent) > 0 {
-			amount = spaceRegex.ReplaceAllString(string(amount[0]), "")
+			amount = spaceRegex.ReplaceAllString(string(amount), "")
 		}
 		// bunch of regex replacement to support all types of currencies
 		processedContent := amountRegex.ReplaceAllString(m.Content, "")
