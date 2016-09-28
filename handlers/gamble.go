@@ -48,7 +48,7 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 				return
 			}
 			pickedNumber, err := strconv.Atoi(gameInputs[0])
-			if err != nil {
+			if err != nil || pickedNumber < 1 {
 				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
 				return
 			}
