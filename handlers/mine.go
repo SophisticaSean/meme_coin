@@ -43,7 +43,7 @@ func GenerateResponseList() []MineResponse {
 		},
 		MineResponse{
 			amount:   25000,
-			response: "'s meme mining has made the Maymay gods happy, they rewarded them with a MLG-shiny-holofoil-dankasfuck Pepe Diamond worth 25000 memes!",
+			response: "'s meme mining has made the Maymay gods happy, they rewarded them with a MLG-shiny-holofoil-dankasheck Pepe Diamond worth 25000 memes!",
 			chance:   1,
 		}}
 
