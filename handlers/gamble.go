@@ -62,10 +62,10 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 				return
 			}
 
-			answer := rand.Intn(rangeNumber)
+			answer := rand.Intn(rangeNumber) + 1
 			message := "The result was " + strconv.Itoa(answer)
 			if answer == pickedNumber {
-				payout := BetToPayout(bet, float64(rangeNumber))
+				payout := BetToPayout(bet, float64(rangeNumber-1))
 				dbHandler.MoneyAdd(&author, payout, "gamble", db)
 				message = message + ". Congrats, " + m.Author.Username + " won " + strconv.Itoa(payout) + " memes."
 				fmt.Println(message)
