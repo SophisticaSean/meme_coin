@@ -72,7 +72,9 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	}
 
 	// pick a response out of the responses in responseList
-	mineResponse := responseList[(rand.Intn(len(responseList)))]
+	pickedIndex := rand.Intn(len(responseList))
+	mineResponse := responseList[pickedIndex]
+	fmt.Println(pickedIndex)
 	dbHandler.MoneyAdd(&author, mineResponse.amount, "mined", db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+mineResponse.response)
 	fmt.Println(author.Username + " mined " + strconv.Itoa(mineResponse.amount))
