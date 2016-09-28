@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"time"
 
 	_ "database/sql"
 	_ "strings"
@@ -31,7 +32,7 @@ func main() {
 	// Create a new Discord session using the provided login information.
 	dg, err := discordgo.New(Email, PW)
 	// generate a new rand seed, else all results will be deterministic
-	//rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 	fmt.Println(rand.Int())
 	fmt.Println(rand.Int())
 	fmt.Println(rand.Int())
