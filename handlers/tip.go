@@ -28,6 +28,7 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		spaceRegex := regexp.MustCompile(`^ *| *$`)
 
 		// find amount via some regex
+		fmt.Println(m.Content)
 		amountInContent = amountRegex.FindAllString(m.Content, -1)
 		if len(amountInContent) > 0 {
 			amount = spaceRegex.ReplaceAllString(amountInContent[0], "")
@@ -42,8 +43,6 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		processedContent = symbolRegex.ReplaceAllString(processedContent, "")
 		processedContent = twelveRegex.ReplaceAllString(processedContent, " ")
 		processedContent = spaceRegex.ReplaceAllString(processedContent, "")
-		fmt.Println(len(m.Attachments))
-		fmt.Println(len(m.Embeds))
 
 		if len(processedContent) > 0 {
 			currencyName = processedContent
