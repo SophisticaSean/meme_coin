@@ -35,21 +35,15 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 
 		// bunch of regex replacement to support all types of currencies
 		processedContent := amountRegex.ReplaceAllString(m.Content, "")
-		fmt.Println(processedContent)
 		processedContent = tipRegex.ReplaceAllString(processedContent, "")
-		fmt.Println(processedContent)
 		processedContent = nameRegex.ReplaceAllString(processedContent, "")
-		fmt.Println(processedContent)
 		processedContent = carrotRegex.ReplaceAllString(processedContent, "")
-		fmt.Println(processedContent)
 		processedContent = spaceReplaceRegex.ReplaceAllString(processedContent, "12ww12ww12")
-		fmt.Println(processedContent)
 		processedContent = symbolRegex.ReplaceAllString(processedContent, "")
-		fmt.Println(processedContent)
 		processedContent = twelveRegex.ReplaceAllString(processedContent, " ")
-		fmt.Println(processedContent)
 		processedContent = spaceRegex.ReplaceAllString(processedContent, "")
-		fmt.Println(processedContent)
+		fmt.Println(len(m.Attachments))
+		fmt.Println(len(m.Embeds))
 
 		if len(processedContent) > 0 {
 			currencyName = processedContent
