@@ -35,8 +35,8 @@ func init() {
 	Unit          Cost           Memes minute
 	miner         1k             0.1 m/m
 	robot         50k            6 m/m
-	swarm         2.5mil         36 m/m
-	fracker       125mil         216 m/m
+	swarm         2.5mil         360 m/m
+	fracker       125mil         21600 m/m
 	`
 	unitList = UnitList()
 }
@@ -56,12 +56,12 @@ func UnitList() []Unit {
 		Unit{
 			name:       "swarm",
 			cost:       2500000,
-			production: 360,
+			production: 3600,
 		},
 		Unit{
 			name:       "fracker",
 			cost:       125000000,
-			production: 2160,
+			production: 216000,
 		},
 	}
 	return unitList
