@@ -29,39 +29,40 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if strings.Contains(m.Content, "!tip") == true {
+	lowerMessage := strings.ToLower(m.Content)
+	if strings.Contains(lowerMessage, "!tip") {
 		handlers.Tip(s, m, db)
 	}
 
-	if m.Content == "!balance" || m.Content == "!memes" {
+	if lowerMessage == "!balance" || lowerMessage == "!memes" {
 		handlers.Balance(s, m, db)
 	}
 
-	if strings.Contains(m.Content, "!gamble") {
+	if strings.Contains(lowerMessage, "!gamble") {
 		handlers.Gamble(s, m, db)
 	}
 
-	if m.Content == "!mine" {
+	if lowerMessage == "!mine" {
 		handlers.Mine(s, m, responseList, db)
 	}
 
-	if strings.Contains(m.Content, "!buy") {
+	if strings.Contains(lowerMessage, "!buy") {
 		handlers.Buy(s, m, db)
 	}
 
-	if m.Content == "!units" {
+	if lowerMessage == "!units" {
 		handlers.UnitInfo(s, m, db)
 	}
 
-	if m.Content == "!collect" {
+	if lowerMessage == "!collect" {
 		handlers.Collect(s, m, db)
 	}
 
-	if m.Content == "!memehelp" {
+	if lowerMessage == "!memehelp" {
 		handlers.Help(s, m)
 	}
 
-	if m.Content == "meme" {
+	if lowerMessage == "meme" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you're a dank maymay-er, harry")
 	}
 }
