@@ -158,7 +158,7 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 		}
 	}
 	// add the transaction to the database
-	db.MustExec(`INSERT INTO transactions (discord_id, amount, type) = ($1, $2, $3)`, user.DID, amount, addition)
+	db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
 }
 
 // units functionality
