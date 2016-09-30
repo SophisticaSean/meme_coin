@@ -76,6 +76,8 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	mineResponse := responseList[pickedIndex]
 	dbHandler.MoneyAdd(&author, mineResponse.amount, "mined", db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+mineResponse.response)
-	fmt.Println(m.Author.Username + " mined " + strconv.Itoa(mineResponse.amount))
+	channel, _ := s.Channel(m.ChannelID)
+	isPrivate := strconv.FormatBool(channel.IsPrivate)
+	fmt.Println(m.Author.Username + " mined " + strconv.Itoa(mineResponse.amount) + " in: " + channel.ID + " is private: " + isPrivate)
 	return
 }
