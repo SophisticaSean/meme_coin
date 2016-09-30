@@ -72,12 +72,14 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 		user = UserGet(discordUser, db)
 	} else {
 		user = users[0]
+		db.MustExec(`UPDATE money SET (name) = ($1) where discord_id = `+user.DID, discordUser.Username)
 	}
 	return user
 }
 
 func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
-	newCurrentMoney := user.CurMoney - amount
+	negativeAmount := amount * -1
+	newCurrentMoney := user.CurMoney + negativeAmount
 	newDeductionAmount := -1
 	dbString := ``
 	deductionRecord := -1
@@ -108,6 +110,7 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newDeductionAmount)
+		db.MustExec(`INSERT INTO transactions (discord_id, amount, type) = ($1, $2, $3)`, user.DID, negativeAmount, deduction)
 	}
 }
 
@@ -154,6 +157,8 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 			db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
 		}
 	}
+	// add the transaction to the database
+	db.MustExec(`INSERT INTO transactions (discord_id, amount, type) = ($1, $2, $3)`, user.DID, amount, addition)
 }
 
 // units functionality
