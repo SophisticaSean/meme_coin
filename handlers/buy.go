@@ -74,6 +74,7 @@ func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		message := "total balance is: " + strconv.Itoa(author.CurMoney)
 		_, production, _ := ProductionSum(m.Author, db)
 		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
+		message = message + "\nnet gambling balance: " + strconv.Itoa(author.WonMoney-author.LostMoney)
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 }
