@@ -63,6 +63,12 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	author := dbHandler.UserGet(m.Author, db)
 	difference := time.Now().Sub(author.MineTime)
 	timeLimit := 5
+	channel, _ := s.Channel(m.ChannelID)
+
+	if channel.IsPrivate {
+		_, _ = s.ChannelMessageSend(m.ChannelID, "you think you're slick, eh? gotta mine in a public room bro.")
+		return
+	}
 
 	// check to make sure user is not trying to mine before timeLimit has passed
 	if difference.Minutes() < float64(timeLimit) {
@@ -76,8 +82,6 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	mineResponse := responseList[pickedIndex]
 	dbHandler.MoneyAdd(&author, mineResponse.amount, "mined", db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+mineResponse.response)
-	channel, _ := s.Channel(m.ChannelID)
-	isPrivate := strconv.FormatBool(channel.IsPrivate)
-	fmt.Println(m.Author.Username + " mined " + strconv.Itoa(mineResponse.amount) + " in: " + channel.ID + " is private: " + isPrivate)
+	fmt.Println(m.Author.Username + " mined " + strconv.Itoa(mineResponse.amount))
 	return
 }
