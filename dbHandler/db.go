@@ -110,7 +110,7 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newDeductionAmount)
-		db.MustExec(`INSERT INTO transactions (discord_id, amount, type) = ($1, $2, $3)`, user.DID, negativeAmount, deduction)
+		db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, negativeAmount, deduction)
 	}
 }
 
@@ -150,15 +150,17 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 		// bindvars can only be used as values so we have to concat the user.DID onto the db string
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newAdditionAmount, time.Now())
+		// add the transaction to the database
+		db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
 	} else {
 		if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
 			// bindvars can only be used as values so we have to concat the user.DID onto the db string
 			dbString = dbString + `'` + user.DID + `'`
 			db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
+			// add the transaction to the database
+			db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
 		}
 	}
-	// add the transaction to the database
-	db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
 }
 
 // units functionality
