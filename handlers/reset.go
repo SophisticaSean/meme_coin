@@ -6,8 +6,13 @@ import (
 )
 
 func Reset(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
-	message := "yo, whaddup. Here are the commands I know:\r"
-	message = message + "`!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp`"
-	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	for _, resetUser := range m.Mentions {
+		// reset their money
+		db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		// reset their units
+		db.MustExec(`UPDATE units set (miner, robot, swarm, fracker) = (0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		message := resetUser.Username + " has been reset."
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
 	return
 }
