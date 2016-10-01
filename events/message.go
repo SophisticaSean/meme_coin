@@ -6,7 +6,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
-	"github.com/sophisticasean/meme_coin/dbHandler"
 	"github.com/sophisticasean/meme_coin/handlers"
 )
 
@@ -17,19 +16,24 @@ var (
 )
 
 func init() {
-	db = dbHandler.DbGet()
+	db = handlers.DbGet()
 	responseList = handlers.GenerateResponseList()
 }
 
 func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	lowerMessage := strings.ToLower(m.Content)
+
 	if BotID == "" {
 		BotID, _ = os.LookupEnv("BotID")
 	}
+
 	if m.Author.ID == BotID {
+		if strings.Contains(lowerMessage, "!reset") {
+			handlers.Reset(s, m, db)
+		}
 		return
 	}
 
-	lowerMessage := strings.ToLower(m.Content)
 	if strings.Contains(lowerMessage, "!tip") {
 		handlers.Tip(s, m, db)
 	}

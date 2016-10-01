@@ -9,7 +9,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
-	"github.com/sophisticasean/meme_coin/dbHandler"
 )
 
 type Unit struct {
@@ -70,7 +69,7 @@ func UnitList() []Unit {
 func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
-		author := dbHandler.UserGet(m.Author, db)
+		author := UserGet(m.Author, db)
 		message := "total balance is: " + strconv.Itoa(author.CurMoney)
 		_, production, _ := ProductionSum(m.Author, db)
 		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
@@ -97,17 +96,17 @@ func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you don't have enough memes to collect right now.")
 		return
 	}
-	user := dbHandler.UserGet(m.Author, db)
-	dbHandler.MoneyAdd(&user, totalMemesEarned, "collected", db)
-	dbHandler.UpdateUnitsTimestamp(&userUnits, db)
+	user := UserGet(m.Author, db)
+	MoneyAdd(&user, totalMemesEarned, "collected", db)
+	UpdateUnitsTimestamp(&userUnits, db)
 	message := m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
-func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, dbHandler.UserUnits) {
-	userUnits := dbHandler.UnitsGet(user, db)
+func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
+	userUnits := UnitsGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
 	production := 0
@@ -173,7 +172,7 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		return
 	}
 
-	user := dbHandler.UserGet(m.Author, db)
+	user := UserGet(m.Author, db)
 	totalCost := (unit.cost * amount)
 
 	if totalCost > user.CurMoney {
@@ -182,8 +181,8 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		return
 	}
 
-	dbHandler.MoneyDeduct(&user, totalCost, "buy", db)
-	userUnits := dbHandler.UnitsGet(m.Author, db)
+	MoneyDeduct(&user, totalCost, "buy", db)
+	userUnits := UnitsGet(m.Author, db)
 	// gross if statements to determine what number to increment
 	if unit.name == "miner" {
 		userUnits.Miner = userUnits.Miner + amount
@@ -197,8 +196,8 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	if unit.name == "fracker" {
 		userUnits.Fracker = userUnits.Fracker + amount
 	}
-	dbHandler.UpdateUnits(&userUnits, db)
-	dbHandler.UpdateUnitsTimestamp(&userUnits, db)
+	UpdateUnits(&userUnits, db)
+	UpdateUnitsTimestamp(&userUnits, db)
 	message := m.Author.Username + " successfully bought " + strconv.Itoa(amount) + " " + unit.name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)

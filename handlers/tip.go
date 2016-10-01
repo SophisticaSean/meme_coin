@@ -8,7 +8,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
-	"github.com/sophisticasean/meme_coin/dbHandler"
 )
 
 func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
@@ -59,15 +58,15 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			return
 		}
 		totalDeduct := intAmount * len(m.Mentions)
-		from := dbHandler.UserGet(m.Author, db)
+		from := UserGet(m.Author, db)
 		if totalDeduct > from.CurMoney {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(totalDeduct))
 			return
 		}
-		dbHandler.MoneyDeduct(&from, totalDeduct, "tip", db)
+		MoneyDeduct(&from, totalDeduct, "tip", db)
 		for _, to := range m.Mentions {
-			toUser := dbHandler.UserGet(to, db)
-			dbHandler.MoneyAdd(&toUser, intAmount, "tip", db)
+			toUser := UserGet(to, db)
+			MoneyAdd(&toUser, intAmount, "tip", db)
 			message := from.Username + " gave " + amount + " " + currencyName + " to " + to.Username
 			_, _ = s.ChannelMessageSend(m.ChannelID, message)
 			fmt.Println(message)

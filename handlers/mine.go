@@ -9,7 +9,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
-	"github.com/sophisticasean/meme_coin/dbHandler"
 )
 
 // MineResponse is a struct for possible events to the !mine action
@@ -60,7 +59,7 @@ func GenerateResponseList() []MineResponse {
 }
 
 func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineResponse, db *sqlx.DB) {
-	author := dbHandler.UserGet(m.Author, db)
+	author := UserGet(m.Author, db)
 	difference := time.Now().Sub(author.MineTime)
 	timeLimit := 5
 	channel, _ := s.Channel(m.ChannelID)
@@ -80,7 +79,7 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	// pick a response out of the responses in responseList
 	pickedIndex := rand.Intn(len(responseList))
 	mineResponse := responseList[pickedIndex]
-	dbHandler.MoneyAdd(&author, mineResponse.amount, "mined", db)
+	MoneyAdd(&author, mineResponse.amount, "mined", db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+mineResponse.response)
 	fmt.Println(m.Author.Username + " mined " + strconv.Itoa(mineResponse.amount))
 	return

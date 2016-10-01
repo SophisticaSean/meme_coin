@@ -9,7 +9,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
-	"github.com/sophisticasean/meme_coin/dbHandler"
 )
 
 func BetToPayout(bet int, payoutMultiplier float64) int {
@@ -20,7 +19,7 @@ func BetToPayout(bet int, payoutMultiplier float64) int {
 func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 4 {
-		author := dbHandler.UserGet(m.Author, db)
+		author := UserGet(m.Author, db)
 		bet, err := strconv.Atoi(args[1])
 		if err != nil {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
@@ -66,13 +65,13 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			message := "The result was " + strconv.Itoa(answer)
 			if answer == pickedNumber {
 				payout := BetToPayout(bet, float64(rangeNumber-1))
-				dbHandler.MoneyAdd(&author, payout, "gamble", db)
+				MoneyAdd(&author, payout, "gamble", db)
 				message = message + ". Congrats, " + m.Author.Username + " won " + strconv.Itoa(payout) + " memes."
 				fmt.Println(message)
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)
 				return
 			} else {
-				dbHandler.MoneyDeduct(&author, bet, "gamble", db)
+				MoneyDeduct(&author, bet, "gamble", db)
 				message = message + ". Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
 				fmt.Println(message)
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)
@@ -90,13 +89,13 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 				if answer == gameInput {
 					// 1x payout
 					payout := BetToPayout(bet, 1.0)
-					dbHandler.MoneyAdd(&author, payout, "gamble", db)
+					MoneyAdd(&author, payout, "gamble", db)
 					message = message + ". Congrats, " + m.Author.Username + " won " + strconv.Itoa(payout) + " memes."
 					fmt.Println(message)
 					_, _ = s.ChannelMessageSend(m.ChannelID, message)
 					return
 				} else {
-					dbHandler.MoneyDeduct(&author, bet, "gamble", db)
+					MoneyDeduct(&author, bet, "gamble", db)
 					message = message + ". Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
 					fmt.Println(message)
 					_, _ = s.ChannelMessageSend(m.ChannelID, message)
