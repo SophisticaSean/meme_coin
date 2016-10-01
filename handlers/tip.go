@@ -18,7 +18,7 @@ func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		currencyName := "super dank memes"
 
 		amountRegex := regexp.MustCompile(` \d+`)
-		tipRegex := regexp.MustCompile(`!tip `)
+		tipRegex := regexp.MustCompile(`^!\w* `)
 		nameRegex := regexp.MustCompile(`@!*\w+`)
 		carrotRegex := regexp.MustCompile(`<|>`)
 		spaceReplaceRegex := regexp.MustCompile(` `)
