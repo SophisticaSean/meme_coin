@@ -12,7 +12,7 @@ import (
 
 func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
-	if len(args) >= 3 && args[0] == "!tip" {
+	if len(args) >= 3 && strings.ToLower(args[0]) == "!tip" {
 		amountInContent := []string{}
 		amount := "-1"
 		currencyName := "super dank memes"
