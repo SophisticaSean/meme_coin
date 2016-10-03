@@ -39,12 +39,29 @@ type UserUnits struct {
 	CollectTime time.Time `db:"collect_time"`
 }
 
+var schema = `
+CREATE table money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
+
+create table units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
+
+create table transactions(discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
+`
+
 func DbGet() *sqlx.DB {
 	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
 	if err != nil {
 		log.Fatal(err)
 	}
+	db.MustExec(schema)
+	return db
+}
 
+func TestDbGet() *sqlx.DB {
+	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=test password=password sslmode=disable parseTime=true")
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.MustExec(schema)
 	return db
 }
 
