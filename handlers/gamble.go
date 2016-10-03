@@ -103,6 +103,7 @@ func winLoseProcessor(answer string, pickedItem string, payout float64, bet int,
 func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	author := UserGet(m.Author, db)
 	message := gambleProcess(m.Content, &author, db)
+	fmt.Println("hello")
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
