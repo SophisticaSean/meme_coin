@@ -16,25 +16,25 @@ func BetToPayout(bet int, payoutMultiplier float64) int {
 	return payout
 }
 
-func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
-	args := strings.Split(m.Content, " ")
+func gambleProcess(content string, author *User, db *sqlx.DB) string {
+	message := ""
+	args := strings.Split(content, " ")
 	if len(args) == 4 {
-		author := UserGet(m.Author, db)
 		bet, err := strconv.Atoi(args[1])
 		if err != nil {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
-			return
+			message = "amount is too large or not a number, try again."
+			return message
 		}
 		if bet <= 0 {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
-			return
+			message = "amount has to be more than 0"
+			return message
 		}
 		game := args[2]
 		gameInput := args[3]
 
 		if bet > author.CurMoney {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(author.CurMoney)+" needed:"+strconv.Itoa(bet))
-			return
+			message = "not enough funds to complete transaction, total: " + strconv.Itoa(author.CurMoney) + " needed:" + strconv.Itoa(bet)
+			return message
 		}
 
 		// Pick a number game
@@ -43,39 +43,34 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			gameInputs := strings.Split(gameInput, ":")
 
 			if len(gameInputs) != 2 {
-				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
-				return
+				return numberErrMessage
 			}
 			pickedNumber, err := strconv.Atoi(gameInputs[0])
 			if err != nil || pickedNumber < 1 {
-				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
-				return
+				return numberErrMessage
 			}
 			rangeNumber, err := strconv.Atoi(gameInputs[1])
 			if err != nil || rangeNumber < pickedNumber {
-				_, _ = s.ChannelMessageSend(m.ChannelID, numberErrMessage)
-				return
+				return numberErrMessage
 			}
 			if rangeNumber <= 1 {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "your highestNumberInRange needs to be greater than 1")
-				return
+				message = "your highestNumberInRange needs to be greater than 1"
+				return message
 			}
 
 			answer := rand.Intn(rangeNumber) + 1
 			message := "The result was " + strconv.Itoa(answer)
 			if answer == pickedNumber {
 				payout := BetToPayout(bet, float64(rangeNumber-1))
-				MoneyAdd(&author, payout, "gamble", db)
-				message = message + ". Congrats, " + m.Author.Username + " won " + strconv.Itoa(payout) + " memes."
+				MoneyAdd(author, payout, "gamble", db)
+				message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
 				fmt.Println(message)
-				_, _ = s.ChannelMessageSend(m.ChannelID, message)
-				return
+				return message
 			} else {
-				MoneyDeduct(&author, bet, "gamble", db)
-				message = message + ". Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+				MoneyDeduct(author, bet, "gamble", db)
+				message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
 				fmt.Println(message)
-				_, _ = s.ChannelMessageSend(m.ChannelID, message)
-				return
+				return message
 			}
 		}
 
@@ -89,27 +84,34 @@ func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 				if answer == gameInput {
 					// 1x payout
 					payout := BetToPayout(bet, 1.0)
-					MoneyAdd(&author, payout, "gamble", db)
-					message = message + ". Congrats, " + m.Author.Username + " won " + strconv.Itoa(payout) + " memes."
+					MoneyAdd(author, payout, "gamble", db)
+					message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
 					fmt.Println(message)
-					_, _ = s.ChannelMessageSend(m.ChannelID, message)
-					return
+					return message
 				} else {
-					MoneyDeduct(&author, bet, "gamble", db)
-					message = message + ". Bummer, " + m.Author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+					MoneyDeduct(author, bet, "gamble", db)
+					message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
 					fmt.Println(message)
-					_, _ = s.ChannelMessageSend(m.ChannelID, message)
-					return
+					return message
 				}
 			} else {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "pick heads or tails bud. `!gamble <amount> coin heads|tails`")
+				message = "pick heads or tails bud. `!gamble <amount> coin heads|tails`"
+				return message
 			}
 		}
 	} else if args[0] == "!gamble" {
-		_, _ = s.ChannelMessageSend(m.ChannelID,
-			`Gamble command is used as follows: '!gamble <amount> <game> <gameInput>
+		message = `
+			Gamble command is used as follows: '!gamble <amount> <game> <gameInput>
 			 '!gamble <amount> coin|flip heads|tails' payout is 1x
-			 '!gamble <amount> number <numberToGuess>:<highestNumberInRange>' payout is whatever the <highestNumberInRange> is.`,
-		)
+			 '!gamble <amount> number <numberToGuess>:<highestNumberInRange>' payout is whatever the <highestNumberInRange> is.`
+		return message
 	}
+	return message
+}
+
+func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	author := UserGet(m.Author, db)
+	message := gambleProcess(m.Content, &author, db)
+	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	return
 }

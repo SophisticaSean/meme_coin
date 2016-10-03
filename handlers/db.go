@@ -89,7 +89,10 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 		user = UserGet(discordUser, db)
 	} else {
 		user = users[0]
-		db.MustExec(`UPDATE money SET (name) = ($1) where discord_id = '`+user.DID+`'`, discordUser.Username)
+		if user.Username != discordUser.Username {
+			db.MustExec(`UPDATE money SET (name) = ($1) where discord_id = '`+user.DID+`'`, discordUser.Username)
+			user.Username = discordUser.Username
+		}
 	}
 	return user
 }
