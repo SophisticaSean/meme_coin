@@ -60,7 +60,8 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 
 			answer := strconv.Itoa(rand.Intn(rangeNumber) + 1)
 			strPickedNumber := strconv.Itoa(pickedNumber)
-			winLoseProcessor(answer, strPickedNumber, float64(rangeNumber-1), bet, author, db)
+			message = winLoseProcessor(answer, strPickedNumber, float64(rangeNumber-1), bet, author, db)
+			return message
 		}
 
 		// Coin flip game
@@ -68,7 +69,8 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 			if gameInput == "heads" || gameInput == "tails" {
 				answers := []string{"heads", "tails"}
 				answer := answers[rand.Intn(len(answers))]
-				winLoseProcessor(answer, gameInput, 1.0, bet, author, db)
+				message = winLoseProcessor(answer, gameInput, 1.0, bet, author, db)
+				return message
 			} else {
 				message = "pick heads or tails bud. `!gamble <amount> coin heads|tails`"
 				return message
@@ -103,7 +105,6 @@ func winLoseProcessor(answer string, pickedItem string, payout float64, bet int,
 func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	author := UserGet(m.Author, db)
 	message := gambleProcess(m.Content, &author, db)
-	fmt.Println("hello")
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
