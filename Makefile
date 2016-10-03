@@ -3,3 +3,5 @@ build: main.go
 	docker build -t meme_coin .
 	docker rm -f meme_coin; true
 	docker run -v ~/mnt/containers/meme_coin:/mnt/containers/meme_coin -e pw=$(pw) -e email=$(email) -d --name meme_coin meme_coin
+psql:
+	docker exec -it meme_coin bash -c 'su postgres -c "psql money"'
