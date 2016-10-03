@@ -62,7 +62,11 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	author := UserGet(m.Author, db)
 	difference := time.Now().Sub(author.MineTime)
 	timeLimit := 5
-	channel, _ := s.Channel(m.ChannelID)
+	channel, err := s.Channel(m.ChannelID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	if channel.IsPrivate {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you think you're slick, eh? gotta mine in a public room bro.")
