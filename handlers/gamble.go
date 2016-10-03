@@ -58,20 +58,9 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 				return message
 			}
 
-			answer := rand.Intn(rangeNumber) + 1
-			message := "The result was " + strconv.Itoa(answer)
-			if answer == pickedNumber {
-				payout := BetToPayout(bet, float64(rangeNumber-1))
-				MoneyAdd(author, payout, "gamble", db)
-				message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
-				fmt.Println(message)
-				return message
-			} else {
-				MoneyDeduct(author, bet, "gamble", db)
-				message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
-				fmt.Println(message)
-				return message
-			}
+			answer := strconv.Itoa(rand.Intn(rangeNumber) + 1)
+			strPickedNumber := strconv.Itoa(pickedNumber)
+			winLoseProcessor(answer, strPickedNumber, float64(rangeNumber-1), bet, author, db)
 		}
 
 		// Coin flip game
@@ -79,21 +68,7 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 			if gameInput == "heads" || gameInput == "tails" {
 				answers := []string{"heads", "tails"}
 				answer := answers[rand.Intn(len(answers))]
-				message := "The result was " + answer
-
-				if answer == gameInput {
-					// 1x payout
-					payout := BetToPayout(bet, 1.0)
-					MoneyAdd(author, payout, "gamble", db)
-					message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
-					fmt.Println(message)
-					return message
-				} else {
-					MoneyDeduct(author, bet, "gamble", db)
-					message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
-					fmt.Println(message)
-					return message
-				}
+				winLoseProcessor(answer, gameInput, 1.0, bet, author, db)
 			} else {
 				message = "pick heads or tails bud. `!gamble <amount> coin heads|tails`"
 				return message
@@ -107,6 +82,22 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 		return message
 	}
 	return message
+}
+
+func winLoseProcessor(answer string, pickedItem string, payout float64, bet int, author *User, db *sqlx.DB) string {
+	message := "The result was " + answer
+	if answer == pickedItem {
+		payout := BetToPayout(bet, payout)
+		MoneyAdd(author, payout, "gamble", db)
+		message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
+		fmt.Println(message)
+		return message
+	} else {
+		MoneyDeduct(author, bet, "gamble", db)
+		message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+		fmt.Println(message)
+		return message
+	}
 }
 
 func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
