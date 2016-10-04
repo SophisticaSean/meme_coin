@@ -10,14 +10,6 @@ import (
 	ga "github.com/tomcraven/goga"
 )
 
-var (
-	populationSize  = 1
-	populationCap   = 2000
-	iterLimit       = 5000
-	totalFitness    = 0
-	totalIterations = 0
-)
-
 type stringMaterSimulator struct {
 }
 
@@ -82,13 +74,19 @@ func (ec *myEliteConsumer) OnElite(g *ga.IGenome) {
 	}
 
 	fmt.Println(ec.currentIter, "\t", genomeString, "\t", genomeBitSet, "\t", (*g).GetFitness())
+	totalIterations = ec.currentIter
 	if ec.currentIter >= iterLimit {
-		totalIterations = ec.currentIter
-		fmt.Println(ec.currentIter)
-		fmt.Println(totalIterations)
 		limitHit = true
 	}
 }
+
+var (
+	populationSize  = 1
+	populationCap   = 2000
+	iterLimit       = 5000
+	totalFitness    = 0
+	totalIterations = 0
+)
 
 var (
 	targetString = "some random string"
