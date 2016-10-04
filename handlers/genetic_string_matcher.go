@@ -93,7 +93,7 @@ var (
 var (
 	targetString = "some random string"
 	targetLength int
-	limitHit     = false
+	limitHit     bool
 )
 
 func getMaxStringLength(maxStringLength int) int {
@@ -129,6 +129,7 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	iterLimit = 5000
 	totalFitness = 0
 	totalIterations = 0
+	limitHit = false
 
 	fmt.Println(populationSize, populationCap, iterLimit, totalFitness, totalIterations)
 	// make sure caps are respected
