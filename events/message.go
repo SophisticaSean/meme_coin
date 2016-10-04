@@ -62,7 +62,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handlers.Collect(s, m, db)
 	}
 
-	if lowerMessage == "!hack" {
+	if strings.Contains(lowerMessage, "!hack") {
 		handlers.Hack(s, m, db)
 	}
 
