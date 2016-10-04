@@ -62,6 +62,21 @@ func UnitList() []Unit {
 			cost:       125000000,
 			production: 216000,
 		},
+		Unit{
+			name:       "guard",
+			cost:       100,
+			production: 2,
+		},
+		Unit{
+			name:       "scout",
+			cost:       100,
+			production: 1,
+		},
+		Unit{
+			name:       "soldier",
+			cost:       100,
+			production: 1,
+		},
 	}
 	return unitList
 }
@@ -113,27 +128,49 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 	for _, unit := range tempUnitList {
 		if unit.name == "miner" {
 			unit.amount = userUnits.Miner
-			production = production + (unit.amount * unit.production)
-			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "robot" {
 			unit.amount = userUnits.Robot
-			production = production + (unit.amount * unit.production)
-			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "swarm" {
 			unit.amount = userUnits.Swarm
-			production = production + (unit.amount * unit.production)
-			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
 		if unit.name == "fracker" {
 			unit.amount = userUnits.Fracker
-			production = production + (unit.amount * unit.production)
-			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 		}
+		production = production + (unit.amount * unit.production)
+		message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 	}
 	message = message + "total memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
 	return message, production, userUnits
+}
+
+func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, UserUnits) {
+	userUnits := UnitsGet(user, db)
+	tempUnitList := UnitList()
+	message := ""
+	attack := 0
+	defense := 0
+	scouting := 0
+	for _, unit := range tempUnitList {
+		if unit.name == "guard" {
+			unit.amount = userUnits.Guard
+			defense = defense + (unit.amount * unit.production)
+		}
+		if unit.name == "scout" {
+			unit.amount = userUnits.Scout
+			scouting = scouting + (unit.amount * unit.production)
+		}
+		if unit.name == "soldier" {
+			unit.amount = userUnits.Soldier
+			attack = attack + (unit.amount * unit.production)
+		}
+		message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+	}
+	message = message + "total attack: " + strconv.Itoa(attack)
+	message = message + "\rtotal defense: " + strconv.Itoa(defense)
+	message = message + "\rtotal scouting: " + strconv.Itoa(scouting)
+	return message, attack, defense, scouting, userUnits
 }
 
 func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
@@ -195,6 +232,15 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	if unit.name == "fracker" {
 		userUnits.Fracker = userUnits.Fracker + amount
+	}
+	if unit.name == "guard" {
+		userUnits.Guard = userUnits.Guard + amount
+	}
+	if unit.name == "scout" {
+		userUnits.Scout = userUnits.Scout + amount
+	}
+	if unit.name == "soldier" {
+		userUnits.Soldier = userUnits.Soldier + amount
 	}
 	UpdateUnits(&userUnits, db)
 	UpdateUnitsTimestamp(&userUnits, db)

@@ -36,6 +36,9 @@ type UserUnits struct {
 	Robot       int       `db:"robot"`
 	Swarm       int       `db:"swarm"`
 	Fracker     int       `db:"fracker"`
+	Guard       int       `db:"guard"`
+	Scout       int       `db:"scout"`
+	Soldier     int       `db:"soldier"`
 	CollectTime time.Time `db:"collect_time"`
 }
 
@@ -187,7 +190,7 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 
 func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 	var units []UserUnits
-	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, guard, scout, soldier, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,7 +206,7 @@ func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 }
 
 func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker) = ($1, $2, $3, $4) WHERE discord_id = `
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, guard, scout, soldier) = ($1, $2, $3, $4) WHERE discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
 	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker)
 }
