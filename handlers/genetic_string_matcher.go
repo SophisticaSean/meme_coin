@@ -76,8 +76,6 @@ func (ec *myEliteConsumer) OnElite(g *ga.IGenome) {
 	//fmt.Println(ec.currentIter, "\t", genomeString, "\t", genomeBitSet, "\t", (*g).GetFitness())
 	totalIterations = ec.currentIter
 	if ec.currentIter >= iterLimit {
-		fmt.Println(ec.currentIter, iterLimit)
-		fmt.Println("limit hit")
 		limitHit = true
 	}
 }
@@ -131,7 +129,6 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	totalIterations = 0
 	limitHit = false
 
-	fmt.Println(populationSize, populationCap, iterLimit, totalFitness, totalIterations)
 	// make sure caps are respected
 	if popSize > populationCap {
 		popSize = populationCap
@@ -172,7 +169,6 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 
 	startTime := time.Now()
 	genAlgo.Simulate()
-	fmt.Println(populationSize, populationCap, iterLimit, totalFitness, totalIterations)
 	// reset the seed
 	rand.Seed(time.Now().UnixNano())
 	fmt.Println(time.Since(startTime))
