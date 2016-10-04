@@ -62,6 +62,10 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handlers.Collect(s, m, db)
 	}
 
+	if lowerMessage == "!hack" {
+		handlers.Hack(s, m, db)
+	}
+
 	if lowerMessage == "!memehelp" {
 		handlers.Help(s, m)
 	}
