@@ -251,7 +251,7 @@ func TempBan(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where discord_id = '` + resetUser.ID + `'`)
 		// tmp ban their collect timer
 		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where discord_id = '` + resetUser.ID + `'`)
-		message := resetUser.Username + " has been reset."
+		message := resetUser.Username + " has been banned for " + days + "(s)."
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 	return
