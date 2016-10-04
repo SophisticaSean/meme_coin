@@ -31,6 +31,9 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if strings.Contains(lowerMessage, "!reset") {
 			handlers.Reset(s, m, db)
 		}
+		if strings.Contains(lowerMessage, "!ban") {
+			handlers.TempBan(s, m, db)
+		}
 		return
 	}
 

@@ -4,7 +4,8 @@ import (
 	_ "database/sql"
 	"fmt"
 	"log"
-	_ "strings"
+	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/bmizerany/pq"
@@ -206,9 +207,9 @@ func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 }
 
 func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker, cyphers, hackers, botnets) = ($1, $2, $3, $4) WHERE discord_id = `
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, cyphers, hackers, botnets) = ($1, $2, $3, $4, $5, $6, $7) WHERE discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
-	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker)
+	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet)
 }
 
 func UpdateUnitsTimestamp(userUnits *UserUnits, db *sqlx.DB) {
@@ -224,4 +225,34 @@ func createUserUnits(user *discordgo.User, db *sqlx.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func Reset(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	for _, resetUser := range m.Mentions {
+		// reset their money
+		db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		// reset their units
+		db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets) = (0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		message := resetUser.Username + " has been reset."
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
+	return
+}
+
+func TempBan(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	args := strings.Split(m.Content, " ")
+	days := args[1]
+	_, err := strconv.Atoi(days)
+	if err != nil {
+		days = "1"
+	}
+	for _, resetUser := range m.Mentions {
+		// tmp ban their mine timeer
+		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where discord_id = '` + resetUser.ID + `'`)
+		// tmp ban their collect timer
+		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where discord_id = '` + resetUser.ID + `'`)
+		message := resetUser.Username + " has been reset."
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
+	return
 }
