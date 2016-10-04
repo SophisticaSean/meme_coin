@@ -63,17 +63,17 @@ func UnitList() []Unit {
 			production: 216000,
 		},
 		Unit{
-			name:       "guard",
+			name:       "cypher",
 			cost:       100,
 			production: 2,
 		},
 		Unit{
-			name:       "scout",
+			name:       "hacker",
 			cost:       100,
 			production: 1,
 		},
 		Unit{
-			name:       "soldier",
+			name:       "botnet",
 			cost:       100,
 			production: 1,
 		},
@@ -149,28 +149,28 @@ func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 	userUnits := UnitsGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
-	attack := 0
+	botnet := 0
 	defense := 0
-	scouting := 0
+	hacking := 0
 	for _, unit := range tempUnitList {
-		if unit.name == "guard" {
-			unit.amount = userUnits.Guard
+		if unit.name == "cypher" {
+			unit.amount = userUnits.Cypher
 			defense = defense + (unit.amount * unit.production)
 		}
-		if unit.name == "scout" {
-			unit.amount = userUnits.Scout
-			scouting = scouting + (unit.amount * unit.production)
+		if unit.name == "hacker" {
+			unit.amount = userUnits.Hacker
+			hacking = hacking + (unit.amount * unit.production)
 		}
-		if unit.name == "soldier" {
-			unit.amount = userUnits.Soldier
-			attack = attack + (unit.amount * unit.production)
+		if unit.name == "botnet" {
+			unit.amount = userUnits.Botnet
+			botnet = botnet + (unit.amount * unit.production)
 		}
 		message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
 	}
-	message = message + "total attack: " + strconv.Itoa(attack)
-	message = message + "\rtotal defense: " + strconv.Itoa(defense)
-	message = message + "\rtotal scouting: " + strconv.Itoa(scouting)
-	return message, attack, defense, scouting, userUnits
+	message = message + "total botnets: " + strconv.Itoa(botnet)
+	message = message + "\rtotal cypher strength: " + strconv.Itoa(defense)
+	message = message + "\rtotal hackers: " + strconv.Itoa(hacking)
+	return message, botnet, defense, hacking, userUnits
 }
 
 func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
@@ -233,14 +233,14 @@ func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	if unit.name == "fracker" {
 		userUnits.Fracker = userUnits.Fracker + amount
 	}
-	if unit.name == "guard" {
-		userUnits.Guard = userUnits.Guard + amount
+	if unit.name == "cypher" {
+		userUnits.Cypher = userUnits.Cypher + amount
 	}
-	if unit.name == "scout" {
-		userUnits.Scout = userUnits.Scout + amount
+	if unit.name == "hacker" {
+		userUnits.Hacker = userUnits.Hacker + amount
 	}
-	if unit.name == "soldier" {
-		userUnits.Soldier = userUnits.Soldier + amount
+	if unit.name == "botnet" {
+		userUnits.Botnet = userUnits.Botnet + amount
 	}
 	UpdateUnits(&userUnits, db)
 	UpdateUnitsTimestamp(&userUnits, db)

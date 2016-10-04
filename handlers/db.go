@@ -36,16 +36,16 @@ type UserUnits struct {
 	Robot       int       `db:"robot"`
 	Swarm       int       `db:"swarm"`
 	Fracker     int       `db:"fracker"`
-	Guard       int       `db:"guard"`
-	Scout       int       `db:"scout"`
-	Soldier     int       `db:"soldier"`
+	Cypher      int       `db:"cypher"`
+	Hacker      int       `db:"hacker"`
+	Botnet      int       `db:"botnet"`
 	CollectTime time.Time `db:"collect_time"`
 }
 
 var schema = `
 CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
 
-CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hacker numeric DEFAULT(0), botnet numeric DEFAULT(0), cypher numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
 
 CREATE TABLE IF NOT EXISTS transactions(discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
 `
@@ -190,7 +190,7 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 
 func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 	var units []UserUnits
-	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, guard, scout, soldier, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, cypher, hacker, botnet, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -206,7 +206,7 @@ func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 }
 
 func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker, guard, scout, soldier) = ($1, $2, $3, $4) WHERE discord_id = `
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, cypher, hacker, botnet) = ($1, $2, $3, $4) WHERE discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
 	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker)
 }
