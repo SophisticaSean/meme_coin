@@ -76,6 +76,8 @@ func (ec *myEliteConsumer) OnElite(g *ga.IGenome) {
 	//fmt.Println(ec.currentIter, "\t", genomeString, "\t", genomeBitSet, "\t", (*g).GetFitness())
 	totalIterations = ec.currentIter
 	if ec.currentIter >= iterLimit {
+		fmt.Println(ec.currentIter, iterLimit)
+		fmt.Println("limit hit")
 		limitHit = true
 	}
 }
