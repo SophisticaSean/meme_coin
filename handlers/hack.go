@@ -15,7 +15,8 @@ import (
 var helpMessage = "The goal of hacking is to get your hacker's performance to 100 percent and then your botnet performance to 100 percent. You're trying to hack someone's password to steal all their uncollected memes. If your hacker's performance is under 100 percent, it means you need to increase the amount of botnets you're using, if your botnet's performance is overperforming, you'll need to decrease the amount of botnets you're using. There is a magic number of botnets and hackers that will hacker the target's password successfully. You only have a fixed amount of tries at someone's password before it resets! The more cyphers someone has, the more difficult their password is going to be to crack!\r"
 
 const (
-	lossChances = 10
+	lossChances  = 10
+	hackAttempts = 4
 )
 
 func Ftoa(float float64) string {
@@ -73,14 +74,14 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
 
-	if targetUnits.HackSeed == 0 || targetUnits.HackAttempts >= 10 {
+	if targetUnits.HackSeed == 0 || targetUnits.HackAttempts >= hackAttempts {
 		discordID, err := strconv.Atoi(targetUnits.DID)
 		// shouldn't happen
 		if err != nil {
 			fmt.Println("SUPER BAD ERROR: ", err)
 			return
 		}
-		if targetUnits.HackAttempts >= 10 {
+		if targetUnits.HackAttempts >= hackAttempts {
 			message = "`Your hacking attempts were detected! The target's password has been reset!`"
 			_, _ = s.ChannelMessageSend(m.ChannelID, message)
 			message = ""
