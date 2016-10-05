@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"runtime"
@@ -167,11 +166,11 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 
 	genAlgo.Init(populationSize, numThreads)
 
-	startTime := time.Now()
+	//startTime := time.Now()
 	genAlgo.Simulate()
 	// reset the seed
 	rand.Seed(time.Now().UnixNano())
-	fmt.Println(time.Since(startTime))
+	//fmt.Println(time.Since(startTime))
 	//fmt.Println(targetString, totalIterations, iterationLimit, seed)
 	return (float64(totalFitness) / float64(targetLength)), (float64(iterationLimit) / float64(totalIterations))
 }

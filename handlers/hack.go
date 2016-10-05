@@ -128,6 +128,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		targetUnits.HackAttempts = 0
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
+		fmt.Println(message)
 	} else {
 		// update the target's hacked count and possibly CollectTime
 		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
@@ -141,6 +142,5 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	UpdateUnits(&targetUnits, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
-	fmt.Println(message)
 	return
 }
