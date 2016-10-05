@@ -32,7 +32,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 	hackerLosses := 0
 	botnetLosses := 0
 	for i := 0; i <= usedHackers; i++ {
-		if rand.Intn(100) < lossChances {
+		if rand.Intn(400) < lossChances {
 			hackerLosses += 1
 		}
 	}
