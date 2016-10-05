@@ -130,6 +130,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	} else {
 		roundedGenerationPercentage = math.Ceil(generationPercentage * 10)
 	}
+	fmt.Println(lossChances)
 	if fitnessPercentage == 1 && generationPercentage == 1 {
 		message = "The hack was successful, " + author.Username + " stole " + strconv.Itoa(totalMemes) + " dank memes from " + target.Username
 		// reset targetUnits collectTime, HackSeed, and HackAttempts
@@ -139,7 +140,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		UpdateUnitsTimestamp(&targetUnits, db)
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
-		fmt.Println(message)
+		lossChances = 4
+		fmt.Println(message, lossChances)
 	} else {
 		// update the target's hacked count and possibly CollectTime
 		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
