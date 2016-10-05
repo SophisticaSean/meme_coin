@@ -74,6 +74,10 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			fmt.Println("SUPER BAD ERROR: ", err)
 			return
 		}
+		if targetUnits.HackAttempts >= 10 {
+			message = "Your hacking attempts were detected! The target's password has been reset!"
+			_, _ = s.ChannelMessageSend(m.ChannelID, message)
+		}
 		targetUnits.HackAttempts = 0
 		targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
 		UpdateUnits(&targetUnits, db)
