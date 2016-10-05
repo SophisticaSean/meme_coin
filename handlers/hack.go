@@ -15,8 +15,11 @@ import (
 var helpMessage = "The goal of hacking is to get your hacker's performance to 100 percent and then your botnet performance to 100 percent. You're trying to hack someone's password to steal all their uncollected memes. If your hacker's performance is under 100 percent, it means you need to increase the amount of botnets you're using, if your botnet's performance is overperforming, you'll need to decrease the amount of botnets you're using. There is a magic number of botnets and hackers that will hacker the target's password successfully. You only have a fixed amount of tries at someone's password before it resets! The more cyphers someone has, the more difficult their password is going to be to crack!\r"
 
 const (
-	lossChances  = 5
-	hackAttempts = 4
+	lossChances   = 5
+	hackAttempts  = 4
+	hackerLimit   = 10
+	botnetLimit   = 5000
+	cypherPadding = 5
 )
 
 func Ftoa(float float64) string {
@@ -92,28 +95,34 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	seed := targetUnits.HackSeed
 
-	popSize, err := strconv.Atoi(args[1])
-	if err != nil || popSize < 1 {
+	hackerCount, err := strconv.Atoi(args[1])
+	if err != nil || hackerCount < 1 {
 		message = "your amount of hackers argument (`!hack <this_argument> <amount_of_botnets>`) is too large, too small, or not a number.\r"
 	}
-	if popSize > authorUnits.Hacker {
+	if hackerCount > authorUnits.Hacker {
 		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker) + "\r"
 	}
+	if hackerCount > hackerLimit {
+		hackerCount = hackerLimit
+	}
 
-	iterationLimit, err := strconv.Atoi(args[2])
-	if err != nil || iterationLimit < 1 {
+	botnetCount, err := strconv.Atoi(args[2])
+	if err != nil || botnetCount < 1 {
 		message = message + "your amount of botnets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number.\r"
 	}
-	if iterationLimit > authorUnits.Botnet {
+	if botnetCount > authorUnits.Botnet {
 		message = message + "You don't have enough botnets for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
+	}
+	if botnetCount > botnetLimit {
+		botnetCount = botnetLimit
 	}
 	if message != "" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
 
-	maxStringLength := targetUnits.Cypher + 5
-	fitnessPercentage, generationPercentage := hackSimulate(seed, popSize, iterationLimit, maxStringLength)
+	maxStringLength := targetUnits.Cypher + cypherPadding
+	fitnessPercentage, generationPercentage := hackSimulate(seed, hackerCount, botnetCount, maxStringLength)
 	// randomize which direction we round in
 	roundedGenerationPercentage := 0.0
 	if rand.Intn(1) == 1 {
@@ -134,7 +143,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	} else {
 		// update the target's hacked count and possibly CollectTime
 		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
-		lossesMessage := processHackingLosses(&authorUnits, popSize, iterationLimit, db)
+		lossesMessage := processHackingLosses(&authorUnits, hackerCount, botnetCount, db)
 		message = "`hacking was not successful! hacking report:`"
 		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
 		if fitnessPercentage == 1 {
