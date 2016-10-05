@@ -122,11 +122,14 @@ func generateRandomString(maxStringLength int) string {
 func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength int) (float64, float64) {
 	// set/reset default vars
 	populationSize = 1
-	populationCap = 2000
+	populationCap = 10
 	iterLimit = 5000
 	totalFitness = 0
 	totalIterations = 0
 	limitHit = false
+
+	// +2 for populationCap for every extra string length
+	populationCap = populationCap + 2*(5-maxStringLength)
 
 	// make sure caps are respected
 	if popSize > populationCap {
