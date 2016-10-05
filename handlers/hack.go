@@ -25,7 +25,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 	message := ""
 	hackerLosses := 0
 	botnetLosses := 0
-	for i := 0; i <= units.Hacker; i++ {
+	for i := 0; i <= usedHackers; i++ {
 		if rand.Intn(100) < lossChances {
 			hackerLosses += 1
 		}
@@ -34,7 +34,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 		units.Hacker = units.Hacker - hackerLosses
 		message = message + "`Your hacking got " + strconv.Itoa(hackerLosses) + " hackers arrested by the FBI!`\r`You now have " + strconv.Itoa(units.Hacker) + " hackers left.`\r"
 	}
-	for i := 0; i <= units.Botnet; i++ {
+	for i := 0; i <= usedBotnets; i++ {
 		if rand.Intn(100) < lossChances {
 			botnetLosses += 1
 		}
@@ -75,8 +75,9 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			return
 		}
 		if targetUnits.HackAttempts >= 10 {
-			message = "Your hacking attempts were detected! The target's password has been reset!"
+			message = "`Your hacking attempts were detected! The target's password has been reset!`"
 			_, _ = s.ChannelMessageSend(m.ChannelID, message)
+			message = ""
 		}
 		targetUnits.HackAttempts = 0
 		targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
