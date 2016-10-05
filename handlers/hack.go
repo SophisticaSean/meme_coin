@@ -89,10 +89,10 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 
 	iterationLimit, err := strconv.Atoi(args[2])
 	if err != nil || iterationLimit < 1 {
-		message = message + "your amount of bot_nets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number.\r"
+		message = message + "your amount of botnets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number.\r"
 	}
 	if iterationLimit > authorUnits.Botnet {
-		message = message + "You don't have enough hackers for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
+		message = message + "You don't have enough botnets for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
 	}
 	if message != "" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
