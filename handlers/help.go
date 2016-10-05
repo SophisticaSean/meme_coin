@@ -10,6 +10,6 @@ func Help(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func help() string {
 	message := "yo, whaddup. Here are the commands I know:\r"
-	message = message + "`!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp`"
+	message = message + "`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp`"
 	return message
 }
