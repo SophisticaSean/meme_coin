@@ -112,7 +112,6 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`"
 		message = message + "\r `botnets performed at: " + Ftoa(generationPercentage*100) + "%`\r" + lossesMessage
 	}
-	message = "fitness: " + Ftoa(fitnessPercentage) + " generations: " + Ftoa(generationPercentage)
 	// update the target's hacked count and possibly CollectTime
 	targetUnits.HackAttempts = targetUnits.HackAttempts + 1
 	UpdateUnits(&targetUnits, db)

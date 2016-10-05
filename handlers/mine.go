@@ -69,7 +69,7 @@ func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineR
 	}
 
 	if channel.IsPrivate {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "you think you're slick, eh? gotta mine in a public room bro.")
+		_, _ = s.ChannelMessageSend(m.ChannelID, "you think you're slick, eh? gotta mine in a public room, bro.")
 		return
 	}
 
