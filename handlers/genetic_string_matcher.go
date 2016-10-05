@@ -73,7 +73,7 @@ func (ec *myEliteConsumer) OnElite(g *ga.IGenome) {
 		genomeBitSet = append(genomeBitSet, byte(c))
 	}
 
-	//fmt.Println(ec.currentIter, "\t", genomeString, "\t", genomeBitSet, "\t", (*g).GetFitness())
+	fmt.Println(ec.currentIter, "\t", genomeString, "\t", genomeBitSet, "\t", (*g).GetFitness())
 	totalIterations = ec.currentIter
 	if ec.currentIter >= iterLimit {
 		limitHit = true
