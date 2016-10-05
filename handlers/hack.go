@@ -12,6 +12,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var helpMessage = "The goal of hacking is to get your hacker's performance to 100 percent and then your botnet performance to 100 percent. You're trying to hack someone's password to steal all their uncollected memes. If your hacker's performance is under 100 percent, it means you need to increase the amount of botnets you're using, if your botnet's performance is overperforming, you'll need to decrease the amount of botnets you're using. There is a magic number of botnets and hackers that will hacker the target's password successfully. You only have a fixed amount of tries at someone's password before it resets!\r"
+
 const (
 	lossChances = 5
 )
@@ -51,6 +53,10 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	defaultSyntax := "`!hack <amount_of_hackers> <amount_of_botnets> @person`"
 	message := ""
+	if len(args) == 1 {
+		_, _ = s.ChannelMessageSend(m.ChannelID, helpMessage+defaultSyntax)
+		return
+	}
 	if len(args) != 4 {
 		message = "Too many or too few arguments, hack like this boi: " + defaultSyntax
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
