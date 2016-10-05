@@ -115,10 +115,11 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	fitnessPercentage, generationPercentage := hackSimulate(seed, popSize, iterationLimit, maxStringLength)
 	fmt.Println("hello", fitnessPercentage, generationPercentage)
 	// randomize which direction we round in
+	roundedGenerationPercentage := 0.0
 	if rand.Intn(1) == 1 {
-		generationPercentage = math.Floor(generationPercentage * 10)
+		roundedGenerationPercentage = math.Floor(generationPercentage * 10)
 	} else {
-		generationPercentage = math.Ceil(generationPercentage * 10)
+		roundedGenerationPercentage = math.Ceil(generationPercentage * 10)
 	}
 	if fitnessPercentage == 1 && generationPercentage == 1 {
 		message = "The hack was successful, " + author.Username + " stole " + strconv.Itoa(totalMemes) + " dank memes from " + target.Username
@@ -133,7 +134,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		message = "`hacking was not successful! hacking report:`"
 		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
 		if fitnessPercentage == 1 {
-			message = message + "`botnets overperformed at: ~" + Ftoa(generationPercentage*10) + "%`\r"
+			message = message + "`botnets overperformed at: ~" + Ftoa(roundedGenerationPercentage*10) + "%`\r"
 		}
 		message = message + lossesMessage
 	}
