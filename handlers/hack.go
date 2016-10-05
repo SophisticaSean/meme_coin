@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	lossChances = 10
+	lossChances = 5
 )
 
 func Ftoa(float float64) string {
@@ -20,7 +20,7 @@ func Ftoa(float float64) string {
 	return floatString
 }
 
-func processHackingLosses(units *UserUnits, db *sqlx.DB) string {
+func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db *sqlx.DB) string {
 	message := ""
 	hackerLosses := 0
 	botnetLosses := 0
@@ -81,24 +81,20 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 
 	popSize, err := strconv.Atoi(args[1])
 	if err != nil || popSize < 1 {
-		message = "your amount of hackers argument (`!hack <this_argument> <amount_of_botnets>`) is too large, too small, or not a number."
-		_, _ = s.ChannelMessageSend(m.ChannelID, message)
-		return
+		message = "your amount of hackers argument (`!hack <this_argument> <amount_of_botnets>`) is too large, too small, or not a number.\r"
 	}
 	if popSize > authorUnits.Hacker {
-		message = "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker)
-		_, _ = s.ChannelMessageSend(m.ChannelID, message)
-		return
+		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker) + "\r"
 	}
 
 	iterationLimit, err := strconv.Atoi(args[2])
 	if err != nil || iterationLimit < 1 {
-		message = "your amount of bot_nets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number."
-		_, _ = s.ChannelMessageSend(m.ChannelID, message)
-		return
+		message = message + "your amount of bot_nets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number.\r"
 	}
 	if iterationLimit > authorUnits.Botnet {
-		message = "You don't have enough hackers for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
+		message = message + "You don't have enough hackers for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
+	}
+	if message != "" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
@@ -112,7 +108,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		targetUnits.HackSeed = 0
 		targetUnits.HackAttempts = 0
 	} else {
-		lossesMessage := processHackingLosses(&authorUnits, db)
+		lossesMessage := processHackingLosses(&authorUnits, popSize, iterationLimit, db)
 		message = "`hacking was not successful! hacking report:`"
 		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`"
 		message = message + "\r `botnets performed at: " + Ftoa(generationPercentage*100) + "%`\r" + lossesMessage
