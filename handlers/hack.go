@@ -15,11 +15,14 @@ import (
 var helpMessage = "The goal of hacking is to get your hacker's performance to 100 percent and then your botnet performance to 100 percent. You're trying to hack someone's password to steal all their uncollected memes. If your hacker's performance is under 100 percent, it means you need to increase the amount of botnets you're using, if your botnet's performance is overperforming, you'll need to decrease the amount of botnets you're using. There is a magic number of botnets and hackers that will crack the target's password successfully. You only have a fixed amount of tries at someone's password before it resets! The more cyphers someone has, the more difficult their password is going to be to crack!\r"
 
 const (
-	lossChances   = 2
 	hackAttempts  = 5
 	hackerLimit   = 10
 	botnetLimit   = 5000
 	cypherPadding = 5
+)
+
+var (
+	lossChances = 4
 )
 
 func Ftoa(float float64) string {
@@ -73,6 +76,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		return
 	}
 	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
+	strTotalMemes, _ := strconv.Itoa(totalMemes)
+	lossChances = lossChances + (len(strTotalMemes) - 4)
 	target := UserGet(mentions[0], db)
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
@@ -138,7 +143,10 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	} else {
 		// update the target's hacked count and possibly CollectTime
 		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
-		lossesMessage := processHackingLosses(&authorUnits, hackerCount, botnetCount, db)
+		lossesMessage := ""
+		if target.DID != author.DID {
+			lossesMessage = processHackingLosses(&authorUnits, hackerCount, botnetCount, db)
+		}
 		message = "`hacking was not successful! hacking report:`"
 		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
 		if fitnessPercentage == 1 {
