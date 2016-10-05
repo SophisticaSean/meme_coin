@@ -87,6 +87,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	if popSize > authorUnits.Hacker {
 		message = "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker)
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+		return
 	}
 
 	iterationLimit, err := strconv.Atoi(args[2])
@@ -97,6 +99,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	if iterationLimit > authorUnits.Botnet {
 		message = "You don't have enough hackers for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+		return
 	}
 
 	maxStringLength := targetUnits.Cypher + 5
