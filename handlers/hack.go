@@ -147,6 +147,12 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		message = message + lossesMessage
 		// handle hackAttempts limit reached
 		if targetUnits.HackAttempts >= hackAttempts {
+			discordID, err := strconv.Atoi(targetUnits.DID)
+			// shouldn't happen
+			if err != nil {
+				fmt.Println("SUPER BAD ERROR: ", err)
+				return
+			}
 			targetUnits.HackAttempts = 0
 			targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
 			UpdateUnits(&targetUnits, db)
