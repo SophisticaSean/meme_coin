@@ -141,6 +141,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		message = message + lossesMessage
 	}
 	UpdateUnits(&targetUnits, db)
+	UpdateUnitsTimestamp(&targetUnits, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
