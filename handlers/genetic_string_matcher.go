@@ -120,7 +120,7 @@ func generateRandomString(maxStringLength int) string {
 	return string(charList)
 }
 
-func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength int) (float64, int) {
+func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength int) (float64, float64) {
 	// set/reset default vars
 	populationSize = 1
 	populationCap = 2000
@@ -172,5 +172,5 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	// reset the seed
 	rand.Seed(time.Now().UnixNano())
 	fmt.Println(time.Since(startTime))
-	return (float64(totalFitness) / float64(targetLength)), totalIterations
+	return (float64(totalFitness) / float64(targetLength)), (float64(totalIterations) / float64(iterationLimit))
 }

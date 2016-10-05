@@ -92,13 +92,16 @@ func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 }
-func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
-	_, production, userUnits := ProductionSum(m.Author, db)
+
+func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits) {
+	memes := 0
+	message := ""
+	_, production, userUnits := ProductionSum(user, db)
 	difference := time.Now().Sub(userUnits.CollectTime)
 	diffMinutes := difference.Minutes()
 	if diffMinutes < 1.0 {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "have to wait at least 1 minute between collections. \r its better to wait longer between collections, as we round down when computing how much memes you earned.")
-		return
+		message = "have to wait at least 1 minute between collections. \r its better to wait longer between collections, as we round down when computing how much memes you earned."
+		return memes, message, userUnits
 	}
 	maxDifference := float64(24 * 60) //max difference is 1 days worth of minutes
 	if diffMinutes > maxDifference {
@@ -108,13 +111,21 @@ func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	productionPerMinute := float64(production) / 10.0
 	totalMemesEarned := int(roundedDifference * productionPerMinute)
 	if totalMemesEarned < 1.0 {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "you don't have enough memes to collect right now.")
+		message = "you don't have enough memes to collect right now."
+		return memes, message, userUnits
+	}
+	return memes, message, userUnits
+}
+func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	user := UserGet(m.Author, db)
+	totalMemesEarned, message, userUnits := totalMemesEarned(m.Author, db)
+	if message != "" {
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
-	user := UserGet(m.Author, db)
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
 	UpdateUnitsTimestamp(&userUnits, db)
-	message := m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
+	message = m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return

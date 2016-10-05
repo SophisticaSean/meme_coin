@@ -15,38 +15,42 @@ import (
 
 // User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
-	ID             int       `db:"id"`
-	DID            string    `db:"discord_id"`
-	Username       string    `db:"name"`
-	CurMoney       int       `db:"current_money"`
-	TotMoney       int       `db:"total_money"`
-	WonMoney       int       `db:"won_money"`
-	LostMoney      int       `db:"lost_money"`
-	GiveMoney      int       `db:"given_money"`
-	RecMoney       int       `db:"received_money"`
-	EarMoney       int       `db:"earned_money"`
-	SpentMoney     int       `db:"spent_money"`
-	CollectedMoney int       `db:"collected_money"`
-	MineTime       time.Time `db:"mine_time"`
+	ID              int       `db:"id"`
+	DID             string    `db:"discord_id"`
+	Username        string    `db:"name"`
+	CurMoney        int       `db:"current_money"`
+	TotMoney        int       `db:"total_money"`
+	WonMoney        int       `db:"won_money"`
+	LostMoney       int       `db:"lost_money"`
+	GiveMoney       int       `db:"given_money"`
+	RecMoney        int       `db:"received_money"`
+	EarMoney        int       `db:"earned_money"`
+	SpentMoney      int       `db:"spent_money"`
+	CollectedMoney  int       `db:"collected_money"`
+	HackedMoney     int       `db:"hacked_money"`
+	StolenFromMoney int       `db:"stolen_money"`
+	MineTime        time.Time `db:"mine_time"`
 }
 
 // UserUnits is a struct that maps 1 to 1 with units db table, keeps track of what units users have purchased
 type UserUnits struct {
-	DID         string    `db:"discord_id"`
-	Miner       int       `db:"miner"`
-	Robot       int       `db:"robot"`
-	Swarm       int       `db:"swarm"`
-	Fracker     int       `db:"fracker"`
-	Cypher      int       `db:"cyphers"`
-	Hacker      int       `db:"hackers"`
-	Botnet      int       `db:"botnets"`
-	CollectTime time.Time `db:"collect_time"`
+	DID          string    `db:"discord_id"`
+	Miner        int       `db:"miner"`
+	Robot        int       `db:"robot"`
+	Swarm        int       `db:"swarm"`
+	Fracker      int       `db:"fracker"`
+	Cypher       int       `db:"cyphers"`
+	Hacker       int       `db:"hackers"`
+	Botnet       int       `db:"botnets"`
+	HackSeed     int64     `db:"hack_seed"`
+	HackAttempts int       `db:"hack_attempts"`
+	CollectTime  time.Time `db:"collect_time"`
 }
 
 var schema = `
-CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), hacked_money numeric DEFAULT(0), stolen_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
 
-CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
 
 CREATE TABLE IF NOT EXISTS transactions(discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
 `
@@ -131,6 +135,15 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 		user.SpentMoney = newDeductionAmount
 	}
 
+	if deduction == "hacked" {
+		dbString = `UPDATE money SET (current_money, stolen_money) = ($1, $2) WHERE discord_id = `
+		deductionRecord = user.StolenFromMoney
+		newDeductionAmount = user.StolenFromMoney + amount
+		// don't actually deduct any money, we're taking it from their uncollected funds
+		newCurrentMoney = user.CurMoney
+		user.StolenFromMoney = newDeductionAmount
+	}
+
 	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newDeductionAmount)
@@ -165,6 +178,13 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 		user.CurMoney = newCurrentMoney
 		user.CollectedMoney = newAdditionAmount
 	}
+	if addition == "hacked" {
+		dbString = `UPDATE money SET (current_money, hacked_money) = ($1, $2) WHERE discord_id = `
+		additionRecord = user.HackedMoney
+		newAdditionAmount = user.HackedMoney + amount
+		user.CurMoney = newCurrentMoney
+		user.HackedMoney = newAdditionAmount
+	}
 	if addition == "mined" {
 		dbString = `UPDATE money SET (current_money, earned_money, mine_time) = ($1, $2, $3) WHERE discord_id = `
 		additionRecord = user.EarMoney
@@ -191,7 +211,7 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 
 func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 	var units []UserUnits
-	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, cyphers, hackers, botnets, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -207,9 +227,9 @@ func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 }
 
 func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker, cyphers, hackers, botnets) = ($1, $2, $3, $4, $5, $6, $7) WHERE discord_id = `
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = ($1, $2, $3, $4, $5, $6, $7, $8, $9) WHERE discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
-	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet)
+	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet, userUnits.HackSeed, userUnits.HackAttempts)
 }
 
 func UpdateUnitsTimestamp(userUnits *UserUnits, db *sqlx.DB) {
@@ -232,7 +252,7 @@ func Reset(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		// reset their money
 		db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
 		// reset their units
-		db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets) = (0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = (0,0,0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
 		message := resetUser.Username + " has been reset."
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
