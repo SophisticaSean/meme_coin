@@ -38,7 +38,7 @@ func init() {
 	fracker       125mil         21600 m/m
 	cypher        10k            +1 password strength
 	hacker        100            +1 hacking strength
-	cypher        100            +1 hacking strength
+	botnet        100            +1 hacking strength
 	`
 	unitList = UnitList()
 }
