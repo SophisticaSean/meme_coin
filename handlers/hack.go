@@ -126,6 +126,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		targetUnits.HackSeed = 0
 		targetUnits.HackAttempts = 0
 	} else {
+		// update the target's hacked count and possibly CollectTime
+		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
 		lossesMessage := processHackingLosses(&authorUnits, popSize, iterationLimit, db)
 		message = "`hacking was not successful! hacking report:`"
 		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
@@ -134,8 +136,6 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		}
 		message = message + lossesMessage
 	}
-	// update the target's hacked count and possibly CollectTime
-	targetUnits.HackAttempts = targetUnits.HackAttempts + 1
 	UpdateUnits(&targetUnits, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
