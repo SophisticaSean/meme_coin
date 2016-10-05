@@ -37,7 +37,7 @@ func init() {
 	swarm         2.5mil         360 m/m
 	fracker       125mil         21600 m/m
 	cypher        10k            +1 password strength
-	hacker        1000            +1 hacking strength
+	hacker        500            +5 hacking strength
 	botnet        100            +1 hacking strength
 	`
 	unitList = UnitList()
@@ -72,8 +72,8 @@ func UnitList() []Unit {
 		},
 		Unit{
 			name:       "hacker",
-			cost:       1000,
-			production: 1,
+			cost:       500,
+			production: 5,
 		},
 		Unit{
 			name:       "botnet",
