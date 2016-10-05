@@ -137,21 +137,29 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 	tempUnitList := UnitList()
 	message := ""
 	production := 0
+	productionUnit := false
 	for _, unit := range tempUnitList {
 		if unit.name == "miner" {
 			unit.amount = userUnits.Miner
+			productionUnit = true
 		}
 		if unit.name == "robot" {
 			unit.amount = userUnits.Robot
+			productionUnit = true
 		}
 		if unit.name == "swarm" {
 			unit.amount = userUnits.Swarm
+			productionUnit = true
 		}
 		if unit.name == "fracker" {
 			unit.amount = userUnits.Fracker
+			productionUnit = true
 		}
-		production = production + (unit.amount * unit.production)
-		message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+		if productionUnit == true {
+			production = production + (unit.amount * unit.production)
+			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+		}
+		productionUnit = false
 	}
 	message = message + "total memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
 	return message, production, userUnits
@@ -164,20 +172,27 @@ func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 	botnet := 0
 	defense := 0
 	hacking := 0
+	militaryUnit := false
 	for _, unit := range tempUnitList {
 		if unit.name == "cypher" {
 			unit.amount = userUnits.Cypher
 			defense = defense + (unit.amount * unit.production)
+			militaryUnit = true
 		}
 		if unit.name == "hacker" {
 			unit.amount = userUnits.Hacker
 			hacking = hacking + (unit.amount * unit.production)
+			militaryUnit = true
 		}
 		if unit.name == "botnet" {
 			unit.amount = userUnits.Botnet
 			botnet = botnet + (unit.amount * unit.production)
+			militaryUnit = true
 		}
-		message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+		if militaryUnit {
+			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+		}
+		militaryUnit = false
 	}
 	message = message + "total botnets: " + strconv.Itoa(botnet)
 	message = message + "\rtotal cypher strength: " + strconv.Itoa(defense)
