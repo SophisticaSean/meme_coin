@@ -61,6 +61,10 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handlers.UnitInfo(s, m, db)
 	}
 
+	if lowerMessage == "!military" {
+		handlers.MilitaryUnitInfo(s, m, db)
+	}
+
 	if lowerMessage == "!collect" {
 		handlers.Collect(s, m, db)
 	}

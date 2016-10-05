@@ -206,6 +206,12 @@ func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	return
 }
 
+func MilitaryUnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+	message, _, _, _, _ := MilitarySum(m.Author, db)
+	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	return
+}
+
 func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if args[0] != "!buy" {
