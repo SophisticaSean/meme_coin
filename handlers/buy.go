@@ -197,9 +197,9 @@ func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 		}
 		militaryUnit = false
 	}
-	message = message + "total botnets: " + strconv.Itoa(botnet)
-	message = message + "\rtotal cypher strength: " + strconv.Itoa(defense)
-	message = message + "\rtotal hackers: " + strconv.Itoa(hacking)
+	//message = message + "total botnets: " + strconv.Itoa(botnet)
+	//message = message + "\rtotal cypher strength: " + strconv.Itoa(defense)
+	//message = message + "\rtotal hackers: " + strconv.Itoa(hacking)
 	return message, botnet, defense, hacking, userUnits
 }
 
