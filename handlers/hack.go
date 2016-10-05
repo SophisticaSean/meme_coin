@@ -51,7 +51,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 
 func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
-	defaultSyntax := "`!hack <amount_of_hackers> <amount_of_botnets> @person`"
+	defaultSyntax := "`!hack <amount_of_hackers> <amount_of_botnets> @person`\r!hack 3 12 @some_body`"
 	message := ""
 	if len(args) == 1 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, helpMessage+defaultSyntax)
