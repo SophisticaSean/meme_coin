@@ -113,7 +113,6 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 
 	maxStringLength := targetUnits.Cypher + 5
 	fitnessPercentage, generationPercentage := hackSimulate(seed, popSize, iterationLimit, maxStringLength)
-	fmt.Println("hello", fitnessPercentage, generationPercentage)
 	// randomize which direction we round in
 	roundedGenerationPercentage := 0.0
 	if rand.Intn(1) == 1 {
@@ -127,6 +126,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		targetUnits.CollectTime = time.Now()
 		targetUnits.HackSeed = 0
 		targetUnits.HackAttempts = 0
+		MoneyAdd(&author, totalMemes, "hacked", db)
+		MoneyDeduct(&target, totalMemes, "hacked", db)
 	} else {
 		// update the target's hacked count and possibly CollectTime
 		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
@@ -138,8 +139,8 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		}
 		message = message + lossesMessage
 	}
-	fmt.Println("hello", fitnessPercentage, generationPercentage)
 	UpdateUnits(&targetUnits, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	fmt.Println(message)
 	return
 }
