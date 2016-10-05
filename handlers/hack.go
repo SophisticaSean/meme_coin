@@ -16,7 +16,7 @@ var helpMessage = "The goal of hacking is to get your hacker's performance to 10
 
 const (
 	lossChances   = 5
-	hackAttempts  = 4
+	hackAttempts  = 5
 	hackerLimit   = 10
 	botnetLimit   = 5000
 	cypherPadding = 5
@@ -77,17 +77,12 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
 
-	if targetUnits.HackSeed == 0 || targetUnits.HackAttempts >= hackAttempts {
+	if targetUnits.HackSeed == 0 {
 		discordID, err := strconv.Atoi(targetUnits.DID)
 		// shouldn't happen
 		if err != nil {
 			fmt.Println("SUPER BAD ERROR: ", err)
 			return
-		}
-		if targetUnits.HackAttempts >= hackAttempts {
-			message = "`Your hacking attempts were detected! The target's password has been reset!`"
-			_, _ = s.ChannelMessageSend(m.ChannelID, message)
-			message = ""
 		}
 		targetUnits.HackAttempts = 0
 		targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
@@ -150,6 +145,13 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			message = message + "`botnets overperformed at: ~" + Ftoa(roundedGenerationPercentage*10) + "%`\r"
 		}
 		message = message + lossesMessage
+		// handle hackAttempts limit reached
+		if targetUnits.HackAttempts >= hackAttempts {
+			targetUnits.HackAttempts = 0
+			targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
+			UpdateUnits(&targetUnits, db)
+			message = message + "`Your hacking attempts were detected! The target's password has been reset!`"
+		}
 	}
 	UpdateUnits(&targetUnits, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
