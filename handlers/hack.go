@@ -73,6 +73,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 			fmt.Println("SUPER BAD ERROR: ", err)
 			return
 		}
+		targetUnits.HackAttempts = 0
 		targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
 		UpdateUnits(&targetUnits, db)
 	}
