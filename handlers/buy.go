@@ -128,6 +128,9 @@ func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		return
 	}
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
+	userUnits.HackSeed = 0
+	userUnits.HackAttempts = 0
+	UpdateUnits(&userUnits, db)
 	UpdateUnitsTimestamp(&userUnits, db)
 	message = m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
 	fmt.Println(message)
