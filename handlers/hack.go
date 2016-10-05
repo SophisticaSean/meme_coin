@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	lossChances = 4
+	lossChances int
 )
 
 func Ftoa(float float64) string {
@@ -77,7 +77,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
 	strTotalMemes := strconv.Itoa(totalMemes)
-	lossChances = lossChances + (len(strTotalMemes) - 4)
+	lossChances = int(math.Abs(float64((len(strTotalMemes) - 3) * 2)))
 	target := UserGet(mentions[0], db)
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
@@ -140,7 +140,6 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		UpdateUnitsTimestamp(&targetUnits, db)
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
-		lossChances = 4
 		fmt.Println(message, lossChances)
 	} else {
 		// update the target's hacked count and possibly CollectTime
