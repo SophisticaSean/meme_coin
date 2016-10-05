@@ -41,7 +41,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 			botnetLosses += 1
 		}
 	}
-	if hackerLosses != 0 {
+	if botnetLosses != 0 {
 		units.Botnet = units.Botnet - botnetLosses
 		message = message + "`Your hacking was detected and got some botnets discovered, some whitehat released a zero day whitepaper and patch defeating " + strconv.Itoa(botnetLosses) + " of your botnets.`\r`You now have " + strconv.Itoa(units.Botnet) + " botnets left.`\r"
 	}
