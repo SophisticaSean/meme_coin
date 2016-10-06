@@ -77,7 +77,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 	}
 	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
 	strTotalMemes := strconv.Itoa(totalMemes)
-	lossChances = int(math.Abs(float64((len(strTotalMemes) - 3) * 2)))
+	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 1.5))))
 	target := UserGet(mentions[0], db)
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
