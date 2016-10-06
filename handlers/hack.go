@@ -16,7 +16,7 @@ var helpMessage = "The goal of hacking is to get your hacker's performance to 10
 
 const (
 	hackAttempts  = 4
-	hackerLimit   = 10
+	hackerLimit   = 7
 	botnetLimit   = 5000
 	cypherPadding = 5
 )
@@ -103,7 +103,7 @@ func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
 		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker) + "\r"
 	}
 	if hackerCount > hackerLimit {
-		hackerCount = hackerLimit
+		hackerCount = hackerLimit + 3*(targetUnits.Cypher)
 	}
 
 	botnetCount, err := strconv.Atoi(args[2])
