@@ -1,0 +1,54 @@
+{
+	"ImportPath": "github.com/SophisticaSean/meme_coin",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/bmizerany/pq",
+			"Rev": "da2b95e392c172df0be322eadc19a90b0f771548"
+		},
+		{
+			"ImportPath": "github.com/bwmarrin/discordgo",
+			"Comment": "v0.13.0-5-gc5abbfa",
+			"Rev": "c5abbfa42ecd88bf8718d50329e41a6a04a364a7"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "ecff5aabe41f13b4cdf897e3c0c9bbccbe552a29"
+		},
+		{
+			"ImportPath": "github.com/jmoiron/sqlx",
+			"Comment": "sqlx-v1.1-79-g05b81a7",
+			"Rev": "05b81a7d5d38058e42148dc01f17daf4acba4640"
+		},
+		{
+			"ImportPath": "github.com/jmoiron/sqlx/reflectx",
+			"Comment": "sqlx-v1.1-79-g05b81a7",
+			"Rev": "05b81a7d5d38058e42148dc01f17daf4acba4640"
+		},
+		{
+			"ImportPath": "github.com/sophisticasean/meme_coin/events",
+			"Rev": "29723f46d23e1bf9a8e3ce111c554a019cbc6044"
+		},
+		{
+			"ImportPath": "github.com/sophisticasean/meme_coin/handlers",
+			"Rev": "29723f46d23e1bf9a8e3ce111c554a019cbc6044"
+		},
+		{
+			"ImportPath": "github.com/tomcraven/goga",
+			"Rev": "3b7915ecdd7bb6616dc3ceed450068e092ed87bc"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/nacl/secretbox",
+			"Rev": "7db43667c77d5d330c359ffd03f5789cf390e973"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/poly1305",
+			"Rev": "7db43667c77d5d330c359ffd03f5789cf390e973"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/salsa20/salsa",
+			"Rev": "7db43667c77d5d330c359ffd03f5789cf390e973"
+		}
+	]
+}

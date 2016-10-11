@@ -9,10 +9,10 @@ import (
 	_ "database/sql"
 	_ "strings"
 
-	"github.com/sophisticasean/meme_coin/events"
+	"github.com/SophisticaSean/meme_coin/events"
 
+	"github.com/SophisticaSean/meme_coin/interaction"
 	_ "github.com/bmizerany/pq"
-	"github.com/bwmarrin/discordgo"
 )
 
 // Import vars and init vars
@@ -29,26 +29,31 @@ func init() {
 }
 
 func main() {
-	// Create a new Discord session using the provided login information.
-	dg, err := discordgo.New(Email, PW)
+	var botSess interaction.Session
+	if Email == "" {
+		botSess = interaction.NewConsoleSession()
+	} else {
+		var err error
+		botSess, err = interaction.NewDiscordSession(Email, PW)
+		if err != nil {
+			fmt.Println("Unable to create Discord session with given Email and Password,", err)
+			return
+		}
+	}
 	// generate a new rand seed, else all results will be deterministic
 	rand.Seed(time.Now().UnixNano())
-	if err != nil {
-		fmt.Println("error creating Discord session,", err)
-		return
-	}
 
-	u, err := dg.User("@me")
+	u, err := botSess.User("@me")
 	if err != nil {
 		fmt.Println("error obtaining account details,", err)
 	}
 
 	// set var BotID so events know the ID of the bot
-	os.Setenv("BotID", u.ID)
+	os.Setenv("BotID", u.GetID())
 
-	dg.AddHandler(events.MessageCreate)
+	botSess.AddHandler(events.DiscordMessageHandler)
 
-	err = dg.Open()
+	err = botSess.Open()
 	if err != nil {
 		fmt.Println("error opening connection:", err)
 		return

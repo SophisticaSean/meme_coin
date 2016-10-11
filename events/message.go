@@ -4,9 +4,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/SophisticaSean/meme_coin/handlers"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
-	"github.com/sophisticasean/meme_coin/handlers"
 )
 
 var (
@@ -20,7 +20,7 @@ func init() {
 	responseList = handlers.GenerateResponseList()
 }
 
-func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+func DiscordMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	lowerMessage := strings.ToLower(m.Content)
 
 	if BotID == "" {
