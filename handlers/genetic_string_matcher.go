@@ -128,9 +128,6 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	totalIterations = 0
 	limitHit = false
 
-	// +2 for populationCap for every extra string length
-	populationCap = populationCap + 2*(5-maxStringLength)
-
 	// make sure caps are respected
 	if popSize > populationCap {
 		popSize = populationCap
