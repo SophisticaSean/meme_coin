@@ -2,6 +2,7 @@
 
 #service postgresql start
 mkdir -p /mnt/containers/meme_coin/pg/
+chown postgres -R /mnt/containers/meme_coin/pg
 su -c "/usr/lib/postgresql/9.5/bin/initdb /mnt/containers/meme_coin/pg/" -m postgres
 su -c "/usr/lib/postgresql/9.5/bin/pg_ctl -D /mnt/containers/meme_coin/pg/ -l /mnt/containers/meme_coin/pg/pg.log start" -m postgres
 sleep 10

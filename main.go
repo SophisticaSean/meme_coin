@@ -17,12 +17,14 @@ import (
 
 // Import vars and init vars
 var (
-	Token string
-	Email string
-	PW    string
+	Console string
+	Token   string
+	Email   string
+	PW      string
 )
 
 func init() {
+	Console, _ = os.LookupEnv("console")
 	Token, _ = os.LookupEnv("bot_token")
 	Email, _ = os.LookupEnv("email")
 	PW, _ = os.LookupEnv("pw")
@@ -30,7 +32,8 @@ func init() {
 
 func main() {
 	var botSess interaction.Session
-	if Email == "" {
+	fmt.Println(Console)
+	if Console != "" {
 		botSess = interaction.NewConsoleSession()
 	} else {
 		var err error
