@@ -57,7 +57,8 @@ func (cs *ConsoleSession) ChannelMessageSend(id string, message string) (string,
 }
 
 func (cs *ConsoleSession) AddHandler(event interface{}) func() {
-	return nil //ds.Session.AddHandler(event)
+	return nil
+	//ds.Session.AddHandler(event)
 }
 
 func (cs *ConsoleSession) User(userID string) (User, error) {

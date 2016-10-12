@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math/rand"
 	"os"
@@ -63,7 +64,16 @@ func main() {
 	}
 
 	fmt.Println("Bot is now running!")
+	reader := bufio.NewReader(os.Stdin)
+	// TODO: parse text and pass it into botSess as an MessageCreate event so our handlers can handle it and respond in kind
+	for {
+		text, _ := reader.ReadString('\n')
+		if text != "" {
+			fmt.Println(text)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	// do some busy work indefinitely
-	<-make(chan struct{})
+	//<-make(chan struct{})
 	return
 }
