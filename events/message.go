@@ -6,6 +6,7 @@ import (
 
 	"github.com/SophisticaSean/meme_coin/handlers"
 	"github.com/SophisticaSean/meme_coin/interaction"
+	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -32,7 +33,13 @@ func init() {
 	responseList = handlers.GenerateResponseList()
 }
 
-func DiscordMessageHandler(s interaction.Session, m *interaction.MessageCreate) {
+func DiscordMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	sess := interaction.DiscordSession{Session: s}
+	messageCreate := &interaction.MessageCreate{MessageCreate: m}
+	MessageHandler(sess, messageCreate)
+}
+
+func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 	lowerMessage := strings.ToLower(m.Content)
 
 	if BotID == "" {

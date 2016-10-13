@@ -54,9 +54,13 @@ func main() {
 	}
 
 	// set var BotID so events know the ID of the bot
-	os.Setenv("BotID", u.GetID())
-
-	botSess.AddHandler(events.DiscordMessageHandler)
+	//os.Setenv("BotID", u.GetID())
+	fmt.Println(u)
+	if Console != "" {
+		botSess.AddHandler(events.MessageHandler)
+	} else {
+		botSess.AddHandler(events.DiscordMessageHandler)
+	}
 
 	err = botSess.Open()
 	if err != nil {
@@ -65,24 +69,27 @@ func main() {
 	}
 
 	fmt.Println("Bot is now running!")
-	reader := bufio.NewReader(os.Stdin)
-	// TODO: parse text and pass it into botSess as an MessageCreate event so our handlers can handle it and respond in kind
-	//var message *interaction.MessageCreate
-	message := interaction.NewMessage()
-	author := discordgo.User{
-		ID:       "1",
-		Username: "admin",
-	}
-	message.Author = &author
-	for {
-		text, _ := reader.ReadString('\n')
-		if text != "" {
-			message.Content = strings.TrimSpace(text)
-			events.DiscordMessageHandler(botSess, &message)
+	if Console != "" {
+		reader := bufio.NewReader(os.Stdin)
+		// TODO: parse text and pass it into botSess as an MessageCreate event so our handlers can handle it and respond in kind
+		//var message *interaction.MessageCreate
+		message := interaction.NewMessage()
+		author := discordgo.User{
+			ID:       "1",
+			Username: "admin",
 		}
-		time.Sleep(100 * time.Millisecond)
+		message.Author = &author
+		for {
+			text, _ := reader.ReadString('\n')
+			if text != "" {
+				message.Content = strings.TrimSpace(text)
+				//events.DiscordMessageHandler(botSess.Session, message.MessageCreate)
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	} else {
+		//do some busy work indefinitely
+		<-make(chan struct{})
 	}
-	// do some busy work indefinitely
-	//<-make(chan struct{})
 	return
 }

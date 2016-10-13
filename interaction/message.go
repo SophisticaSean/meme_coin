@@ -3,10 +3,10 @@ package interaction
 import "github.com/bwmarrin/discordgo"
 
 type MessageCreate struct {
-	*discordgo.Message
+	*discordgo.MessageCreate
 }
 
 func NewMessage() MessageCreate {
-	message := discordgo.Message{}
-	return MessageCreate{Message: &message}
+	message := discordgo.MessageCreate{}
+	return MessageCreate{MessageCreate: &message}
 }
