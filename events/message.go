@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/SophisticaSean/meme_coin/handlers"
-	"github.com/bwmarrin/discordgo"
+	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,12 +15,24 @@ var (
 	BotID        string
 )
 
+func validateSingleArg(validator string, validatee string) bool {
+	newValidateeSlice := strings.Split(validatee, " ")
+	newValidatee := ""
+	if len(newValidateeSlice) > 0 {
+		newValidatee = newValidateeSlice[0]
+		newValidatee = strings.TrimSpace(newValidatee)
+	} else {
+		return false
+	}
+	return validator == newValidatee
+}
+
 func init() {
 	db = handlers.DbGet()
 	responseList = handlers.GenerateResponseList()
 }
 
-func DiscordMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+func DiscordMessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 	lowerMessage := strings.ToLower(m.Content)
 
 	if BotID == "" {
@@ -73,7 +85,7 @@ func DiscordMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handlers.Hack(s, m, db)
 	}
 
-	if lowerMessage == "!memehelp" {
+	if lowerMessage == "!help" || lowerMessage == "!memehelp" {
 		handlers.Help(s, m)
 	}
 

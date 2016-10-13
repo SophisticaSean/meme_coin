@@ -8,9 +8,10 @@ import (
 	"time"
 
 	_ "database/sql"
-	_ "strings"
+	"strings"
 
 	"github.com/SophisticaSean/meme_coin/events"
+	"github.com/bwmarrin/discordgo"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
 	_ "github.com/bmizerany/pq"
@@ -66,10 +67,18 @@ func main() {
 	fmt.Println("Bot is now running!")
 	reader := bufio.NewReader(os.Stdin)
 	// TODO: parse text and pass it into botSess as an MessageCreate event so our handlers can handle it and respond in kind
+	//var message *interaction.MessageCreate
+	message := interaction.NewMessage()
+	author := discordgo.User{
+		ID:       "1",
+		Username: "admin",
+	}
+	message.Author = &author
 	for {
 		text, _ := reader.ReadString('\n')
 		if text != "" {
-			fmt.Println(text)
+			message.Content = strings.TrimSpace(text)
+			events.DiscordMessageHandler(botSess, &message)
 		}
 		time.Sleep(100 * time.Millisecond)
 	}

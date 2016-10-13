@@ -11,6 +11,7 @@ type Session interface {
 	AddHandler(event interface{}) func()
 	User(userID string) (User, error)
 	Open() error
+	Channel(string) (discordgo.Channel, error)
 }
 
 type DiscordSession struct {
@@ -40,6 +41,11 @@ func (ds *DiscordSession) Open() error {
 	return ds.Session.Open()
 }
 
+func (ds *DiscordSession) Channel(channelID string) (discordgo.Channel, error) {
+	channel, err := ds.Channel(channelID)
+	return channel, err
+}
+
 func NewDiscordSession(email string, pass string) (*DiscordSession, error) {
 	s, e := discordgo.New(email, pass)
 	if e != nil {
@@ -67,6 +73,10 @@ func (cs *ConsoleSession) User(userID string) (User, error) {
 
 func (cs *ConsoleSession) Open() error {
 	return nil
+}
+
+func (ds *ConsoleSession) Channel(channelID string) (discordgo.Channel, error) {
+	return discordgo.Channel{ID: channelID}, nil
 }
 
 func NewConsoleSession() *ConsoleSession {

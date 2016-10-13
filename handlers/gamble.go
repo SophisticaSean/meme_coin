@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -102,7 +102,7 @@ func winLoseProcessor(answer string, pickedItem string, payout float64, bet int,
 	}
 }
 
-func Gamble(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func Gamble(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	author := UserGet(m.Author, db)
 	message := gambleProcess(m.Content, &author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)

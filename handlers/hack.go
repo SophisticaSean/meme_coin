@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -56,7 +56,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 	return message
 }
 
-func Hack(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	defaultSyntax := "`!hack <amount_of_hackers> <amount_of_botnets> @person`\r`!hack 3 12 @some_body`"
 	message := ""

@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/jmoiron/sqlx"
 )
 
-func Tip(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) >= 3 && strings.ToLower(args[0]) == "!tip" {
 		amountInContent := []string{}

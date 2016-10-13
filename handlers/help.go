@@ -1,8 +1,8 @@
 package handlers
 
-import "github.com/bwmarrin/discordgo"
+import "github.com/SophisticaSean/meme_coin/interaction"
 
-func Help(s *discordgo.Session, m *discordgo.MessageCreate) {
+func Help(s interaction.Session, m *interaction.MessageCreate) {
 	message := help()
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return

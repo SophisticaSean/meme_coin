@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
 )
@@ -84,7 +85,7 @@ func UnitList() []Unit {
 	return unitList
 }
 
-func Balance(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
@@ -120,7 +121,7 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits
 	return memes, message, userUnits
 }
 
-func Collect(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	user := UserGet(m.Author, db)
 	totalMemesEarned, message, userUnits := totalMemesEarned(m.Author, db)
 	if message != "" {
@@ -206,19 +207,19 @@ func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 	return message, botnet, defense, hacking, userUnits
 }
 
-func UnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func UnitInfo(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	message, _, _ := ProductionSum(m.Author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
-func MilitaryUnitInfo(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func MilitaryUnitInfo(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	message, _, _, _, _ := MilitarySum(m.Author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
-func Buy(s *discordgo.Session, m *discordgo.MessageCreate, db *sqlx.DB) {
+func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if args[0] != "!buy" {
 		return

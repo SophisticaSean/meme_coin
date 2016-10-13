@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -58,7 +58,7 @@ func GenerateResponseList() []MineResponse {
 	return responseList
 }
 
-func Mine(s *discordgo.Session, m *discordgo.MessageCreate, responseList []MineResponse, db *sqlx.DB) {
+func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []MineResponse, db *sqlx.DB) {
 	author := UserGet(m.Author, db)
 	difference := time.Now().Sub(author.MineTime)
 	timeLimit := 5
