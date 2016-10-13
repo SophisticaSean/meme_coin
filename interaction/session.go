@@ -11,7 +11,7 @@ type Session interface {
 	AddHandler(interface{}) func()
 	User(string) (User, error)
 	Open() error
-	Channel(string) (discordgo.Channel, error)
+	Channel(string) (*discordgo.Channel, error)
 }
 
 type DiscordSession struct {
@@ -23,8 +23,8 @@ type ConsoleSession struct {
 }
 
 func (ds DiscordSession) ChannelMessageSend(id string, message string) (string, error) {
-	msg, err := ds.Session.ChannelMessageSend(id, message)
-	return msg.Content, err
+	_, err := ds.Session.ChannelMessageSend(id, message)
+	return "hello", err
 }
 
 func (ds DiscordSession) AddHandler(event interface{}) func() {
@@ -43,8 +43,8 @@ func (ds DiscordSession) Open() error {
 	return ds.Session.Open()
 }
 
-func (ds DiscordSession) Channel(channelID string) (discordgo.Channel, error) {
-	channel, err := ds.Channel(channelID)
+func (ds DiscordSession) Channel(channelID string) (*discordgo.Channel, error) {
+	channel, err := ds.Session.Channel(channelID)
 	return channel, err
 }
 
@@ -77,8 +77,8 @@ func (cs *ConsoleSession) Open() error {
 	return nil
 }
 
-func (ds *ConsoleSession) Channel(channelID string) (discordgo.Channel, error) {
-	return discordgo.Channel{ID: channelID}, nil
+func (ds *ConsoleSession) Channel(channelID string) (*discordgo.Channel, error) {
+	return &discordgo.Channel{ID: channelID}, nil
 }
 
 func NewConsoleSession() *ConsoleSession {
