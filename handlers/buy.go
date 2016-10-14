@@ -140,8 +140,10 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	userUnits.HackAttempts = 0
 	UpdateUnits(&userUnits, db)
 	UpdateUnitsTimestamp(&userUnits, db)
-	message = m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
+	message = m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
 	fmt.Println(message)
+	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
+
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
