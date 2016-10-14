@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"runtime"
@@ -113,7 +112,7 @@ const corpus = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func generateRandomString(maxStringLength int) string {
 	stringLength := getMaxStringLength(maxStringLength)
-	fmt.Println(stringLength)
+	//fmt.Println(stringLength)
 	charList := make([]byte, stringLength)
 	for i := range charList {
 		charList[i] = corpus[rand.Intn(len(charList))]
@@ -173,6 +172,6 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	// reset the seed
 	rand.Seed(time.Now().UnixNano())
 	//fmt.Println(time.Since(startTime))
-	fmt.Println(targetString, totalIterations, iterationLimit, seed, totalFitness, targetLength, populationSize)
+	//fmt.Println(targetString, totalIterations, iterationLimit, seed, totalFitness, targetLength, populationSize)
 	return (float64(totalFitness) / float64(targetLength)), (float64(iterationLimit) / float64(totalIterations))
 }

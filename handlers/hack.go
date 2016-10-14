@@ -105,7 +105,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if hackerCount > authorUnits.Hacker {
 		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker) + "\r"
 	}
-	fmt.Println(hackerLimit, hackerCount)
 	if hackerCount > hackerLimit {
 		hackerCount = hackerLimit
 	}
