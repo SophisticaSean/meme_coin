@@ -173,6 +173,6 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	// reset the seed
 	rand.Seed(time.Now().UnixNano())
 	//fmt.Println(time.Since(startTime))
-	//fmt.Println(targetString, totalIterations, iterationLimit, seed)
+	fmt.Println(targetString, totalIterations, iterationLimit, seed, totalFitness)
 	return (float64(totalFitness) / float64(targetLength)), (float64(iterationLimit) / float64(totalIterations))
 }
