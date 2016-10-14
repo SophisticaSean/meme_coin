@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"runtime"
@@ -112,6 +113,7 @@ const corpus = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func generateRandomString(maxStringLength int) string {
 	stringLength := getMaxStringLength(maxStringLength)
+	fmt.Println(stringLength)
 	charList := make([]byte, stringLength)
 	for i := range charList {
 		charList[i] = corpus[rand.Intn(len(charList))]

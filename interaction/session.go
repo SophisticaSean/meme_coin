@@ -59,9 +59,8 @@ func NewDiscordSession(email string, pass string) (DiscordSession, error) {
 }
 
 func (cs *ConsoleSession) ChannelMessageSend(id string, message string) (string, error) {
-	msg := fmt.Sprintf("Channel: %s\nSent: %s", id, message)
-	fmt.Println(msg)
-	return msg, nil
+	fmt.Printf(message)
+	return message, nil
 }
 
 func (cs *ConsoleSession) AddHandler(event interface{}) func() {
