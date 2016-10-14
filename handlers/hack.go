@@ -78,7 +78,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	// set the vars we care about
 	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
 	strTotalMemes := strconv.Itoa(totalMemes)
-	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 1.5))))
+	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 0.75))))
 	hackAttempts = int((math.Floor(float64(targetUnits.Cypher/15.0) + 4)))
 	hackerLimit := globalHackerLimit + int(math.Floor(float64(targetUnits.Cypher)*float64(0.8)))
 	target := UserGet(mentions[0], db)
