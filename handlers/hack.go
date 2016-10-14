@@ -15,14 +15,14 @@ import (
 var helpMessage = "The goal of hacking is to get your hacker's performance to 100 percent and then your botnet performance to 100 percent. You're trying to hack someone's password to steal all their uncollected memes. If your hacker's performance is under 100 percent, it means you need to increase the amount of botnets you're using, if your botnet's performance is overperforming, you'll need to decrease the amount of botnets you're using. There is a magic number of botnets and hackers that will crack the target's password successfully. You only have a fixed amount of tries at someone's password before it resets! The more cyphers someone has, the more difficult their password is going to be to crack!\r"
 
 const (
-	hackAttempts  = 4
 	hackerLimit   = 7
 	botnetLimit   = 5000
 	cypherPadding = 5
 )
 
 var (
-	lossChances int
+	hackAttempts int
+	lossChances  int
 )
 
 func Ftoa(float float64) string {
@@ -78,6 +78,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
 	strTotalMemes := strconv.Itoa(totalMemes)
 	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 1.5))))
+	hackAttempts = int((math.Floor(float64(targetUnits.Cypher/15.0) + 3)))
 	target := UserGet(mentions[0], db)
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
@@ -147,8 +148,8 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		if target.DID != author.DID {
 			lossesMessage = processHackingLosses(&authorUnits, hackerCount, botnetCount, db)
 		}
-		message = "`hacking was not successful! hacking report:`"
-		message = message + "\r `hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
+		message = "`" + author.Username + " is trying to hack " + target.Username + "!\rhacking report:`"
+		message = message + "\r`hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
 		if fitnessPercentage == 1 {
 			message = message + "`botnets overperformed at: ~" + Ftoa(roundedGenerationPercentage*10) + "%`\r"
 		}

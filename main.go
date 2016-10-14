@@ -80,7 +80,8 @@ func main() {
 		}
 		message.Message.Author = &author
 		for {
-			text, _ := reader.ReadString('\n')
+			line, _, _ := reader.ReadLine()
+			text := string(line)
 			if text != "" {
 				message.Message.Content = strings.TrimSpace(text)
 				events.MessageHandler(botSess, &message)
