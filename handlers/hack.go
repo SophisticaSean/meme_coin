@@ -15,12 +15,12 @@ import (
 var helpMessage = "The goal of hacking is to get your hacker's performance to 100 percent and then your botnet performance to 100 percent. You're trying to hack someone's password to steal all their uncollected memes. If your hacker's performance is under 100 percent, it means you need to increase the amount of botnets you're using, if your botnet's performance is overperforming, you'll need to decrease the amount of botnets you're using. There is a magic number of botnets and hackers that will crack the target's password successfully. You only have a fixed amount of tries at someone's password before it resets! The more cyphers someone has, the more difficult their password is going to be to crack!\r"
 
 const (
-	botnetLimit   = 5000
-	cypherPadding = 5
+	globalHackerLimit = 7
+	botnetLimit       = 5000
+	cypherPadding     = 5
 )
 
 var (
-	hackerLimit  = 7
 	hackAttempts int
 	lossChances  int
 )
@@ -80,6 +80,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	strTotalMemes := strconv.Itoa(totalMemes)
 	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 1.5))))
 	hackAttempts = int((math.Floor(float64(targetUnits.Cypher/15.0) + 4)))
+	hackerLimit = globalHackerLimit + int(math.Floor(float64(targetUnits.Cypher)*float64(0.5)))
 	target := UserGet(mentions[0], db)
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
@@ -104,7 +105,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if hackerCount > authorUnits.Hacker {
 		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker) + "\r"
 	}
-	hackerLimit = hackerLimit + int(math.Floor(float64(targetUnits.Cypher)*float64(0.5)))
+	fmt.Println(hackerLimit, hackerCount)
 	if hackerCount > hackerLimit {
 		hackerCount = hackerLimit
 	}
