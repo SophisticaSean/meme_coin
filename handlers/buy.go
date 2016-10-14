@@ -19,6 +19,10 @@ type Unit struct {
 	amount     int
 }
 
+const (
+	multiplier = 3
+)
+
 var (
 	infoMessage string
 	unitList    []Unit
@@ -112,8 +116,11 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits
 		diffMinutes = maxDifference
 	}
 	roundedDifference := math.Floor(diffMinutes)
+	roundedHours := math.Floor(diffMinutes / 60)
+	productionMultiplier := int((roundedHours * multiplier) + 100)
 	productionPerMinute := float64(production) / 10.0
 	memes = int(roundedDifference * productionPerMinute)
+	memes = int((memes * productionMultiplier) / 100)
 	if memes < 1.0 {
 		message = "you don't have enough memes to collect right now."
 		return memes, message, userUnits
@@ -133,7 +140,7 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	userUnits.HackAttempts = 0
 	UpdateUnits(&userUnits, db)
 	UpdateUnitsTimestamp(&userUnits, db)
-	message = m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
+	message = m.Author.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
