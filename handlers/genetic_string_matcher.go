@@ -115,7 +115,7 @@ func generateRandomString(maxStringLength int) string {
 	//fmt.Println(stringLength)
 	charList := make([]byte, stringLength)
 	for i := range charList {
-		charList[i] = corpus[rand.Intn(len(charList))]
+		charList[i] = corpus[rand.Intn(len(corpus))]
 	}
 	return string(charList)
 }
