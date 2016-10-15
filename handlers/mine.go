@@ -76,7 +76,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	// check to make sure user is not trying to mine before timeLimit has passed
 	if difference.Minutes() < float64(timeLimit) {
 		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
-		_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
+		_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
 		return
 	}
 
@@ -84,7 +84,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	pickedIndex := rand.Intn(len(responseList))
 	mineResponse := responseList[pickedIndex]
 	MoneyAdd(&author, mineResponse.amount, "mined", db)
-	_, _ = s.ChannelMessageSend(m.ChannelID, m.Author.Username+mineResponse.response)
-	fmt.Println(m.Author.Username + " mined " + strconv.Itoa(mineResponse.amount))
+	_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+mineResponse.response)
+	fmt.Println(author.Username + " mined " + strconv.Itoa(mineResponse.amount))
 	return
 }
