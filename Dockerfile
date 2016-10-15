@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 MAINTAINER Sean Lewis
-ENV SYSTEM gitlab
+ENV SYSTEM meme_coin
 ENV TYPE repo
 ENV TERM xterm
 
@@ -18,12 +18,10 @@ RUN apt-get -y update && \
 
 RUN curl -q "https://storage.googleapis.com/golang/go1.6.3.linux-amd64.tar.gz" > go.tar.gz && \
 tar -C /usr/local -xzf go.tar.gz && \
-mkdir -p /builds/go/src/github.com/SophisticaSean/meme_coin
+mkdir -p /builds/go/src/github.com/SophisticaSean/
 
-RUN mkdir -p /meme_coin
-
+# add binary to container
 ADD meme_coin /
-ADD ./. /builds/go/src/github.com/SophisticaSean/meme_coin/
 
 ## Copy Dockerfile over to image
 ADD Dockerfile /Dockerfile.$SYSTEM

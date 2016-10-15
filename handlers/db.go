@@ -4,6 +4,7 @@ import (
 	_ "database/sql"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -56,8 +57,21 @@ CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner nume
 CREATE TABLE IF NOT EXISTS transactions(discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
 `
 
+var dropSchema = `
+DROP TABLE IF EXISTS money;
+DROP TABLE IF EXISTS units;
+DROP TABLE IF EXISTS transactions;
+`
+
 func DbGet() *sqlx.DB {
-	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
+	isTest, _ := os.LookupEnv("TEST")
+	var db *sqlx.DB
+	var err error
+	if isTest != "" {
+		db, err = sqlx.Connect("postgres", "host=localhost user=memebot dbname=test password=password sslmode=disable parseTime=true")
+	} else {
+		db, err = sqlx.Connect("postgres", "host=localhost user=memebot dbname=money password=password sslmode=disable parseTime=true")
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,13 +79,12 @@ func DbGet() *sqlx.DB {
 	return db
 }
 
-func TestDbGet() *sqlx.DB {
+func DbReset() {
 	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=test password=password sslmode=disable parseTime=true")
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.MustExec(schema)
-	return db
+	db.MustExec(dropSchema)
 }
 
 func createUser(user *discordgo.User, db *sqlx.DB) {
