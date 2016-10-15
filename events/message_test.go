@@ -2,6 +2,7 @@ package events
 
 import (
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -81,6 +82,163 @@ func TestNewUser(t *testing.T) {
 	}
 	if !strings.Contains(output, "creating user in units table: "+id) {
 		t.Log("user units creation didn't fire")
+		t.Error(output)
+	}
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+	if user.CurMoney != 1000 {
+		t.Error("Did not give new user 1000 starting money.")
+	}
+}
+
+func TestGambleCoinWin(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	gambleAmount := 1000
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin heads"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "result was heads.") {
+		t.Log("Coin game did not report result.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, author.Username+" won "+strconv.Itoa(gambleAmount)+" memes.") {
+		t.Log("Coin toss did not report win properly.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 2000 {
+		t.Log("Coin toss did not award proper amount of memes!")
+		t.Log("We expected 2000 memes, but got " + strconv.Itoa(user.CurMoney))
+		t.Error(output)
+	}
+	if user.WonMoney != 1000 {
+		t.Log("Coin game didn't compute WonMoney Properly!")
+		t.Log("User has " + strconv.Itoa(user.WonMoney) + " but we expected 1000.")
+		t.Error(output)
+	}
+}
+
+func TestGambleCoinLoss(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	gambleAmount := 1000
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin tails"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "result was heads.") {
+		t.Log("Coin game did not report result.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, author.Username+" lost "+strconv.Itoa(gambleAmount)+" memes.") {
+		t.Log("Coin toss did not report loss properly.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 0 {
+		t.Log("Coin toss did not take away memes!")
+		t.Log("User still has " + strconv.Itoa(user.CurMoney) + " memes.")
+		t.Error(output)
+	}
+	if user.LostMoney != 1000 {
+		t.Log("Coin game didn't compute LostMoney Properly!")
+		t.Log("User has " + strconv.Itoa(user.LostMoney) + " but we expected 1000.")
+		t.Error(output)
+	}
+}
+
+func TestGambleNumberWin(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	gambleAmount := 1000
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " number 35:100"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "result was 35.") {
+		t.Log("Number game did not report result.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, author.Username+" won "+strconv.Itoa(gambleAmount*99)+" memes.") {
+		t.Log("Number game did not report win properly.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 100000 {
+		t.Log("Number game did not award proper amount of memes!")
+		t.Log("We expected 10000 memes, but got " + strconv.Itoa(user.CurMoney))
+		t.Error(output)
+	}
+	if user.WonMoney != 99000 {
+		t.Log("Number game didn't compute WonMoney Properly!")
+		t.Log("User has " + strconv.Itoa(user.WonMoney) + " but we expected 99000.")
+		t.Error(output)
+	}
+}
+
+func TestGambleNumberLoss(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	gambleAmount := 1000
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " number 36:100"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "result was 35.") {
+		t.Log("Number game did not report result.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, author.Username+" lost "+strconv.Itoa(gambleAmount)+" memes.") {
+		t.Log("Number game did not report loss properly.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 0 {
+		t.Log("Number game did not take away memes!")
+		t.Log("User still has " + strconv.Itoa(user.CurMoney) + " memes.")
+		t.Error(output)
+	}
+	if user.LostMoney != 1000 {
+		t.Log("Number game didn't compute LostMoney Properly!")
+		t.Log("User has " + strconv.Itoa(user.LostMoney) + " but we expected 1000.")
 		t.Error(output)
 	}
 }
