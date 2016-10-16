@@ -36,6 +36,10 @@ func TestMain(m *testing.M) {
 	os.Exit(exit)
 }
 
+func log(t *testing.T, expected string, actual string) {
+	t.Log("We expected " + expected + ", but got: " + actual)
+}
+
 func TestHelp(t *testing.T) {
 	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp`"
 	splitTargets := strings.Split(targetString, " ")
@@ -119,12 +123,12 @@ func TestGambleCoinWin(t *testing.T) {
 	user = handlers.UserGet(&author, db)
 	if user.CurMoney != 2000 {
 		t.Log("Coin toss did not award proper amount of memes!")
-		t.Log("We expected 2000 memes, but got " + strconv.Itoa(user.CurMoney))
+		log(t, strconv.Itoa(2000), strconv.Itoa(user.CurMoney))
 		t.Error(output)
 	}
 	if user.WonMoney != 1000 {
 		t.Log("Coin game didn't compute WonMoney Properly!")
-		t.Log("User has " + strconv.Itoa(user.WonMoney) + " but we expected 1000.")
+		log(t, strconv.Itoa(user.WonMoney), strconv.Itoa(1000))
 		t.Error(output)
 	}
 }
@@ -162,7 +166,7 @@ func TestGambleCoinLoss(t *testing.T) {
 	}
 	if user.LostMoney != 1000 {
 		t.Log("Coin game didn't compute LostMoney Properly!")
-		t.Log("User has " + strconv.Itoa(user.LostMoney) + " but we expected 1000.")
+		log(t, strconv.Itoa(user.LostMoney), strconv.Itoa(1000))
 		t.Error(output)
 	}
 }
@@ -195,12 +199,12 @@ func TestGambleNumberWin(t *testing.T) {
 	user = handlers.UserGet(&author, db)
 	if user.CurMoney != 100000 {
 		t.Log("Number game did not award proper amount of memes!")
-		t.Log("We expected 10000 memes, but got " + strconv.Itoa(user.CurMoney))
+		log(t, strconv.Itoa(1000), strconv.Itoa(user.CurMoney))
 		t.Error(output)
 	}
 	if user.WonMoney != 99000 {
 		t.Log("Number game didn't compute WonMoney Properly!")
-		t.Log("User has " + strconv.Itoa(user.WonMoney) + " but we expected 99000.")
+		log(t, strconv.Itoa(user.WonMoney), strconv.Itoa(99000))
 		t.Error(output)
 	}
 }
@@ -233,12 +237,93 @@ func TestGambleNumberLoss(t *testing.T) {
 	user = handlers.UserGet(&author, db)
 	if user.CurMoney != 0 {
 		t.Log("Number game did not take away memes!")
-		t.Log("User still has " + strconv.Itoa(user.CurMoney) + " memes.")
+		log(t, strconv.Itoa(user.CurMoney), strconv.Itoa(0))
 		t.Error(output)
 	}
 	if user.LostMoney != 1000 {
 		t.Log("Number game didn't compute LostMoney Properly!")
-		t.Log("User has " + strconv.Itoa(user.LostMoney) + " but we expected 1000.")
+		log(t, strconv.Itoa(user.LostMoney), strconv.Itoa(1000))
+		t.Error(output)
+	}
+}
+
+func TestHackWin(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	targetID := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "thief",
+	}
+	target := discordgo.User{
+		ID:       targetID,
+		Username: "target",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+
+	user := handlers.UserGet(&author, db)
+	userUnits := handlers.UnitsGet(&author, db)
+	userUnits.Hacker = 100
+	userUnits.Botnet = 100
+	handlers.UpdateUnits(&userUnits, db)
+	userUnits = handlers.UnitsGet(&target, db)
+
+	targetUser := handlers.UserGet(&target, db)
+	targetUnits := handlers.UnitsGet(&target, db)
+	targetUnits.Miner = 14
+	targetUnits.HackSeed = 37
+	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUnits, db)
+
+	text := "!hack 100 67 @target"
+	message.Message.Content = text
+	message.Message.Mentions = append(message.Message.Mentions, &target)
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newTargetUser := handlers.UserGet(&target, db)
+	newTargetUnits := handlers.UnitsGet(&target, db)
+
+	userMoneyDiff := newUser.CurMoney - user.CurMoney
+	if userMoneyDiff != targetUnits.Miner {
+		t.Log("The thief's money wasn't updated properly.")
+		log(t, strconv.Itoa(targetUnits.Miner), strconv.Itoa(userMoneyDiff))
+		t.Error(output)
+	}
+
+	userStoleDiff := newUser.HackedMoney - user.HackedMoney
+	if userStoleDiff != targetUnits.Miner {
+		t.Log("The thief's HackedMoney wasn't updated properly.")
+		log(t, strconv.Itoa(targetUnits.Miner), strconv.Itoa(userStoleDiff))
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	targetStoleDiff := newTargetUser.StolenFromMoney - targetUser.StolenFromMoney
+	if targetStoleDiff != targetUnits.Miner {
+		t.Log("The target's StolenFromMoney wasn't updated properly.")
+		log(t, strconv.Itoa(targetUnits.Miner), strconv.Itoa(targetStoleDiff))
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newTargetUnits.CollectTime == targetUnits.CollectTime {
+		t.Log("The target's CollectTime wasn't updated properly.")
+		t.Error(output)
+	}
+
+	if newTargetUnits.HackAttempts != 0 {
+		t.Log("The target's HackAttempts was not reset back to 0")
+		log(t, strconv.Itoa(0), strconv.Itoa(newTargetUnits.HackAttempts))
+		t.Error(output)
+	}
+
+	if newTargetUnits.HackSeed != 0 {
+		t.Log("The target's HackSeed was not reset")
+		t.Log("The seed was still: " + strconv.Itoa(int(newTargetUnits.HackSeed)))
 		t.Error(output)
 	}
 }

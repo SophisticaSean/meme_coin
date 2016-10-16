@@ -1,3 +1,6 @@
+
+containerRunning := $(shell docker ps | grep meme_coin | wc -l)
+
 prebuild: main.go
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o meme_coin .
 	docker build -t meme_coin .
@@ -9,8 +12,11 @@ build: prebuild
 console: console_prebuild
 	sleep 3
 	docker exec -it meme_coin /meme_coin
-test: # console_prebuild
+test:
+# test depends on already running console_prebuild container
+  ifeq ($(containerRunning), 0)
+		make console_prebuild
+  endif
 	docker exec -it meme_coin bash -c "export GOPATH=/builds/go; export TEST=true; cd /builds/go/src/github.com/SophisticaSean/meme_coin; /usr/local/go/bin/go get; /usr/local/go/bin/go test ./..."
-	#docker exec -it meme_coin cd /builds/go/src/github.com/SophisticaSean/meme_coin && /usr/local/bin/go/bin/go test
 psql:
 	docker exec -it meme_coin bash -c 'su postgres -c "psql money"'

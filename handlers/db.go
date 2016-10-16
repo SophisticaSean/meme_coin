@@ -100,7 +100,7 @@ func createUser(user *discordgo.User, db *sqlx.DB) {
 func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 	var users []User
 	//fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, mine_time FROM money WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, mine_time, hacked_money, stolen_money FROM money WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -241,15 +241,9 @@ func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
 }
 
 func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = ($1, $2, $3, $4, $5, $6, $7, $8, $9) WHERE discord_id = `
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, collect_time, cyphers, hackers, botnets, hack_seed, hack_attempts) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) WHERE discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
-	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet, userUnits.HackSeed, userUnits.HackAttempts)
-}
-
-func UpdateUnitsTimestamp(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (collect_time) = ($1) WHERE discord_id = `
-	dbString = dbString + `'` + userUnits.DID + `'`
-	db.MustExec(dbString, time.Now())
+	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.CollectTime, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet, userUnits.HackSeed, userUnits.HackAttempts)
 }
 
 func createUserUnits(user *discordgo.User, db *sqlx.DB) {

@@ -139,7 +139,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		targetUnits.CollectTime = time.Now()
 		targetUnits.HackSeed = 0
 		targetUnits.HackAttempts = 0
-		UpdateUnitsTimestamp(&targetUnits, db)
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
 		fmt.Println(message, lossChances)

@@ -138,8 +138,8 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
 	userUnits.HackSeed = 0
 	userUnits.HackAttempts = 0
+	userUnits.CollectTime = time.Now()
 	UpdateUnits(&userUnits, db)
-	UpdateUnitsTimestamp(&userUnits, db)
 	message = user.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
 	fmt.Println(message)
 	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
@@ -291,8 +291,8 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if unit.name == "botnet" {
 		userUnits.Botnet = userUnits.Botnet + amount
 	}
+	userUnits.CollectTime = time.Now()
 	UpdateUnits(&userUnits, db)
-	UpdateUnitsTimestamp(&userUnits, db)
 	message := user.Username + " successfully bought " + strconv.Itoa(amount) + " " + unit.name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)

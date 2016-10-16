@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"runtime"
 	"time"
 
@@ -172,6 +174,15 @@ func hackSimulate(seed int64, popSize int, iterationLimit int, maxStringLength i
 	// reset the seed
 	rand.Seed(time.Now().UnixNano())
 	//fmt.Println(time.Since(startTime))
-	//fmt.Println(targetString, totalIterations, iterationLimit, seed, totalFitness, targetLength, populationSize)
+	isTest, _ := os.LookupEnv("TEST")
+	if isTest != "" {
+		fmt.Println("targetString:", targetString)
+		fmt.Println("totalIterations:", totalIterations)
+		fmt.Println("iterationLimit:", iterationLimit)
+		fmt.Println("seed:", seed)
+		fmt.Println("totalFitness:", totalFitness)
+		fmt.Println("targetLength:", targetLength)
+		fmt.Println("populationSize:", populationSize)
+	}
 	return (float64(totalFitness) / float64(targetLength)), (float64(iterationLimit) / float64(totalIterations))
 }
