@@ -326,4 +326,6 @@ func TestHackWin(t *testing.T) {
 		t.Log("The seed was still: " + strconv.Itoa(int(newTargetUnits.HackSeed)))
 		t.Error(output)
 	}
+
+	// analyze the output
 }
