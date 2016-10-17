@@ -36,8 +36,8 @@ func TestMain(m *testing.M) {
 	os.Exit(exit)
 }
 
-func log(t *testing.T, expected string, actual string) {
-	t.Log("We expected " + expected + ", but got: " + actual)
+func numLog(t *testing.T, expected int, actual int) {
+	t.Log("We expected " + strconv.Itoa(expected) + ", but got: " + strconv.Itoa(actual))
 }
 
 func TestHelp(t *testing.T) {
@@ -123,12 +123,12 @@ func TestGambleCoinWin(t *testing.T) {
 	user = handlers.UserGet(&author, db)
 	if user.CurMoney != 2000 {
 		t.Log("Coin toss did not award proper amount of memes!")
-		log(t, strconv.Itoa(2000), strconv.Itoa(user.CurMoney))
+		numLog(t, 2000, user.CurMoney)
 		t.Error(output)
 	}
 	if user.WonMoney != 1000 {
 		t.Log("Coin game didn't compute WonMoney Properly!")
-		log(t, strconv.Itoa(user.WonMoney), strconv.Itoa(1000))
+		numLog(t, user.WonMoney, 1000)
 		t.Error(output)
 	}
 }
@@ -166,7 +166,7 @@ func TestGambleCoinLoss(t *testing.T) {
 	}
 	if user.LostMoney != 1000 {
 		t.Log("Coin game didn't compute LostMoney Properly!")
-		log(t, strconv.Itoa(user.LostMoney), strconv.Itoa(1000))
+		numLog(t, user.LostMoney, 1000)
 		t.Error(output)
 	}
 }
@@ -199,12 +199,12 @@ func TestGambleNumberWin(t *testing.T) {
 	user = handlers.UserGet(&author, db)
 	if user.CurMoney != 100000 {
 		t.Log("Number game did not award proper amount of memes!")
-		log(t, strconv.Itoa(1000), strconv.Itoa(user.CurMoney))
+		numLog(t, 1000, user.CurMoney)
 		t.Error(output)
 	}
 	if user.WonMoney != 99000 {
 		t.Log("Number game didn't compute WonMoney Properly!")
-		log(t, strconv.Itoa(user.WonMoney), strconv.Itoa(99000))
+		numLog(t, user.WonMoney, 99000)
 		t.Error(output)
 	}
 }
@@ -237,12 +237,12 @@ func TestGambleNumberLoss(t *testing.T) {
 	user = handlers.UserGet(&author, db)
 	if user.CurMoney != 0 {
 		t.Log("Number game did not take away memes!")
-		log(t, strconv.Itoa(user.CurMoney), strconv.Itoa(0))
+		numLog(t, user.CurMoney, 0)
 		t.Error(output)
 	}
 	if user.LostMoney != 1000 {
 		t.Log("Number game didn't compute LostMoney Properly!")
-		log(t, strconv.Itoa(user.LostMoney), strconv.Itoa(1000))
+		numLog(t, user.LostMoney, 1000)
 		t.Error(output)
 	}
 }
@@ -290,14 +290,14 @@ func TestHackWin(t *testing.T) {
 	userMoneyDiff := newUser.CurMoney - user.CurMoney
 	if userMoneyDiff != targetUnits.Miner {
 		t.Log("The thief's money wasn't updated properly.")
-		log(t, strconv.Itoa(targetUnits.Miner), strconv.Itoa(userMoneyDiff))
+		numLog(t, targetUnits.Miner, userMoneyDiff)
 		t.Error(output)
 	}
 
 	userStoleDiff := newUser.HackedMoney - user.HackedMoney
 	if userStoleDiff != targetUnits.Miner {
 		t.Log("The thief's HackedMoney wasn't updated properly.")
-		log(t, strconv.Itoa(targetUnits.Miner), strconv.Itoa(userStoleDiff))
+		numLog(t, targetUnits.Miner, userStoleDiff)
 		t.Log(newUser.HackedMoney)
 		t.Error(output)
 	}
@@ -305,7 +305,7 @@ func TestHackWin(t *testing.T) {
 	targetStoleDiff := newTargetUser.StolenFromMoney - targetUser.StolenFromMoney
 	if targetStoleDiff != targetUnits.Miner {
 		t.Log("The target's StolenFromMoney wasn't updated properly.")
-		log(t, strconv.Itoa(targetUnits.Miner), strconv.Itoa(targetStoleDiff))
+		numLog(t, targetUnits.Miner, targetStoleDiff)
 		t.Log(newUser.HackedMoney)
 		t.Error(output)
 	}
@@ -317,7 +317,7 @@ func TestHackWin(t *testing.T) {
 
 	if newTargetUnits.HackAttempts != 0 {
 		t.Log("The target's HackAttempts was not reset back to 0")
-		log(t, strconv.Itoa(0), strconv.Itoa(newTargetUnits.HackAttempts))
+		numLog(t, 0, newTargetUnits.HackAttempts)
 		t.Error(output)
 	}
 
