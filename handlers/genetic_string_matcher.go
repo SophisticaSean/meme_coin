@@ -36,9 +36,8 @@ func (sms *stringMaterSimulator) ExitFunc(g *ga.IGenome) bool {
 	totalFitness = (*g).GetFitness()
 	if !limitHit {
 		return (*g).GetFitness() == targetLength
-	} else {
-		return true
 	}
+	return true
 }
 
 type myBitsetCreate struct {
@@ -95,13 +94,20 @@ var (
 	limitHit     bool
 )
 
+const (
+	hardStringLengthCap = 80
+)
+
 func getMaxStringLength(maxStringLength int) int {
-	eightyPercent := int(math.Ceil(float64(maxStringLength) * 0.8))
+	percentage := int(math.Ceil(float64(maxStringLength) * 0.5))
 	numArr := rand.Perm(maxStringLength)
 	stringLength := 0
 	for _, number := range numArr {
 		if stringLength == 0 {
-			if number >= eightyPercent {
+			if number >= percentage {
+				if number > hardStringLengthCap {
+					number = hardStringLengthCap
+				}
 				stringLength = number
 				return stringLength
 			}

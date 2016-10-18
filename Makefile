@@ -17,6 +17,6 @@ test:
   ifeq ($(containerRunning), 0)
 		make console_prebuild
   endif
-	docker exec -it meme_coin bash -c "export GOPATH=/builds/go; export TEST=true; cd /builds/go/src/github.com/SophisticaSean/meme_coin; /usr/local/go/bin/go get; /usr/local/go/bin/go test ./..."
+	@docker exec -it meme_coin bash -c "export GOPATH=/builds/go; export TEST=true; cd /builds/go/src/github.com/SophisticaSean/meme_coin; /usr/local/go/bin/go get; /usr/local/go/bin/go test ./..."
 psql:
 	docker exec -it meme_coin bash -c 'su postgres -c "psql money"'

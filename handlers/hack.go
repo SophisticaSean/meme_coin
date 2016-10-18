@@ -25,18 +25,20 @@ var (
 	lossChances  int
 )
 
+// Ftoa is the Float64 equivalent of strconv.Itoa
 func Ftoa(float float64) string {
 	floatString := strconv.FormatFloat(float, 'f', -1, 64)
 	return floatString
 }
 
-func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db *sqlx.DB) string {
+func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, seed int64, db *sqlx.DB) string {
+	rand.Seed(seed)
 	message := ""
 	hackerLosses := 0
 	botnetLosses := 0
 	for i := 0; i <= usedHackers; i++ {
 		if rand.Intn(400) < lossChances {
-			hackerLosses += 1
+			hackerLosses++
 		}
 	}
 	if hackerLosses != 0 {
@@ -45,7 +47,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 	}
 	for i := 0; i <= usedBotnets; i++ {
 		if rand.Intn(100) < lossChances {
-			botnetLosses += 1
+			botnetLosses++
 		}
 	}
 	if botnetLosses != 0 {
@@ -53,9 +55,11 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, db
 		message = message + "`Your hacking was detected and got some botnets discovered, some whitehat released a zero day whitepaper and patch defeating " + strconv.Itoa(botnetLosses) + " of your botnets.`\r`You now have " + strconv.Itoa(units.Botnet) + " botnets left.`\r"
 	}
 	UpdateUnits(units, db)
+	rand.Seed(time.Now().UnixNano())
 	return message
 }
 
+// Hack handles all the logic for the !hack command
 func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	defaultSyntax := "`!hack <amount_of_hackers> <amount_of_botnets> @person`\r`!hack 3 12 @some_body`"
@@ -80,7 +84,15 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	strTotalMemes := strconv.Itoa(totalMemes)
 	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 1.2))))
 	hackAttempts = int((math.Floor(float64(targetUnits.Cypher/15.0) + 4)))
-	hackerLimit := globalHackerLimit + int(math.Floor(float64(targetUnits.Cypher)*float64(0.8)))
+	maxStringLength := targetUnits.Cypher + cypherPadding
+	maxStringCapped := maxStringLength
+	//if maxStringLength > 75 {
+	//maxStringLength = 75
+	//}
+	if maxStringCapped > 80 {
+		maxStringCapped = 80
+	}
+	hackerLimit := globalHackerLimit + int(math.Floor(float64(maxStringCapped)*float64(0.5)))
 	target := UserGet(mentions[0], db)
 	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
@@ -124,7 +136,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		return
 	}
 
-	maxStringLength := targetUnits.Cypher + cypherPadding
 	fitnessPercentage, generationPercentage := hackSimulate(seed, hackerCount, botnetCount, maxStringLength)
 	// randomize which direction we round in
 	roundedGenerationPercentage := 0.0
@@ -147,7 +158,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
 		lossesMessage := ""
 		if target.DID != author.DID {
-			lossesMessage = processHackingLosses(&authorUnits, hackerCount, botnetCount, db)
+			lossesMessage = processHackingLosses(&authorUnits, hackerCount, botnetCount, seed, db)
 		}
 		message = "`" + author.Username + " is trying to hack " + target.Username + "!\rhacking report:`"
 		message = message + "\r`hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"

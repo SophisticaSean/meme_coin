@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -92,6 +93,106 @@ func TestNewUser(t *testing.T) {
 	user := handlers.UserGet(&author, db)
 	if user.CurMoney != 1000 {
 		t.Error("Did not give new user 1000 starting money.")
+	}
+}
+
+func TestGambleNegativeAmount(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	gambleAmount := -1000
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin heads"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "amount has to be more than 0") {
+		t.Log("Coin game did not error on bad input.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 1000 {
+		t.Log("Coin toss did not award proper amount of memes!")
+		numLog(t, 1000, user.CurMoney)
+		t.Error(output)
+	}
+	if user.WonMoney != 0 {
+		t.Log("Coin game didn't compute WonMoney Properly!")
+		numLog(t, user.WonMoney, 0)
+		t.Error(output)
+	}
+}
+
+func TestGambleOverflow(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	text := "!gamble 120301020300120301028012310929301923091093 coin heads"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "amount is too large or not a number, try again.") {
+		t.Log("Coin game did not error on bad input.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 1000 {
+		t.Log("Coin toss did not award proper amount of memes!")
+		numLog(t, 1000, user.CurMoney)
+		t.Error(output)
+	}
+	if user.WonMoney != 0 {
+		t.Log("Coin game didn't compute WonMoney Properly!")
+		numLog(t, user.WonMoney, 0)
+		t.Error(output)
+	}
+}
+
+func TestGambleNaN(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	rand.Seed(37)
+	message.Message.Author = &author
+	text := "!gamble hello coin heads"
+	message.Message.Content = text
+	db := handlers.DbGet()
+	user := handlers.UserGet(&author, db)
+
+	output := capStdout(botSess, message)
+	if !strings.Contains(output, "amount is too large or not a number, try again.") {
+		t.Log("Coin game did not error on bad input.")
+		t.Error(output)
+	}
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 1000 {
+		t.Log("Coin toss did not award proper amount of memes!")
+		numLog(t, 1000, user.CurMoney)
+		t.Error(output)
+	}
+	if user.WonMoney != 0 {
+		t.Log("Coin game didn't compute WonMoney Properly!")
+		numLog(t, user.WonMoney, 0)
+		t.Error(output)
 	}
 }
 
@@ -261,32 +362,38 @@ func TestHackWin(t *testing.T) {
 		ID:       targetID,
 		Username: "target",
 	}
-	rand.Seed(37)
-	message.Message.Author = &author
+	seed := int64(37)
+	hackers := "100"
+	botnets := "88"
+
+	rand.Seed(seed)
 
 	user := handlers.UserGet(&author, db)
 	userUnits := handlers.UnitsGet(&author, db)
 	userUnits.Hacker = 100
 	userUnits.Botnet = 100
 	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&target, db)
+	userUnits = handlers.UnitsGet(&author, db)
 
 	targetUser := handlers.UserGet(&target, db)
 	targetUnits := handlers.UnitsGet(&target, db)
 	targetUnits.Miner = 14
-	targetUnits.HackSeed = 37
+	targetUnits.HackSeed = seed
 	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
 	handlers.UpdateUnits(&targetUnits, db)
 
-	text := "!hack 100 67 @target"
+	text := "!hack " + hackers + " " + botnets + " @target"
 	message.Message.Content = text
 	message.Message.Mentions = append(message.Message.Mentions, &target)
+	message.Message.Author = &author
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
+	newUserUnits := handlers.UnitsGet(&author, db)
 	newTargetUser := handlers.UserGet(&target, db)
 	newTargetUnits := handlers.UnitsGet(&target, db)
 
+	// verify the thief's stats
 	userMoneyDiff := newUser.CurMoney - user.CurMoney
 	if userMoneyDiff != targetUnits.Miner {
 		t.Log("The thief's money wasn't updated properly.")
@@ -302,6 +409,19 @@ func TestHackWin(t *testing.T) {
 		t.Error(output)
 	}
 
+	if newUserUnits.Hacker != userUnits.Hacker {
+		t.Log("The thief lost hackers on a successful hack!")
+		numLog(t, newUserUnits.Hacker, userUnits.Hacker)
+		t.Error(output)
+	}
+
+	if newUserUnits.Botnet != userUnits.Botnet {
+		t.Log("The thief lost botnets on a successful hack!")
+		numLog(t, newUserUnits.Botnet, userUnits.Botnet)
+		t.Error(output)
+	}
+
+	// verify the target's stats
 	targetStoleDiff := newTargetUser.StolenFromMoney - targetUser.StolenFromMoney
 	if targetStoleDiff != targetUnits.Miner {
 		t.Log("The target's StolenFromMoney wasn't updated properly.")
@@ -327,5 +447,247 @@ func TestHackWin(t *testing.T) {
 		t.Error(output)
 	}
 
-	// analyze the output
+	// verify the output
+	if !strings.Contains(output, "totalIterations: "+botnets) {
+		t.Log("Number of iterations was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "iterationLimit: "+botnets) {
+		t.Log("IterationLimit was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "seed: "+strconv.Itoa(int(seed))) {
+		t.Log("The seed was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "totalFitness: 32") {
+		t.Log("totalFitness was not what we expected.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "targetLength: 32") {
+		t.Log("targetLength of password was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "populationSize: 9") {
+		t.Log("populationSize was not hardcapped to what we expected!")
+		t.Error(output)
+	}
+	expectedOutput := ("The hack was successful, " + user.Username + " stole " + strconv.Itoa(targetUnits.Miner) + " dank memes from " + target.Username)
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Successful hacking output to channel was not what was expected.")
+		t.Error(output)
+	}
+}
+
+func TestHackLoss(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	targetID := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "thief",
+	}
+	target := discordgo.User{
+		ID:       targetID,
+		Username: "target",
+	}
+	seed := int64(1281) // botnet loss
+	hackers := "300"
+	botnets := "2000"
+
+	user := handlers.UserGet(&author, db)
+	userUnits := handlers.UnitsGet(&author, db)
+	userUnits.Hacker = 300
+	userUnits.Botnet = 2000
+	handlers.UpdateUnits(&userUnits, db)
+	userUnits = handlers.UnitsGet(&author, db)
+
+	targetUser := handlers.UserGet(&target, db)
+	targetUnits := handlers.UnitsGet(&target, db)
+	targetUnits.Miner = 14
+	targetUnits.Cypher = 307
+	targetUnits.HackSeed = seed
+	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUnits, db)
+
+	rand.Seed(seed)
+
+	text := "!hack " + hackers + " " + botnets + " @target"
+	message.Message.Content = text
+	message.Message.Mentions = append(message.Message.Mentions, &target)
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newUserUnits := handlers.UnitsGet(&author, db)
+	newTargetUser := handlers.UserGet(&target, db)
+	newTargetUnits := handlers.UnitsGet(&target, db)
+
+	// verify the thief's stats
+	userMoneyDiff := newUser.CurMoney - user.CurMoney
+	if userMoneyDiff != 0 {
+		t.Log("The thief's money wasn't updated properly.")
+		numLog(t, targetUnits.Miner, userMoneyDiff)
+		t.Error(output)
+	}
+
+	userStoleDiff := newUser.HackedMoney - user.HackedMoney
+	if userStoleDiff != 0 {
+		t.Log("The thief's HackedMoney wasn't updated properly.")
+		numLog(t, targetUnits.Miner, userStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newUserUnits.Hacker != userUnits.Hacker-2 {
+		t.Log("The thief did not lose hackers on a failed hack!")
+		numLog(t, newUserUnits.Hacker, userUnits.Hacker)
+		t.Error(output)
+	}
+
+	if newUserUnits.Botnet != userUnits.Botnet-23 {
+		t.Log("The thief did not lose botnets on a failed hack!")
+		numLog(t, newUserUnits.Botnet, userUnits.Botnet)
+		t.Error(output)
+	}
+
+	// verify the target's stats
+	targetStoleDiff := newTargetUser.StolenFromMoney - targetUser.StolenFromMoney
+	if targetStoleDiff != 0 {
+		t.Log("The target's StolenFromMoney was updated on a failed hack!")
+		numLog(t, targetUnits.Miner, targetStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newTargetUnits.CollectTime != targetUnits.CollectTime {
+		t.Log("The target's CollectTime was reset on a failed hack!")
+		t.Error(output)
+	}
+
+	if newTargetUnits.HackAttempts != targetUnits.HackAttempts+1 {
+		t.Log("The target's HackAttempts was not incremented.")
+		numLog(t, 0, newTargetUnits.HackAttempts)
+		t.Error(output)
+	}
+
+	if newTargetUnits.HackSeed != targetUnits.HackSeed {
+		t.Log("The target's HackSeed reset on a failed Hack!")
+		t.Error(output)
+	}
+
+	// verify the output
+	if !strings.Contains(output, "totalIterations: 426") {
+		t.Log("Number of iterations was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "iterationLimit: "+botnets) {
+		t.Log("IterationLimit was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "seed: "+strconv.Itoa(int(seed))) {
+		t.Log("The seed was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "totalFitness: 640") {
+		t.Log("totalFitness was not what we expected.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "targetLength: 640") {
+		t.Log("targetLength of password was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "populationSize: 47") {
+		t.Log("populationSize was not hardcapped to what we expected!")
+		t.Error(output)
+	}
+	expectedOutput := ("1977 botnets left")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Failed hacking output to channel was not what was expected.")
+		t.Error(output)
+	}
+	expectedOutput = ("298 hackers left")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Failed hacking output to channel was not what was expected.")
+		t.Error(output)
+	}
+}
+
+func TestHackInsufficientUnits(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	targetID := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "thief",
+	}
+	target := discordgo.User{
+		ID:       targetID,
+		Username: "target",
+	}
+	seed := int64(1281) // botnet loss
+	hackers := "300"
+	botnets := "300"
+
+	user := handlers.UserGet(&author, db)
+	userUnits := handlers.UnitsGet(&author, db)
+	userUnits.Hacker = 100
+	userUnits.Botnet = 100
+	handlers.UpdateUnits(&userUnits, db)
+	userUnits = handlers.UnitsGet(&author, db)
+
+	targetUser := handlers.UserGet(&target, db)
+	targetUnits := handlers.UnitsGet(&target, db)
+	targetUnits.Miner = 14
+	targetUnits.Cypher = 307
+	targetUnits.HackSeed = seed
+	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUnits, db)
+
+	rand.Seed(seed)
+
+	text := "!hack " + hackers + " " + botnets + " @target"
+	message.Message.Content = text
+	message.Message.Mentions = append(message.Message.Mentions, &target)
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newUserUnits := handlers.UnitsGet(&author, db)
+	newTargetUser := handlers.UserGet(&target, db)
+	newTargetUnits := handlers.UnitsGet(&target, db)
+
+	// compare old and new users, make sure nothing has changed.
+	if !reflect.DeepEqual(user, newUser) {
+		t.Log("user did not equal newUser")
+		t.Error(output)
+	}
+	if !reflect.DeepEqual(userUnits, newUserUnits) {
+		t.Log("userUnits did not equal newUserUnits")
+		t.Error(output)
+	}
+	if !reflect.DeepEqual(targetUser, newTargetUser) {
+		t.Log("targetUser did not equal newTargetUser")
+		t.Error(output)
+	}
+	if !reflect.DeepEqual(targetUnits, newTargetUnits) {
+		t.Log("targetUnits did not equal newTargetUnits")
+		t.Error(output)
+	}
+
+	// make sure output is correct
+	expectedOutput := ("You don't have enough botnets for the requested hack need: " + botnets + " have: " + strconv.Itoa(userUnits.Botnet))
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Hacking output did not report botnet mismatch.")
+		t.Error(output)
+	}
+	expectedOutput = ("You don't have enough hackers for the requested hack need: " + hackers + " have: " + strconv.Itoa(userUnits.Hacker))
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Hacking output did not report hacker mismatch.")
+		t.Error(output)
+	}
 }
