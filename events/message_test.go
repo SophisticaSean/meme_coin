@@ -691,3 +691,85 @@ func TestHackInsufficientUnits(t *testing.T) {
 		t.Error(output)
 	}
 }
+
+func TestCollectTenMinutes(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	userUnits := handlers.UnitsGet(&author, db)
+	userUnits.Miner = 1000
+	userUnits.CollectTime = userUnits.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&userUnits, db)
+	userUnits = handlers.UnitsGet(&author, db)
+
+	text := "!collect"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newUserUnits := handlers.UnitsGet(&author, db)
+
+	if newUser.CurMoney != (1000 + 1000) {
+		t.Log("User CurMoney was not updated with collected amount!")
+		t.Error(output)
+	}
+
+	if newUserUnits.CollectTime == userUnits.CollectTime {
+		t.Log("User CollectTime was not reset upon collection.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin collected 1000 memes!")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Error(output)
+	}
+}
+
+func TestCollectTwoHours(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	userUnits := handlers.UnitsGet(&author, db)
+	userUnits.Miner = 1000
+	userUnits.CollectTime = userUnits.CollectTime.Add(-120 * time.Minute)
+	handlers.UpdateUnits(&userUnits, db)
+	userUnits = handlers.UnitsGet(&author, db)
+
+	text := "!collect"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newUserUnits := handlers.UnitsGet(&author, db)
+
+	if newUser.CurMoney != (1000 + 12545) {
+		t.Log("User CurMoney was not updated with collected amount!")
+		t.Error(output)
+	}
+
+	if newUserUnits.CollectTime == userUnits.CollectTime {
+		t.Log("User CollectTime was not reset upon collection.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin collected 12545 memes!")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Error(output)
+	}
+}

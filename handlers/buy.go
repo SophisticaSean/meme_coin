@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Unit is a struct defining a unit you can buy
 type Unit struct {
 	name       string
 	cost       int
@@ -48,6 +49,7 @@ func init() {
 	unitList = UnitList()
 }
 
+// UnitList returns a struct of Units with defined values
 func UnitList() []Unit {
 	unitList := []Unit{
 		Unit{
@@ -89,12 +91,13 @@ func UnitList() []Unit {
 	return unitList
 }
 
+// Balance is a function that returns the current balance for a user
 func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
 		message := "total balance is: " + strconv.Itoa(author.CurMoney)
-		_, production, _ := ProductionSum(m.Author, db)
+		_, production, _ := productionSum(m.Author, db)
 		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
 		message = message + "\nnet gambling balance: " + strconv.Itoa(author.WonMoney-author.LostMoney)
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
@@ -104,7 +107,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits) {
 	memes := 0
 	message := ""
-	_, production, userUnits := ProductionSum(user, db)
+	_, production, userUnits := productionSum(user, db)
 	difference := time.Now().Sub(userUnits.CollectTime)
 	diffMinutes := difference.Minutes()
 	if diffMinutes < 1.0 {
@@ -117,10 +120,17 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits
 	}
 	roundedDifference := math.Floor(diffMinutes)
 	roundedHours := math.Floor(diffMinutes / 60)
-	productionMultiplier := int((roundedHours * multiplier) + 100)
+	productionMultiplier := int((multiplier) + 100)
 	productionPerMinute := float64(production) / 10.0
-	memes = int(roundedDifference * productionPerMinute)
-	memes = int((memes * productionMultiplier) / 100)
+	if int(roundedHours) > 0 {
+		for i := 0; i < int(roundedHours); i++ {
+			memes = int((((int(60*productionPerMinute) + memes) * productionMultiplier) / 100))
+			roundedDifference = roundedDifference - 60
+		}
+	}
+	if roundedDifference > 0 {
+		memes = memes + int(productionPerMinute*roundedDifference)
+	}
 	if memes < 1.0 {
 		message = "you don't have enough memes to collect right now."
 		return memes, message, userUnits
@@ -128,6 +138,7 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits
 	return memes, message, userUnits
 }
 
+// Collect is a function that moves uncollected memes into the memebank/user's balance CurMoney
 func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	user := UserGet(m.Author, db)
 	totalMemesEarned, message, userUnits := totalMemesEarned(m.Author, db)
@@ -148,7 +159,7 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	return
 }
 
-func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
+func productionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 	userUnits := UnitsGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
@@ -181,7 +192,7 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 	return message, production, userUnits
 }
 
-func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, UserUnits) {
+func militarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, UserUnits) {
 	userUnits := UnitsGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
@@ -216,18 +227,21 @@ func MilitarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 	return message, botnet, defense, hacking, userUnits
 }
 
+// UnitInfo returns the productionSum for a user
 func UnitInfo(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
-	message, _, _ := ProductionSum(m.Author, db)
+	message, _, _ := productionSum(m.Author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
+// MilitaryUnitInfo returns the militarySum info for a user
 func MilitaryUnitInfo(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
-	message, _, _, _, _ := MilitarySum(m.Author, db)
+	message, _, _, _, _ := militarySum(m.Author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
+// Buy handles unit buying for users
 func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if args[0] != "!buy" {
