@@ -838,7 +838,7 @@ func TestMineWithUnits(t *testing.T) {
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
 
-	if newUser.CurMoney != (1000 + 1400) {
+	if newUser.CurMoney != (1000 + 600) {
 		t.Log("User CurMoney was not updated with mined amount!")
 		t.Error(output)
 	}
@@ -848,7 +848,7 @@ func TestMineWithUnits(t *testing.T) {
 		t.Error(output)
 	}
 
-	expectedOutput := ("admin mined 1400")
+	expectedOutput := ("admin mined 600")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Mineing output did not report proper meme mine amount!")
 		t.Error(output)

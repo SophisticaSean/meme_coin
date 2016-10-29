@@ -68,7 +68,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	timeLimit := 5
 	channel, err := s.Channel(m.ChannelID)
 	_, originalProduction, _ := ProductionSum(m.Author, db)
-	productionMultiplier := int(math.Floor(float64(originalProduction) / float64(rand.Intn(50)+20)))
+	productionMultiplier := int(math.Floor(float64(originalProduction) / float64(rand.Intn(160)+40)))
 	if productionMultiplier < 1 {
 		productionMultiplier = 1
 	}
