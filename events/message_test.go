@@ -875,7 +875,8 @@ func TestMineFrequency(t *testing.T) {
 	newUser := handlers.UserGet(&author, db)
 	output := capStdout(botSess, message)
 
-	if newUser.CurMoney != (1000 + 100) {
+	if newUser.CurMoney != (1000 + 300) {
+		t.Log(newUser.CurMoney)
 		t.Log("User CurMoney was not updated with mined amount!")
 		t.Error(output)
 	}
