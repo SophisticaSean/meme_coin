@@ -97,7 +97,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
 		message := "total balance is: " + strconv.Itoa(author.CurMoney)
-		_, production, _ := productionSum(m.Author, db)
+		_, production, _ := ProductionSum(m.Author, db)
 		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
 		message = message + "\nnet gambling balance: " + strconv.Itoa(author.WonMoney-author.LostMoney)
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
@@ -107,7 +107,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits) {
 	memes := 0
 	message := ""
-	_, production, userUnits := productionSum(user, db)
+	_, production, userUnits := ProductionSum(user, db)
 	difference := time.Now().Sub(userUnits.CollectTime)
 	diffMinutes := difference.Minutes()
 	if diffMinutes < 1.0 {
@@ -159,7 +159,9 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	return
 }
 
-func productionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
+// ProductionSum computes the amount of memes/minute someone has and returns a message
+// with that information, the int of the memes/minute and the user's userUnits struct
+func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 	userUnits := UnitsGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
@@ -227,9 +229,9 @@ func militarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 	return message, botnet, defense, hacking, userUnits
 }
 
-// UnitInfo returns the productionSum for a user
+// UnitInfo returns the ProductionSum for a user
 func UnitInfo(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
-	message, _, _ := productionSum(m.Author, db)
+	message, _, _ := ProductionSum(m.Author, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }

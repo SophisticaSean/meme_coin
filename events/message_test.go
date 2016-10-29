@@ -30,7 +30,6 @@ func capStdout(botSess interaction.Session, messageEvent interaction.MessageCrea
 }
 
 func TestMain(m *testing.M) {
-
 	exit := m.Run()
 	handlers.DbReset()
 
@@ -770,6 +769,125 @@ func TestCollectTwoHours(t *testing.T) {
 	expectedOutput := ("admin collected 12545 memes!")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Error(output)
+	}
+}
+
+func TestMineNoUnits(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	//userUnits := handlers.UnitsGet(&author, db)
+	//userUnits.Miner = 1000
+	//userUnits.CollectTime = userUnits.CollectTime.Add(-120 * time.Minute)
+	//handlers.UpdateUnits(&userUnits, db)
+	//userUnits = handlers.UnitsGet(&author, db)
+
+	text := "!mine"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+
+	if newUser.CurMoney != (1000 + 300) {
+		t.Log("User CurMoney was not updated with mined amount!")
+		t.Error(output)
+	}
+
+	if newUser.MineTime == user.MineTime {
+		t.Log("User MineTime was not reset upon mining.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin mined 300")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Mineing output did not report proper meme mine amount!")
+		t.Error(output)
+	}
+}
+
+func TestMineWithUnits(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	userUnits := handlers.UnitsGet(&author, db)
+	userUnits.Miner = 1000
+	//userUnits.CollectTime = userUnits.CollectTime.Add(-120 * time.Minute)
+	handlers.UpdateUnits(&userUnits, db)
+	userUnits = handlers.UnitsGet(&author, db)
+
+	text := "!mine"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+
+	if newUser.CurMoney != (1000 + 2000) {
+		t.Log("User CurMoney was not updated with mined amount!")
+		t.Error(output)
+	}
+
+	if newUser.MineTime == user.MineTime {
+		t.Log("User MineTime was not reset upon mineing.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin mined 2000")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Mineing output did not report proper meme mine amount!")
+		t.Error(output)
+	}
+}
+
+func TestMineFrequency(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+
+	text := "!mine"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	output := capStdout(botSess, message)
+
+	if newUser.CurMoney != (1000 + 100) {
+		t.Log("User CurMoney was not updated with mined amount!")
+		t.Error(output)
+	}
+
+	if newUser.MineTime == user.MineTime {
+		t.Log("User MineTime was not reset upon mineing.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin mined")
+	if strings.Contains(output, expectedOutput) {
+		t.Log("Mining reported success before time limit!")
 		t.Error(output)
 	}
 }

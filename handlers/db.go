@@ -91,7 +91,8 @@ func createUser(user *discordgo.User, db *sqlx.DB) {
 	var newUser User
 	newUser.DID = user.ID
 	newUser.Username = user.Username
-	_, err := db.NamedExec(`INSERT INTO money (discord_id, name) VALUES (:discord_id, :name)`, newUser)
+	newUser.MineTime = time.Now().Add(-10 * time.Minute)
+	_, err := db.NamedExec(`INSERT INTO money (discord_id, name, mine_time) VALUES (:discord_id, :name, :mine_time)`, newUser)
 	if err != nil {
 		log.Fatal(err)
 	}
