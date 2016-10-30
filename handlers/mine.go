@@ -26,7 +26,7 @@ func GenerateResponseList() []MineResponse {
 		MineResponse{
 			amount:   100,
 			response: " mined for a while and managed to scrounge up $AMOUNT$ dusty memes",
-			chance:   75,
+			chance:   150,
 		},
 		MineResponse{
 			amount:   300,
