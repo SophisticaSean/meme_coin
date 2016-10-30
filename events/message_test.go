@@ -892,3 +892,51 @@ func TestMineFrequency(t *testing.T) {
 		t.Error(output)
 	}
 }
+
+func TestBuyOverflow(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	userUnits := handlers.UnitsGet(&author, db)
+
+	text := "!buy 99999999999 fracker"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newUserUnits := handlers.UnitsGet(&author, db)
+
+	if !reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
+		t.Log("User was updated even though the transaction shouldn't have gone through.")
+		t.Error(output)
+	}
+
+	if !reflect.DeepEqual(user, newUser) {
+		t.Log(userUnits)
+		t.Log(newUserUnits)
+		t.Log("UserUnits was updated even though the transaction shouldn't have gone through.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin successfully bought")
+	if strings.Contains(output, expectedOutput) {
+		t.Log("Buying reported success when it should have failed.")
+		t.Error(output)
+	}
+
+	expectedOutput = ("You're trying to buy too many units at once")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Buying should have returned a message regarding unit purchase amount.")
+		t.Error(output)
+	}
+}

@@ -277,6 +277,12 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	user := UserGet(m.Author, db)
 	totalCost := (unit.cost * amount)
 
+	if totalCost < 0 {
+		// handle the totalCost overflow case
+		s.ChannelMessageSend(m.ChannelID, "You're trying to buy too many units at once, please lower the number and try again.")
+		return
+	}
+
 	if totalCost > user.CurMoney {
 		strTotalCost := strconv.Itoa(totalCost)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost)
