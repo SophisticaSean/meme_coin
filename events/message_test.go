@@ -782,13 +782,9 @@ func TestMineNoUnits(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
+	rand.Seed(37)
 
 	user := handlers.UserGet(&author, db)
-	//userUnits := handlers.UnitsGet(&author, db)
-	//userUnits.Miner = 1000
-	//userUnits.CollectTime = userUnits.CollectTime.Add(-120 * time.Minute)
-	//handlers.UpdateUnits(&userUnits, db)
-	//userUnits = handlers.UnitsGet(&author, db)
 
 	text := "!mine"
 	message.Message.Content = text
@@ -797,7 +793,7 @@ func TestMineNoUnits(t *testing.T) {
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
 
-	if newUser.CurMoney != (1000 + 300) {
+	if newUser.CurMoney != (1000 + 100) {
 		t.Log("User CurMoney was not updated with mined amount!")
 		t.Error(output)
 	}
@@ -807,7 +803,7 @@ func TestMineNoUnits(t *testing.T) {
 		t.Error(output)
 	}
 
-	expectedOutput := ("admin mined 300")
+	expectedOutput := ("admin mined 100")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Mineing output did not report proper meme mine amount!")
 		t.Error(output)
@@ -823,6 +819,7 @@ func TestMineWithUnits(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
+	rand.Seed(37)
 
 	user := handlers.UserGet(&author, db)
 	userUnits := handlers.UnitsGet(&author, db)
@@ -864,6 +861,7 @@ func TestMineFrequency(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
+	rand.Seed(37)
 
 	user := handlers.UserGet(&author, db)
 
@@ -875,7 +873,7 @@ func TestMineFrequency(t *testing.T) {
 	newUser := handlers.UserGet(&author, db)
 	output := capStdout(botSess, message)
 
-	if newUser.CurMoney != (1000 + 300) {
+	if newUser.CurMoney != (1000 + 100) {
 		t.Log(newUser.CurMoney)
 		t.Log("User CurMoney was not updated with mined amount!")
 		t.Error(output)
@@ -921,7 +919,7 @@ func TestBuyOverflow(t *testing.T) {
 		t.Error(output)
 	}
 
-	if !reflect.DeepEqual(user, newUser) {
+	if !reflect.DeepEqual(userUnits, newUserUnits) {
 		t.Log(userUnits)
 		t.Log(newUserUnits)
 		t.Log("UserUnits was updated even though the transaction shouldn't have gone through.")
