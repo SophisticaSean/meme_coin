@@ -67,14 +67,22 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 		// Coin flip game
 		if game == "coin" || game == "flip" {
 			if gameInput == "heads" || gameInput == "tails" {
-				answers := []string{"heads", "tails"}
-				answer := answers[rand.Intn(len(answers))]
+				num := rand.Intn(9)
+				answer := ""
+				if num > 4 {
+					answer = gameInput
+				} else {
+					if gameInput == "heads" {
+						answer = "tails"
+					} else {
+						answer = "heads"
+					}
+				}
 				message = winLoseProcessor(answer, gameInput, 1.0, bet, author, db)
 				return message
-			} else {
-				message = "pick heads or tails bud. `!gamble <amount> coin heads|tails`"
-				return message
 			}
+			message = "pick heads or tails bud. `!gamble <amount> coin heads|tails`"
+			return message
 		}
 	} else if args[0] == "!gamble" {
 		message = `
@@ -94,12 +102,11 @@ func winLoseProcessor(answer string, pickedItem string, payout float64, bet int,
 		message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
 		fmt.Println(message)
 		return message
-	} else {
-		MoneyDeduct(author, bet, "gamble", db)
-		message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
-		fmt.Println(message)
-		return message
 	}
+	MoneyDeduct(author, bet, "gamble", db)
+	message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+	fmt.Println(message)
+	return message
 }
 
 func Gamble(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
