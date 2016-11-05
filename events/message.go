@@ -13,7 +13,8 @@ import (
 var (
 	db           *sqlx.DB
 	responseList []handlers.MineResponse
-	BotID        string
+	botID        string
+	adminID      string
 )
 
 func validateSingleArg(validator string, validatee string) bool {
@@ -33,20 +34,26 @@ func init() {
 	responseList = handlers.GenerateResponseList()
 }
 
+// DiscordMessageHandler is a wrapper for creating a message handler
 func DiscordMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	sess := interaction.DiscordSession{Session: s}
 	messageCreate := &interaction.MessageCreate{MessageCreate: m}
 	MessageHandler(sess, messageCreate)
 }
 
+// MessageHandler is where we define all the handlers we want
 func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 	lowerMessage := strings.ToLower(m.Content)
 
-	if BotID == "" {
-		BotID, _ = os.LookupEnv("BotID")
+	if botID == "" {
+		botID, _ = os.LookupEnv("BotID")
 	}
 
-	if m.Author.ID == BotID {
+	if adminID == "" {
+		adminID, _ = os.LookupEnv("AdminID")
+	}
+
+	if m.Author.ID == botID || m.Author.ID == adminID {
 		if strings.Contains(lowerMessage, "!reset") {
 			handlers.Reset(s, m, db)
 		}
