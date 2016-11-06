@@ -36,13 +36,10 @@ func init() {
 
 func main() {
 	var botSess interaction.Session
-	db, router := api.RouterConfigure()
-	defer db.Close()
 	if Console != "" {
 		botSess = interaction.NewConsoleSession()
 	} else {
 		var err error
-		gin.SetMode(gin.ReleaseMode)
 		botSess, err = interaction.NewDiscordSession(Email, PW)
 		if err != nil {
 			fmt.Println("Unable to create Discord session with given Email and Password,", err)
@@ -72,6 +69,11 @@ func main() {
 		return
 	}
 
+  if Console == "" {
+		gin.SetMode(gin.ReleaseMode)
+  }
+	db, router := api.RouterConfigure()
+	defer db.Close()
 	go router.Run(":8080")
 
 	fmt.Println("Bot is now running!")
