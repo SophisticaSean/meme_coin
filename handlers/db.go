@@ -63,6 +63,7 @@ DROP TABLE IF EXISTS units;
 DROP TABLE IF EXISTS transactions;
 `
 
+// DbGet returns a pointer to a db connection
 func DbGet() *sqlx.DB {
 	isTest, _ := os.LookupEnv("TEST")
 	var db *sqlx.DB
@@ -79,6 +80,7 @@ func DbGet() *sqlx.DB {
 	return db
 }
 
+// DbReset clears the test db
 func DbReset() {
 	db, err := sqlx.Connect("postgres", "host=localhost user=memebot dbname=test password=password sslmode=disable parseTime=true")
 	if err != nil {
@@ -118,6 +120,15 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 		}
 	}
 	return user
+}
+
+func GetAllUsers(db *sqlx.DB) []User {
+	var users []User
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, mine_time, hacked_money, stolen_money FROM money`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return users
 }
 
 func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {

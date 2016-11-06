@@ -10,10 +10,12 @@ import (
 	_ "database/sql"
 	"strings"
 
+	"github.com/SophisticaSean/meme_coin/api"
 	"github.com/SophisticaSean/meme_coin/events"
-	"github.com/bwmarrin/discordgo"
-
 	"github.com/SophisticaSean/meme_coin/interaction"
+	"github.com/bwmarrin/discordgo"
+	"github.com/gin-gonic/gin"
+
 	_ "github.com/bmizerany/pq"
 )
 
@@ -34,11 +36,13 @@ func init() {
 
 func main() {
 	var botSess interaction.Session
-	fmt.Println(Console)
+	db, router := api.RouterConfigure()
+	defer db.Close()
 	if Console != "" {
 		botSess = interaction.NewConsoleSession()
 	} else {
 		var err error
+		gin.SetMode(gin.ReleaseMode)
 		botSess, err = interaction.NewDiscordSession(Email, PW)
 		if err != nil {
 			fmt.Println("Unable to create Discord session with given Email and Password,", err)
@@ -67,6 +71,8 @@ func main() {
 		fmt.Println("error opening connection:", err)
 		return
 	}
+
+	go router.Run(":8080")
 
 	fmt.Println("Bot is now running!")
 	if Console != "" {

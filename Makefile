@@ -6,7 +6,7 @@ prebuild: main.go
 	docker build -t meme_coin .
 	docker rm -f meme_coin; true
 console_prebuild: prebuild
-	docker run -v ~/mnt/containers/meme_coin:/mnt/containers/meme_coin -v $(shell pwd):/builds/go/src/github.com/SophisticaSean/meme_coin -e console='true' -d --name meme_coin meme_coin
+	docker run -p 8080:8080 -v ~/mnt/containers/meme_coin:/mnt/containers/meme_coin -v $(shell pwd):/builds/go/src/github.com/SophisticaSean/meme_coin -e console='true' -d --name meme_coin meme_coin
 build: prebuild
 	docker run -v ~/mnt/containers/meme_coin:/mnt/containers/meme_coin -e pw=$(pw) -e email=$(email) -e AdminID=$(AdminID) -d --name meme_coin --restart=always meme_coin
 console: console_prebuild
