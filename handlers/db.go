@@ -103,7 +103,7 @@ func createUser(user *discordgo.User, db *sqlx.DB) {
 func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 	var users []User
 	//fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, mine_time, hacked_money, stolen_money FROM money WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money, hacked_money, stolen_money, mine_time  FROM money WHERE discord_id = $1`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,7 +124,7 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 
 func GetAllUsers(db *sqlx.DB) []User {
 	var users []User
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, mine_time, hacked_money, stolen_money FROM money`)
+	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money, hacked_money, stolen_money, mine_time FROM money`)
 	if err != nil {
 		log.Fatal(err)
 	}
