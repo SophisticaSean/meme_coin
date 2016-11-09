@@ -113,7 +113,9 @@ func createUser(user *discordgo.User, db *sqlx.DB) {
 func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 	var users []User
 	//fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money, hacked_money, stolen_money, mine_time  FROM money WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&users, `SELECT * FROM money WHERE discord_id = $1`, discordUser.ID)
+
+	//err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.discord_id = units.discord_id) WHERE money.discord_id = '$1';`, discordUser.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -137,6 +139,9 @@ func GetAllUsers(db *sqlx.DB) []User {
 	err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.discord_id = units.discord_id);`)
 	if err != nil {
 		log.Fatal(err)
+	}
+	for i := range users {
+		users[i].HackSeed = 0
 	}
 	return users
 }
