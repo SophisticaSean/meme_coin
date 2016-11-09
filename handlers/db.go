@@ -32,6 +32,16 @@ type User struct {
 	HackedMoney     int       `db:"hacked_money"`
 	StolenFromMoney int       `db:"stolen_money"`
 	MineTime        time.Time `db:"mine_time"`
+	Miner           int       `db:"miner"`
+	Robot           int       `db:"robot"`
+	Swarm           int       `db:"swarm"`
+	Fracker         int       `db:"fracker"`
+	Cypher          int       `db:"cyphers"`
+	Hacker          int       `db:"hackers"`
+	Botnet          int       `db:"botnets"`
+	HackSeed        int64     `db:"hack_seed"`
+	HackAttempts    int       `db:"hack_attempts"`
+	CollectTime     time.Time `db:"collect_time"`
 }
 
 // UserUnits is a struct that maps 1 to 1 with units db table, keeps track of what units users have purchased
@@ -54,7 +64,7 @@ CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100),
 
 CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
 
-CREATE TABLE IF NOT EXISTS transactions(discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS transactions(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
 `
 
 var dropSchema = `
@@ -124,7 +134,7 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 
 func GetAllUsers(db *sqlx.DB) []User {
 	var users []User
-	err := db.Select(&users, `SELECT id, discord_id, name, current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money, hacked_money, stolen_money, mine_time FROM money`)
+	err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.discord_id = units.discord_id);`)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -203,7 +203,7 @@ func TestGambleCoinWin(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
-	rand.Seed(37)
+	rand.Seed(38)
 	message.Message.Author = &author
 	gambleAmount := 1000
 	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin heads"
@@ -546,9 +546,9 @@ func TestHackLoss(t *testing.T) {
 		t.Error(output)
 	}
 
-	if newUserUnits.Botnet != userUnits.Botnet-23 {
+	if newUserUnits.Botnet != userUnits.Botnet-129 {
 		t.Log("The thief did not lose botnets on a failed hack!")
-		numLog(t, newUserUnits.Botnet, userUnits.Botnet)
+		numLog(t, newUserUnits.Botnet, newUserUnits.Botnet-129)
 		t.Error(output)
 	}
 
@@ -602,7 +602,7 @@ func TestHackLoss(t *testing.T) {
 		t.Log("populationSize was not hardcapped to what we expected!")
 		t.Error(output)
 	}
-	expectedOutput := ("1977 botnets left")
+	expectedOutput := ("1871 botnets left")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Failed hacking output to channel was not what was expected.")
 		t.Error(output)
