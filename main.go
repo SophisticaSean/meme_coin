@@ -35,7 +35,6 @@ func init() {
 }
 
 func main() {
-	// sample text
 	var botSess interaction.Session
 	if Console != "" {
 		botSess = interaction.NewConsoleSession()
