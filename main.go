@@ -35,6 +35,7 @@ func init() {
 }
 
 func main() {
+	//sample text
 	var botSess interaction.Session
 	if Console != "" {
 		botSess = interaction.NewConsoleSession()
@@ -69,9 +70,9 @@ func main() {
 		return
 	}
 
-  if Console == "" {
+	if Console == "" {
 		gin.SetMode(gin.ReleaseMode)
-  }
+	}
 	db, router := api.RouterConfigure()
 	defer db.Close()
 	go router.Run(":8080")
