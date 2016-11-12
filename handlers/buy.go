@@ -255,8 +255,12 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 
 	amount, err := strconv.Atoi(args[1])
-	if err != nil || amount < 1 {
+	if amount < 1 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "1st argument needs to be a number, and it needs to be greater than 0. `!buy 10 miners`")
+		return
+	}
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, "trying to buy too many units at once. try buying fewer units.")
 		return
 	}
 
@@ -285,7 +289,8 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 
 	if totalCost > user.CurMoney {
 		strTotalCost := strconv.Itoa(totalCost)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost)
+		maxAmountToBuy := strconv.Itoa(int(math.Floor(float64(user.CurMoney / unit.cost))))
+		s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost+"\rYou can currently afford "+maxAmountToBuy)
 		return
 	}
 
