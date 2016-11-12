@@ -254,16 +254,6 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		return
 	}
 
-	amount, err := strconv.Atoi(args[1])
-	if amount < 1 {
-		_, _ = s.ChannelMessageSend(m.ChannelID, "1st argument needs to be a number, and it needs to be greater than 0. `!buy 10 miners`")
-		return
-	}
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "trying to buy too many units at once. try buying fewer units.")
-		return
-	}
-
 	unit := Unit{}
 	validUnit := false
 	for _, i := range unitList {
@@ -279,19 +269,52 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 
 	user := UserGet(m.Author, db)
-	totalCost := (unit.cost * amount)
+	maxAmountToBuy := int(math.Floor(float64(user.CurMoney / unit.cost)))
+	var amount int
+	var err error
+	var totalCost int
 
-	if totalCost < 0 {
-		// handle the totalCost overflow case
-		s.ChannelMessageSend(m.ChannelID, "You're trying to buy too many units at once, please lower the number and try again.")
-		return
-	}
+	if strings.ToUpper(args[1]) == strings.ToUpper("max") {
+		if maxAmountToBuy > 0 {
+			totalCost = (unit.cost * maxAmountToBuy)
+			amount = maxAmountToBuy
+			if totalCost < 0 {
+				// handle the totalCost overflow case
+				s.ChannelMessageSend(m.ChannelID, "You're trying to buy too many units at once, please lower the number and try again.")
+				return
+			}
+			if totalCost == 0 || totalCost > user.CurMoney {
+				s.ChannelMessageSend(m.ChannelID, "You ain't got enough cash to buy any of those units bro.")
+				return
+			}
+		} else {
+			s.ChannelMessageSend(m.ChannelID, "You ain't got enough cash to buy any of those units bro.")
+			return
+		}
+	} else {
+		amount, err = strconv.Atoi(args[1])
+		if amount < 1 {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "1st argument needs to be a number or the word 'max', and it needs to be greater than 0. `!buy 10 miners`")
+			return
+		}
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "trying to buy too many units at once. try buying fewer units.")
+			return
+		}
 
-	if totalCost > user.CurMoney {
-		strTotalCost := strconv.Itoa(totalCost)
-		maxAmountToBuy := strconv.Itoa(int(math.Floor(float64(user.CurMoney / unit.cost))))
-		s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost+"\rYou can currently afford "+maxAmountToBuy)
-		return
+		totalCost = (unit.cost * amount)
+
+		if totalCost < 0 {
+			// handle the totalCost overflow case
+			s.ChannelMessageSend(m.ChannelID, "You're trying to buy too many units at once, please lower the number and try again.")
+			return
+		}
+
+		if totalCost > user.CurMoney {
+			strTotalCost := strconv.Itoa(totalCost)
+			s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost+"\rYou can currently afford "+strconv.Itoa(maxAmountToBuy))
+			return
+		}
 	}
 
 	MoneyDeduct(&user, totalCost, "buy", db)
