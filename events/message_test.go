@@ -14,6 +14,7 @@ import (
 	"github.com/SophisticaSean/meme_coin/handlers"
 	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/bwmarrin/discordgo"
+	humanize "github.com/dustin/go-humanize"
 )
 
 func capStdout(botSess interaction.Session, messageEvent interaction.MessageCreate) string {
@@ -77,7 +78,7 @@ func TestNewUser(t *testing.T) {
 	message.Message.Content = text
 
 	output := capStdout(botSess, message)
-	if !strings.Contains(output, "total balance is: 1000") {
+	if !strings.Contains(output, "total balance is: 1,000") {
 		t.Error(output)
 	}
 	if !strings.Contains(output, "creating user: "+id) {
@@ -216,7 +217,7 @@ func TestGambleCoinWin(t *testing.T) {
 		t.Log("Coin game did not report result.")
 		t.Error(output)
 	}
-	if !strings.Contains(output, author.Username+" won "+strconv.Itoa(gambleAmount)+" memes.") {
+	if !strings.Contains(output, author.Username+" won "+humanize.Comma(int64(gambleAmount))+" memes.") {
 		t.Log("Coin toss did not report win properly.")
 		t.Error(output)
 	}
@@ -254,7 +255,7 @@ func TestGambleCoinLoss(t *testing.T) {
 		t.Log("Coin game did not report result.")
 		t.Error(output)
 	}
-	if !strings.Contains(output, author.Username+" lost "+strconv.Itoa(gambleAmount)+" memes.") {
+	if !strings.Contains(output, author.Username+" lost "+humanize.Comma(int64(gambleAmount))+" memes.") {
 		t.Log("Coin toss did not report loss properly.")
 		t.Error(output)
 	}
@@ -292,7 +293,7 @@ func TestGambleNumberWin(t *testing.T) {
 		t.Log("Number game did not report result.")
 		t.Error(output)
 	}
-	if !strings.Contains(output, author.Username+" won "+strconv.Itoa(gambleAmount*99)+" memes.") {
+	if !strings.Contains(output, author.Username+" won "+humanize.Comma(int64(gambleAmount*99))+" memes.") {
 		t.Log("Number game did not report win properly.")
 		t.Error(output)
 	}
@@ -330,7 +331,7 @@ func TestGambleNumberLoss(t *testing.T) {
 		t.Log("Number game did not report result.")
 		t.Error(output)
 	}
-	if !strings.Contains(output, author.Username+" lost "+strconv.Itoa(gambleAmount)+" memes.") {
+	if !strings.Contains(output, author.Username+" lost "+humanize.Comma(int64((gambleAmount)))+" memes.") {
 		t.Log("Number game did not report loss properly.")
 		t.Error(output)
 	}
@@ -471,7 +472,7 @@ func TestHackWin(t *testing.T) {
 		t.Log("populationSize was not hardcapped to what we expected!")
 		t.Error(output)
 	}
-	expectedOutput := ("The hack was successful, " + user.Username + " stole " + strconv.Itoa(targetUnits.Miner) + " dank memes from " + target.Username)
+	expectedOutput := ("The hack was successful, " + user.Username + " stole " + humanize.Comma(int64(targetUnits.Miner)) + " dank memes from " + target.Username)
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Successful hacking output to channel was not what was expected.")
 		t.Error(output)
@@ -602,7 +603,7 @@ func TestHackLoss(t *testing.T) {
 		t.Log("populationSize was not hardcapped to what we expected!")
 		t.Error(output)
 	}
-	expectedOutput := ("1871 botnets left")
+	expectedOutput := ("1,871 botnets left")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Failed hacking output to channel was not what was expected.")
 		t.Error(output)
@@ -679,12 +680,12 @@ func TestHackInsufficientUnits(t *testing.T) {
 	}
 
 	// make sure output is correct
-	expectedOutput := ("You don't have enough botnets for the requested hack need: " + botnets + " have: " + strconv.Itoa(userUnits.Botnet))
+	expectedOutput := ("You don't have enough botnets for the requested hack need: " + botnets + " have: " + humanize.Comma(int64(userUnits.Botnet)))
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Hacking output did not report botnet mismatch.")
 		t.Error(output)
 	}
-	expectedOutput = ("You don't have enough hackers for the requested hack need: " + hackers + " have: " + strconv.Itoa(userUnits.Hacker))
+	expectedOutput = ("You don't have enough hackers for the requested hack need: " + hackers + " have: " + humanize.Comma(int64(userUnits.Hacker)))
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Hacking output did not report hacker mismatch.")
 		t.Error(output)
@@ -725,7 +726,7 @@ func TestCollectTenMinutes(t *testing.T) {
 		t.Error(output)
 	}
 
-	expectedOutput := ("admin collected 1000 memes!")
+	expectedOutput := ("admin collected 1,000 memes!")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Collecting output did not report proper meme collection amount!")
 		t.Error(output)
@@ -766,7 +767,7 @@ func TestCollectTwoHours(t *testing.T) {
 		t.Error(output)
 	}
 
-	expectedOutput := ("admin collected 12545 memes!")
+	expectedOutput := ("admin collected 12,545 memes!")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Collecting output did not report proper meme collection amount!")
 		t.Error(output)

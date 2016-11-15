@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -43,7 +44,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, se
 	}
 	if hackerLosses != 0 {
 		units.Hacker = units.Hacker - hackerLosses
-		message = message + "`Your hacking got " + strconv.Itoa(hackerLosses) + " hackers arrested by the FBI!`\r`You now have " + strconv.Itoa(units.Hacker) + " hackers left.`\r"
+		message = message + "`Your hacking got " + humanize.Comma(int64(hackerLosses)) + " hackers arrested by the FBI!`\r`You now have " + humanize.Comma(int64(units.Hacker)) + " hackers left.`\r"
 	}
 	for i := 0; i <= usedBotnets; i++ {
 		if rand.Intn(100) < lossChances {
@@ -52,7 +53,7 @@ func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, se
 	}
 	if botnetLosses != 0 {
 		units.Botnet = units.Botnet - botnetLosses
-		message = message + "`Your hacking was detected and got some botnets discovered, some whitehat released a zero day whitepaper and patch defeating " + strconv.Itoa(botnetLosses) + " of your botnets.`\r`You now have " + strconv.Itoa(units.Botnet) + " botnets left.`\r"
+		message = message + "`Your hacking was detected and got some botnets discovered, some whitehat released a zero day whitepaper and patch defeating " + humanize.Comma(int64(botnetLosses)) + " of your botnets.`\r`You now have " + humanize.Comma(int64(units.Botnet)) + " botnets left.`\r"
 	}
 	UpdateUnits(units, db)
 	rand.Seed(time.Now().UnixNano())
@@ -81,7 +82,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 	// set the vars we care about
 	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
-	strTotalMemes := strconv.Itoa(totalMemes)
+	strTotalMemes := humanize.Comma(int64(totalMemes))
 	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 6))))
 	hackAttempts = int((math.Floor(float64(targetUnits.Cypher/75.0) + 4)))
 	maxStringLength := targetUnits.Cypher + cypherPadding
@@ -115,7 +116,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message = "your amount of hackers argument (`!hack <this_argument> <amount_of_botnets>`) is too large, too small, or not a number.\r"
 	}
 	if hackerCount > authorUnits.Hacker {
-		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + strconv.Itoa(authorUnits.Hacker) + "\r"
+		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + humanize.Comma(int64(authorUnits.Hacker)) + "\r"
 	}
 	if hackerCount > hackerLimit {
 		hackerCount = hackerLimit
@@ -126,7 +127,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message = message + "your amount of botnets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number.\r"
 	}
 	if botnetCount > authorUnits.Botnet {
-		message = message + "You don't have enough botnets for the requested hack need: " + args[2] + " have: " + strconv.Itoa(authorUnits.Botnet)
+		message = message + "You don't have enough botnets for the requested hack need: " + args[2] + " have: " + humanize.Comma(int64(authorUnits.Botnet))
 	}
 	if botnetCount > botnetLimit {
 		botnetCount = botnetLimit
@@ -145,7 +146,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		roundedGenerationPercentage = math.Ceil(generationPercentage * 10)
 	}
 	if fitnessPercentage == 1 && generationPercentage == 1 {
-		message = "The hack was successful, " + author.Username + " stole " + strconv.Itoa(totalMemes) + " dank memes from " + target.Username
+		message = "The hack was successful, " + author.Username + " stole " + humanize.Comma(int64(totalMemes)) + " dank memes from " + target.Username
 		// reset targetUnits collectTime, HackSeed, and HackAttempts
 		targetUnits.CollectTime = time.Now()
 		targetUnits.HackSeed = 0

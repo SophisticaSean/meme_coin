@@ -13,6 +13,25 @@
 			"Rev": "c5abbfa42ecd88bf8718d50329e41a6a04a364a7"
 		},
 		{
+			"ImportPath": "github.com/gin-gonic/gin",
+			"Comment": "v1.0-2-g3900df0",
+			"Rev": "3900df04d2a88e22beaf6a2970c63648b9e1b0e1"
+		},
+		{
+			"ImportPath": "github.com/gin-gonic/gin/binding",
+			"Comment": "v1.0-2-g3900df0",
+			"Rev": "3900df04d2a88e22beaf6a2970c63648b9e1b0e1"
+		},
+		{
+			"ImportPath": "github.com/gin-gonic/gin/render",
+			"Comment": "v1.0-2-g3900df0",
+			"Rev": "3900df04d2a88e22beaf6a2970c63648b9e1b0e1"
+		},
+		{
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "2bc9827a78f95c6665b5fe0abd1fd66b496ae2d8"
+		},
+		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Rev": "ecff5aabe41f13b4cdf897e3c0c9bbccbe552a29"
 		},
@@ -27,12 +46,8 @@
 			"Rev": "05b81a7d5d38058e42148dc01f17daf4acba4640"
 		},
 		{
-			"ImportPath": "github.com/sophisticasean/meme_coin/events",
-			"Rev": "29723f46d23e1bf9a8e3ce111c554a019cbc6044"
-		},
-		{
-			"ImportPath": "github.com/sophisticasean/meme_coin/handlers",
-			"Rev": "29723f46d23e1bf9a8e3ce111c554a019cbc6044"
+			"ImportPath": "github.com/manucorporat/sse",
+			"Rev": "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d"
 		},
 		{
 			"ImportPath": "github.com/tomcraven/goga",
@@ -49,6 +64,19 @@
 		{
 			"ImportPath": "golang.org/x/crypto/salsa20/salsa",
 			"Rev": "7db43667c77d5d330c359ffd03f5789cf390e973"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "4bb47a1098b37d69980d96237e2ae4ff56bb5a95"
+		},
+		{
+			"ImportPath": "gopkg.in/go-playground/validator.v8",
+			"Comment": "v8.18.1",
+			"Rev": "5f57d2222ad794d0dffb07e664ea05e2ee07d60c"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "a5b47d31c556af34a302ce5d659e6fea44d90de0"
 		}
 	]
 }

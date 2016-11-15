@@ -9,6 +9,7 @@ import (
 
 	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/bwmarrin/discordgo"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -96,10 +97,10 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
-		message := "total balance is: " + strconv.Itoa(author.CurMoney)
+		message := "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
 		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
-		message = message + "\nnet gambling balance: " + strconv.Itoa(author.WonMoney-author.LostMoney)
+		message = message + "\nnet gambling balance: " + humanize.Comma(int64(author.WonMoney-author.LostMoney))
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 }
@@ -151,7 +152,7 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	userUnits.HackAttempts = 0
 	userUnits.CollectTime = time.Now()
 	UpdateUnits(&userUnits, db)
-	message = user.Username + " collected " + strconv.Itoa(totalMemesEarned) + " memes!"
+	message = user.Username + " collected " + humanize.Comma(int64(totalMemesEarned)) + " memes!"
 	fmt.Println(message)
 	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
 
@@ -186,7 +187,7 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 		}
 		if productionUnit == true {
 			production = production + (unit.amount * unit.production)
-			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+			message = message + "`" + humanize.Comma(int64(unit.amount)) + " " + unit.name + "(s)` \r"
 		}
 		productionUnit = false
 	}
@@ -219,7 +220,7 @@ func militarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 			militaryUnit = true
 		}
 		if militaryUnit {
-			message = message + "`" + strconv.Itoa(unit.amount) + " " + unit.name + "(s)` \r"
+			message = message + "`" + humanize.Comma(int64(unit.amount)) + " " + unit.name + "(s)` \r"
 		}
 		militaryUnit = false
 	}
@@ -311,8 +312,8 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		}
 
 		if totalCost > user.CurMoney {
-			strTotalCost := strconv.Itoa(totalCost)
-			s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost+"\rYou can currently afford "+strconv.Itoa(maxAmountToBuy))
+			strTotalCost := humanize.Comma(int64(totalCost))
+			s.ChannelMessageSend(m.ChannelID, "not enough money for transaction, need "+strTotalCost+"\rYou can currently afford "+humanize.Comma(int64(maxAmountToBuy)))
 			return
 		}
 	}
@@ -343,7 +344,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 	userUnits.CollectTime = time.Now()
 	UpdateUnits(&userUnits, db)
-	message := user.Username + " successfully bought " + strconv.Itoa(amount) + " " + unit.name + "(s)"
+	message := user.Username + " successfully bought " + humanize.Comma(int64(amount)) + " " + unit.name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return

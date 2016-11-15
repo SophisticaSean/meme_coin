@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
+// Tip is the function that handles the act of giving another player memes
 func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) >= 3 && strings.ToLower(args[0]) == "!tip" {
@@ -60,14 +62,14 @@ func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		totalDeduct := intAmount * len(m.Mentions)
 		from := UserGet(m.Author, db)
 		if totalDeduct > from.CurMoney {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+strconv.Itoa(from.CurMoney)+" needed:"+strconv.Itoa(totalDeduct))
+			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+humanize.Comma(int64(from.CurMoney))+" needed:"+humanize.Comma(int64(totalDeduct)))
 			return
 		}
 		MoneyDeduct(&from, totalDeduct, "tip", db)
 		for _, to := range m.Mentions {
 			toUser := UserGet(to, db)
 			MoneyAdd(&toUser, intAmount, "tip", db)
-			message := from.Username + " gave " + amount + " " + currencyName + " to " + to.Username
+			message := from.Username + " gave " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username
 			_, _ = s.ChannelMessageSend(m.ChannelID, message)
 			fmt.Println(message)
 		}

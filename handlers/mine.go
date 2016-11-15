@@ -5,10 +5,10 @@ import (
 	"math"
 	"math/rand"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
+	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -84,7 +84,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 
 	// check to make sure user is not trying to mine before timeLimit has passed
 	if difference.Minutes() < float64(timeLimit) {
-		waitTime := strconv.Itoa(int(math.Ceil((float64(timeLimit) - difference.Minutes()))))
+		waitTime := humanize.Comma(int64(math.Ceil((float64(timeLimit) - difference.Minutes()))))
 		_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
 		return
 	}
@@ -95,8 +95,8 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	amount := (mineResponse.amount * productionMultiplier)
 	MoneyAdd(&author, amount, "mined", db)
 	amountRegex := regexp.MustCompile(`\$AMOUNT\$`)
-	response := amountRegex.ReplaceAllString(mineResponse.response, strconv.Itoa(amount))
+	response := amountRegex.ReplaceAllString(mineResponse.response, humanize.Comma(int64(amount)))
 	_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+response)
-	fmt.Println(author.Username + " mined " + strconv.Itoa(amount))
+	fmt.Println(author.Username + " mined " + humanize.Comma(int64(amount)))
 	return
 }

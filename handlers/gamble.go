@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
-func BetToPayout(bet int, payoutMultiplier float64) int {
+func betToPayout(bet int, payoutMultiplier float64) int {
 	payout := int(math.Floor(float64(bet) * payoutMultiplier))
 	return payout
 }
@@ -33,7 +34,7 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 		gameInput := args[3]
 
 		if bet > author.CurMoney {
-			message = "not enough funds to complete transaction, total: " + strconv.Itoa(author.CurMoney) + " needed:" + strconv.Itoa(bet)
+			message = "not enough funds to complete transaction, total: " + humanize.Comma(int64(author.CurMoney)) + " needed:" + humanize.Comma(int64(bet))
 			return message
 		}
 
@@ -58,8 +59,8 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 				return message
 			}
 
-			answer := strconv.Itoa(rand.Intn(rangeNumber) + 1)
-			strPickedNumber := strconv.Itoa(pickedNumber)
+			answer := humanize.Comma(int64(rand.Intn(rangeNumber) + 1))
+			strPickedNumber := humanize.Comma(int64(pickedNumber))
 			message = winLoseProcessor(answer, strPickedNumber, float64(rangeNumber-1), bet, author, db)
 			return message
 		}
@@ -97,18 +98,19 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 func winLoseProcessor(answer string, pickedItem string, payout float64, bet int, author *User, db *sqlx.DB) string {
 	message := "The result was " + answer
 	if answer == pickedItem {
-		payout := BetToPayout(bet, payout)
+		payout := betToPayout(bet, payout)
 		MoneyAdd(author, payout, "gamble", db)
-		message = message + ". Congrats, " + author.Username + " won " + strconv.Itoa(payout) + " memes."
+		message = message + ". Congrats, " + author.Username + " won " + humanize.Comma(int64(payout)) + " memes."
 		fmt.Println(message)
 		return message
 	}
 	MoneyDeduct(author, bet, "gamble", db)
-	message = message + ". Bummer, " + author.Username + " lost " + strconv.Itoa(bet) + " memes. :("
+	message = message + ". Bummer, " + author.Username + " lost " + humanize.Comma(int64(bet)) + " memes. :("
 	fmt.Println(message)
 	return message
 }
 
+// Gamble is the function that handles the interaction of a user and gambling their memes
 func Gamble(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	author := UserGet(m.Author, db)
 	message := gambleProcess(m.Content, &author, db)
