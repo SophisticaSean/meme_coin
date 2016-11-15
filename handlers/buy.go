@@ -99,7 +99,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		author := UserGet(m.Author, db)
 		message := "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
-		message = message + "\ntotal memes per minute: " + strconv.FormatFloat((float64(production)/10), 'f', -1, 64)
+		message = message + "\ntotal memes per minute: " + humanize.Comma(int64((float64(production) / 10)))
 		message = message + "\nnet gambling balance: " + humanize.Comma(int64(author.WonMoney-author.LostMoney))
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
