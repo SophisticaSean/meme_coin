@@ -34,9 +34,11 @@ func init() {
 	infoMessage = `
 	usage: !buy <amount> <unitType>
 	!buy 10 miners
+	!buy max miners
 	(passively generated memes are added to your account with !collect command)
 	(buying units resets the time on your generated memes, so remember to collect before
 	you buy!)
+	(you can also use 'max' as a number and it will buy the max amount of those units you can afford)
 	Unit list:
 	Unit          Cost           Memes minute
 	miner         1k             0.1 m/m
@@ -250,7 +252,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if args[0] != "!buy" {
 		return
 	}
-	if len(args) == 1 {
+	if len(args) == 1 || len(args) != 3 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, infoMessage)
 		return
 	}
