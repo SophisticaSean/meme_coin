@@ -14,6 +14,7 @@ import (
 	"github.com/SophisticaSean/meme_coin/handlers"
 	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/bwmarrin/discordgo"
+	"github.com/davecgh/go-spew/spew"
 	humanize "github.com/dustin/go-humanize"
 )
 
@@ -911,13 +912,6 @@ func TestBuyOverflow(t *testing.T) {
 	if !reflect.DeepEqual(user, newUser) {
 		t.Log(user)
 		t.Log(newUser)
-		t.Log("User was updated even though the transaction shouldn't have gone through.")
-		t.Error(output)
-	}
-
-	if !reflect.DeepEqual(user, newUser) {
-		t.Log(user)
-		t.Log(newUser)
 		t.Log("UserUnits was updated even though the transaction shouldn't have gone through.")
 		t.Error(output)
 	}
@@ -931,6 +925,149 @@ func TestBuyOverflow(t *testing.T) {
 	expectedOutput = ("You're trying to buy too many units at once")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Buying should have returned a message regarding unit purchase amount.")
+		t.Error(output)
+	}
+}
+
+func TestBuy(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000000000, "tip", db)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+	units := handlers.UnitList()
+
+	text := "!buy 1 fracker"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+
+	if reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
+		t.Log("User was not updated.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin successfully bought 1 fracker")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Buying did not report success.")
+		t.Error(output)
+	}
+
+	if newUser.Fracker != 1 {
+		t.Log("Users fracker count was not updated on successful purchase.")
+		t.Error(output)
+	}
+
+	if newUser.CurMoney != (user.CurMoney - units[3].Cost) {
+		t.Log("Users current money was not updated on successful purchase.")
+		spew.Dump(units)
+		t.Error(output)
+	}
+
+	text = "!buy 1 robot"
+	message.Message.Content = text
+	message.Message.Author = &author
+	user = handlers.UserGet(&author, db)
+
+	output = capStdout(botSess, message)
+	newUser = handlers.UserGet(&author, db)
+
+	if reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
+		t.Log("User was not updated.")
+		t.Error(output)
+	}
+
+	expectedOutput = ("admin successfully bought 1 robot")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Buying did not report success.")
+		t.Error(output)
+	}
+
+	if newUser.Robot != 1 {
+		t.Log("Users robot count was not updated on successful purchase.")
+		t.Error(output)
+	}
+
+	if newUser.CurMoney != (user.CurMoney - units[1].Cost) {
+		t.Log("Users current money was not updated on successful purchase.")
+		spew.Dump(units)
+		t.Error(output)
+	}
+
+	text = "!buy 1 swarm"
+	message.Message.Content = text
+	message.Message.Author = &author
+	user = handlers.UserGet(&author, db)
+
+	output = capStdout(botSess, message)
+	newUser = handlers.UserGet(&author, db)
+
+	if reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
+		t.Log("User was not updated.")
+		t.Error(output)
+	}
+
+	expectedOutput = ("admin successfully bought 1 swarm")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Buying did not report success.")
+		t.Error(output)
+	}
+
+	if newUser.Swarm != 1 {
+		t.Log("Users robot count was not updated on successful purchase.")
+		t.Error(output)
+	}
+	if newUser.CurMoney != (user.CurMoney - units[2].Cost) {
+		t.Log("Users current money was not updated on successful purchase.")
+		spew.Dump(units)
+		t.Error(output)
+	}
+
+	text = "!buy 1 miner"
+	message.Message.Content = text
+	message.Message.Author = &author
+	user = handlers.UserGet(&author, db)
+
+	output = capStdout(botSess, message)
+	newUser = handlers.UserGet(&author, db)
+
+	if reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
+		t.Log("User was not updated.")
+		t.Error(output)
+	}
+
+	expectedOutput = ("admin successfully bought 1 miner")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Buying did not report success.")
+		t.Error(output)
+	}
+
+	if newUser.Miner != 1 {
+		t.Log("Users miner count was not updated on successful purchase.")
+		t.Error(output)
+	}
+
+	if newUser.CurMoney != (user.CurMoney - units[0].Cost) {
+		t.Log("Users current money was not updated on successful purchase.")
+		spew.Dump(units)
 		t.Error(output)
 	}
 }

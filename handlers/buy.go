@@ -15,10 +15,10 @@ import (
 
 // Unit is a struct defining a unit you can buy
 type Unit struct {
-	name       string
-	cost       int
-	production int
-	amount     int
+	Name       string
+	Cost       int
+	Production int
+	Amount     int
 }
 
 const (
@@ -54,39 +54,39 @@ func init() {
 func UnitList() []Unit {
 	unitList := []Unit{
 		Unit{
-			name:       "miner",
-			cost:       1000,
-			production: 1,
+			Name:       "miner",
+			Cost:       1000,
+			Production: 1,
 		},
 		Unit{
-			name:       "robot",
-			cost:       50000,
-			production: 60,
+			Name:       "robot",
+			Cost:       50000,
+			Production: 60,
 		},
 		Unit{
-			name:       "swarm",
-			cost:       2500000,
-			production: 3600,
+			Name:       "swarm",
+			Cost:       2500000,
+			Production: 3600,
 		},
 		Unit{
-			name:       "fracker",
-			cost:       125000000,
-			production: 216000,
+			Name:       "fracker",
+			Cost:       125000000,
+			Production: 216000,
 		},
 		Unit{
-			name:       "cypher",
-			cost:       10000,
-			production: 2,
+			Name:       "cypher",
+			Cost:       10000,
+			Production: 2,
 		},
 		Unit{
-			name:       "hacker",
-			cost:       500,
-			production: 5,
+			Name:       "hacker",
+			Cost:       500,
+			Production: 5,
 		},
 		Unit{
-			name:       "botnet",
-			cost:       100,
-			production: 1,
+			Name:       "botnet",
+			Cost:       100,
+			Production: 1,
 		},
 	}
 	return unitList
@@ -169,25 +169,25 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, User) {
 	production := 0
 	productionUnit := false
 	for _, unit := range tempUnitList {
-		if unit.name == "miner" {
-			unit.amount = userUnits.Miner
+		if unit.Name == "miner" {
+			unit.Amount = userUnits.Miner
 			productionUnit = true
 		}
-		if unit.name == "robot" {
-			unit.amount = userUnits.Robot
+		if unit.Name == "robot" {
+			unit.Amount = userUnits.Robot
 			productionUnit = true
 		}
-		if unit.name == "swarm" {
-			unit.amount = userUnits.Swarm
+		if unit.Name == "swarm" {
+			unit.Amount = userUnits.Swarm
 			productionUnit = true
 		}
-		if unit.name == "fracker" {
-			unit.amount = userUnits.Fracker
+		if unit.Name == "fracker" {
+			unit.Amount = userUnits.Fracker
 			productionUnit = true
 		}
 		if productionUnit == true {
-			production = production + (unit.amount * unit.production)
-			message = message + "`" + humanize.Comma(int64(unit.amount)) + " " + unit.name + "(s)` \r"
+			production = production + (unit.Amount * unit.Production)
+			message = message + "`" + humanize.Comma(int64(unit.Amount)) + " " + unit.Name + "(s)` \r"
 		}
 		productionUnit = false
 	}
@@ -204,23 +204,23 @@ func militarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User
 	hacking := 0
 	militaryUnit := false
 	for _, unit := range tempUnitList {
-		if unit.name == "cypher" {
-			unit.amount = userUnits.Cypher
-			defense = defense + (unit.amount * unit.production)
+		if unit.Name == "cypher" {
+			unit.Amount = userUnits.Cypher
+			defense = defense + (unit.Amount * unit.Production)
 			militaryUnit = true
 		}
-		if unit.name == "hacker" {
-			unit.amount = userUnits.Hacker
-			hacking = hacking + (unit.amount * unit.production)
+		if unit.Name == "hacker" {
+			unit.Amount = userUnits.Hacker
+			hacking = hacking + (unit.Amount * unit.Production)
 			militaryUnit = true
 		}
-		if unit.name == "botnet" {
-			unit.amount = userUnits.Botnet
-			botnet = botnet + (unit.amount * unit.production)
+		if unit.Name == "botnet" {
+			unit.Amount = userUnits.Botnet
+			botnet = botnet + (unit.Amount * unit.Production)
 			militaryUnit = true
 		}
 		if militaryUnit {
-			message = message + "`" + humanize.Comma(int64(unit.amount)) + " " + unit.name + "(s)` \r"
+			message = message + "`" + humanize.Comma(int64(unit.Amount)) + " " + unit.Name + "(s)` \r"
 		}
 		militaryUnit = false
 	}
@@ -258,7 +258,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	unit := Unit{}
 	validUnit := false
 	for _, i := range unitList {
-		if args[2] == i.name || args[2] == i.name+"s" {
+		if args[2] == i.Name || args[2] == i.Name+"s" {
 			unit = i
 			validUnit = true
 		}
@@ -270,14 +270,14 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 
 	user := UserGet(m.Author, db)
-	maxAmountToBuy := int(math.Floor(float64(user.CurMoney / unit.cost)))
+	maxAmountToBuy := int(math.Floor(float64(user.CurMoney / unit.Cost)))
 	var amount int
 	var err error
 	var totalCost int
 
 	if strings.ToUpper(args[1]) == strings.ToUpper("max") {
 		if maxAmountToBuy > 0 {
-			totalCost = (unit.cost * maxAmountToBuy)
+			totalCost = (unit.Cost * maxAmountToBuy)
 			amount = maxAmountToBuy
 			if totalCost < 0 {
 				// handle the totalCost overflow case
@@ -303,7 +303,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			return
 		}
 
-		totalCost = (unit.cost * amount)
+		totalCost = (unit.Cost * amount)
 
 		if totalCost < 0 {
 			// handle the totalCost overflow case
@@ -321,30 +321,30 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	MoneyDeduct(&user, totalCost, "buy", db)
 	userUnits := UserGet(m.Author, db)
 	// gross if statements to determine what number to increment
-	if unit.name == "miner" {
+	if unit.Name == "miner" {
 		userUnits.Miner = userUnits.Miner + amount
 	}
-	if unit.name == "robot" {
+	if unit.Name == "robot" {
 		userUnits.Robot = userUnits.Robot + amount
 	}
-	if unit.name == "swarm" {
+	if unit.Name == "swarm" {
 		userUnits.Swarm = userUnits.Swarm + amount
 	}
-	if unit.name == "fracker" {
+	if unit.Name == "fracker" {
 		userUnits.Fracker = userUnits.Fracker + amount
 	}
-	if unit.name == "cypher" {
+	if unit.Name == "cypher" {
 		userUnits.Cypher = userUnits.Cypher + amount
 	}
-	if unit.name == "hacker" {
+	if unit.Name == "hacker" {
 		userUnits.Hacker = userUnits.Hacker + amount
 	}
-	if unit.name == "botnet" {
+	if unit.Name == "botnet" {
 		userUnits.Botnet = userUnits.Botnet + amount
 	}
 	userUnits.CollectTime = time.Now()
-	UpdateUnits(&user, db)
-	message := user.Username + " successfully bought " + humanize.Comma(int64(amount)) + " " + unit.name + "(s)"
+	UpdateUnits(&userUnits, db)
+	message := user.Username + " successfully bought " + humanize.Comma(int64(amount)) + " " + unit.Name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
