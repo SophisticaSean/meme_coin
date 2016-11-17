@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	_ "database/sql"
+	_ "database/sql" // necessary for sqlx
 	"fmt"
 	"log"
 	"os"
@@ -10,15 +10,16 @@ import (
 	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
-	_ "github.com/bmizerany/pq"
+	_ "github.com/bmizerany/pq" // necessary for sqlx
 	"github.com/bwmarrin/discordgo"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jmoiron/sqlx"
 )
 
 // User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
 	ID              int       `db:"id"`
-	DID             string    `db:"discord_id"`
+	DID             string    `db:"money_discord_id"`
 	Username        string    `db:"name"`
 	CurMoney        int       `db:"current_money"`
 	TotMoney        int       `db:"total_money"`
@@ -42,11 +43,12 @@ type User struct {
 	HackSeed        int64     `db:"hack_seed"`
 	HackAttempts    int       `db:"hack_attempts"`
 	CollectTime     time.Time `db:"collect_time"`
+	UnitsDID        string    `db:"units_discord_id"`
 }
 
 // UserUnits is a struct that maps 1 to 1 with units db table, keeps track of what units users have purchased
 type UserUnits struct {
-	DID          string    `db:"discord_id"`
+	DID          string    `db:"units_discord_id"`
 	Miner        int       `db:"miner"`
 	Robot        int       `db:"robot"`
 	Swarm        int       `db:"swarm"`
@@ -60,11 +62,11 @@ type UserUnits struct {
 }
 
 var schema = `
-CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), hacked_money numeric DEFAULT(0), stolen_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, money_discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), hacked_money numeric DEFAULT(0), stolen_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
 
-CREATE TABLE IF NOT EXISTS units(discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS units(units_discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
 
-CREATE TABLE IF NOT EXISTS transactions(id SERIAL PRIMARY KEY, discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS transactions(id SERIAL PRIMARY KEY, transactions_discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
 `
 
 var dropSchema = `
@@ -97,46 +99,79 @@ func DbReset() {
 		log.Fatal(err)
 	}
 	db.MustExec(dropSchema)
+	db.MustExec(schema)
 }
 
 func createUser(user *discordgo.User, db *sqlx.DB) {
+	fmt.Println("creating user: " + user.ID)
 	var newUser User
 	newUser.DID = user.ID
 	newUser.Username = user.Username
 	newUser.MineTime = time.Now().Add(-10 * time.Minute)
-	_, err := db.NamedExec(`INSERT INTO money (discord_id, name, mine_time) VALUES (:discord_id, :name, :mine_time)`, newUser)
+	dbString := `INSERT INTO money (money_discord_id, name, mine_time) VALUES (:money_discord_id, :name, :mine_time)`
+	_, err := db.NamedExec(dbString, newUser)
 	if err != nil {
 		log.Fatal(err)
 	}
+	createUserUnits(user, db)
 }
 
+// UserGet returns a User by searching/creating the user in the db and using a discordgo.User
 func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 	var users []User
-	//fmt.Println(discordUser.ID)
-	err := db.Select(&users, `SELECT * FROM money WHERE discord_id = $1`, discordUser.ID)
+	err := db.Select(&users, `
+	SELECT
+		m.id as id,
+		m.money_discord_id as money_discord_id,
+		m.name as name,
+		m.current_money as current_money,
+		m.total_money as total_money,
+		m.won_money as won_money,
+		m.lost_money as lost_money,
+		m.given_money as given_money,
+		m.received_money as received_money,
+		m.earned_money as earned_money,
+		m.spent_money as spent_money,
+		m.collected_money as collected_money,
+		m.hacked_money as hacked_money,
+		m.stolen_money as stolen_money,
+		m.mine_time as mine_time,
+		u.miner as miner,
+		u.robot as robot,
+		u.swarm as swarm,
+		u.fracker as fracker,
+		u.cyphers as cyphers,
+		u.hackers as hackers,
+		u.botnets as botnets,
+		u.hack_seed as hack_seed,
+		u.hack_attempts as hack_attempts,
+		u.collect_time as collect_time
+	FROM money as m
+	INNER JOIN units as u on m.money_discord_id = u.units_discord_id
+	WHERE m.money_discord_id = $1
 
-	//err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.discord_id = units.discord_id) WHERE money.discord_id = '$1';`, discordUser.ID)
+	`, discordUser.ID)
+	var user User
 	if err != nil {
 		log.Fatal(err)
 	}
-	var user User
 	if len(users) == 0 {
-		fmt.Println("creating user: " + discordUser.ID)
 		createUser(discordUser, db)
 		user = UserGet(discordUser, db)
 	} else {
 		user = users[0]
 		if user.Username != discordUser.Username {
-			db.MustExec(`UPDATE money SET (name) = ($1) where discord_id = '`+user.DID+`'`, discordUser.Username)
+			db.MustExec(`UPDATE money SET (name) = ($1) where money_discord_id = '`+user.DID+`'`, discordUser.Username)
 			user.Username = discordUser.Username
 		}
 	}
 	return user
 }
 
+// GetAllUsers returns a []User slice of all users in the db. Used for the API
 func GetAllUsers(db *sqlx.DB) []User {
 	var users []User
-	err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.discord_id = units.discord_id);`)
+	err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.money_discord_id = units.units_discord_id);`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,6 +181,7 @@ func GetAllUsers(db *sqlx.DB) []User {
 	return users
 }
 
+// MoneyDeduct handles all possible deductions
 func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	negativeAmount := amount * -1
 	newCurrentMoney := user.CurMoney + negativeAmount
@@ -154,14 +190,14 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	deductionRecord := -1
 
 	if deduction == "tip" {
-		dbString = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, given_money) = ($1, $2) WHERE money_discord_id = `
 		deductionRecord = user.GiveMoney
 		newDeductionAmount = user.GiveMoney + amount
 		user.CurMoney = newCurrentMoney
 		user.GiveMoney = newDeductionAmount
 	}
 	if deduction == "gamble" {
-		dbString = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, lost_money) = ($1, $2) WHERE money_discord_id = `
 		deductionRecord = user.LostMoney
 		newDeductionAmount = user.LostMoney + amount
 		user.CurMoney = newCurrentMoney
@@ -169,7 +205,7 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	}
 
 	if deduction == "buy" {
-		dbString = `UPDATE money SET (current_money, spent_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, spent_money) = ($1, $2) WHERE money_discord_id = `
 		deductionRecord = user.SpentMoney
 		newDeductionAmount = user.SpentMoney + amount
 		user.CurMoney = newCurrentMoney
@@ -177,7 +213,7 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	}
 
 	if deduction == "hacked" {
-		dbString = `UPDATE money SET (current_money, stolen_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, stolen_money) = ($1, $2) WHERE money_discord_id = `
 		deductionRecord = user.StolenFromMoney
 		newDeductionAmount = user.StolenFromMoney + amount
 		// don't actually deduct any money, we're taking it from their uncollected funds
@@ -188,10 +224,11 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 	if dbString != `` && deductionRecord != -1 && newDeductionAmount != -1 {
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newDeductionAmount)
-		db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, negativeAmount, deduction)
+		db.MustExec(`INSERT INTO transactions (transactions_discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, negativeAmount, deduction)
 	}
 }
 
+// MoneyAdd handles all possible meme additions
 func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 	newCurrentMoney := user.CurMoney + amount
 	newAdditionAmount := -1
@@ -199,35 +236,35 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 	additionRecord := -1
 
 	if addition == "tip" {
-		dbString = `UPDATE money SET (current_money, received_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, received_money) = ($1, $2) WHERE money_discord_id = `
 		additionRecord = user.RecMoney
 		newAdditionAmount = user.RecMoney + amount
 		user.CurMoney = newCurrentMoney
 		user.RecMoney = newAdditionAmount
 	}
 	if addition == "gamble" {
-		dbString = `UPDATE money SET (current_money, won_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, won_money) = ($1, $2) WHERE money_discord_id = `
 		additionRecord = user.WonMoney
 		newAdditionAmount = user.WonMoney + amount
 		user.CurMoney = newCurrentMoney
 		user.WonMoney = newAdditionAmount
 	}
 	if addition == "collected" {
-		dbString = `UPDATE money SET (current_money, collected_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, collected_money) = ($1, $2) WHERE money_discord_id = `
 		additionRecord = user.CollectedMoney
 		newAdditionAmount = user.CollectedMoney + amount
 		user.CurMoney = newCurrentMoney
 		user.CollectedMoney = newAdditionAmount
 	}
 	if addition == "hacked" {
-		dbString = `UPDATE money SET (current_money, hacked_money) = ($1, $2) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, hacked_money) = ($1, $2) WHERE money_discord_id = `
 		additionRecord = user.HackedMoney
 		newAdditionAmount = user.HackedMoney + amount
 		user.CurMoney = newCurrentMoney
 		user.HackedMoney = newAdditionAmount
 	}
 	if addition == "mined" {
-		dbString = `UPDATE money SET (current_money, earned_money, mine_time) = ($1, $2, $3) WHERE discord_id = `
+		dbString = `UPDATE money SET (current_money, earned_money, mine_time) = ($1, $2, $3) WHERE money_discord_id = `
 		additionRecord = user.EarMoney
 		newAdditionAmount = user.EarMoney + amount
 		user.CurMoney = newCurrentMoney
@@ -236,64 +273,54 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 		dbString = dbString + `'` + user.DID + `'`
 		db.MustExec(dbString, newCurrentMoney, newAdditionAmount, time.Now())
 		// add the transaction to the database
-		db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
+		db.MustExec(`INSERT INTO transactions (transactions_discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
 	} else {
 		if dbString != `` && additionRecord != -1 && newAdditionAmount != -1 {
 			// bindvars can only be used as values so we have to concat the user.DID onto the db string
 			dbString = dbString + `'` + user.DID + `'`
 			db.MustExec(dbString, newCurrentMoney, newAdditionAmount)
 			// add the transaction to the database
-			db.MustExec(`INSERT INTO transactions (discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
+			db.MustExec(`INSERT INTO transactions (transactions_discord_id, amount, type) VALUES ($1, $2, $3)`, user.DID, amount, addition)
 		}
 	}
 }
 
-// units functionality
-
-func UnitsGet(discordUser *discordgo.User, db *sqlx.DB) UserUnits {
-	var units []UserUnits
-	err := db.Select(&units, `SELECT discord_id, miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts, collect_time FROM units WHERE discord_id = $1`, discordUser.ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var unitObj UserUnits
-	if len(units) == 0 {
-		fmt.Println("creating user in units table: " + discordUser.ID)
-		createUserUnits(discordUser, db)
-		unitObj = UnitsGet(discordUser, db)
-	} else {
-		unitObj = units[0]
-	}
-	return unitObj
+// Make spew available in testing
+func idk() {
+	spew.Dump("yo whaddup")
 }
 
-func UpdateUnits(userUnits *UserUnits, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker, collect_time, cyphers, hackers, botnets, hack_seed, hack_attempts) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) WHERE discord_id = `
+// UpdateUnits updates all Units table information on a User
+func UpdateUnits(userUnits *User, db *sqlx.DB) {
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, collect_time, cyphers, hackers, botnets, hack_seed, hack_attempts) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) WHERE units_discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
 	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.CollectTime, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet, userUnits.HackSeed, userUnits.HackAttempts)
 }
 
 func createUserUnits(user *discordgo.User, db *sqlx.DB) {
 	var newUser UserUnits
+	fmt.Println("creating user in units table: " + user.ID)
 	newUser.DID = user.ID
-	_, err := db.NamedExec(`INSERT INTO units (discord_id) VALUES (:discord_id)`, newUser)
+	_, err := db.NamedExec(`INSERT INTO units (units_discord_id) VALUES (:units_discord_id)`, newUser)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+// Reset is a helper that makes setting a user back to scratch super easy
 func Reset(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	for _, resetUser := range m.Mentions {
 		// reset their money
-		db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where money_discord_id = '` + resetUser.ID + `'`)
 		// reset their units
-		db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = (0,0,0,0,0,0,0,0,0) where discord_id = '` + resetUser.ID + `'`)
+		db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = (0,0,0,0,0,0,0,0,0) where units_discord_id = '` + resetUser.ID + `'`)
 		message := resetUser.Username + " has been reset."
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 	return
 }
 
+// TempBan blocks a user from mining or collecting for the amount of days passed in
 func TempBan(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	days := args[1]
@@ -303,9 +330,9 @@ func TempBan(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 	for _, resetUser := range m.Mentions {
 		// tmp ban their mine timeer
-		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where discord_id = '` + resetUser.ID + `'`)
+		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where money_discord_id = '` + resetUser.ID + `'`)
 		// tmp ban their collect timer
-		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where discord_id = '` + resetUser.ID + `'`)
+		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where units_discord_id = '` + resetUser.ID + `'`)
 		message := resetUser.Username + " has been banned for " + days + "(s)."
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}

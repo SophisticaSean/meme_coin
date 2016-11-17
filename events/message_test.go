@@ -31,6 +31,7 @@ func capStdout(botSess interaction.Session, messageEvent interaction.MessageCrea
 }
 
 func TestMain(m *testing.M) {
+	//handlers.DbReset()
 	exit := m.Run()
 	handlers.DbReset()
 
@@ -369,18 +370,17 @@ func TestHackWin(t *testing.T) {
 	rand.Seed(seed)
 
 	user := handlers.UserGet(&author, db)
-	userUnits := handlers.UnitsGet(&author, db)
-	userUnits.Hacker = 100
-	userUnits.Botnet = 100
-	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&author, db)
+	user.Hacker = 100
+	user.Botnet = 100
+	handlers.UpdateUnits(&user, db)
+	//t.Fatal(user.Botnet)
+	//user = handlers.UserGet(&author, db)
 
 	targetUser := handlers.UserGet(&target, db)
-	targetUnits := handlers.UnitsGet(&target, db)
-	targetUnits.Miner = 14
-	targetUnits.HackSeed = seed
-	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
-	handlers.UpdateUnits(&targetUnits, db)
+	targetUser.Miner = 14
+	targetUser.HackSeed = seed
+	targetUser.CollectTime = targetUser.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUser, db)
 
 	text := "!hack " + hackers + " " + botnets + " @target"
 	message.Message.Content = text
@@ -389,61 +389,59 @@ func TestHackWin(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
-	newUserUnits := handlers.UnitsGet(&author, db)
-	newTargetUser := handlers.UserGet(&target, db)
-	newTargetUnits := handlers.UnitsGet(&target, db)
+	newTarget := handlers.UserGet(&target, db)
 
 	// verify the thief's stats
 	userMoneyDiff := newUser.CurMoney - user.CurMoney
-	if userMoneyDiff != targetUnits.Miner {
+	if userMoneyDiff != targetUser.Miner {
 		t.Log("The thief's money wasn't updated properly.")
-		numLog(t, targetUnits.Miner, userMoneyDiff)
+		numLog(t, targetUser.Miner, userMoneyDiff)
 		t.Error(output)
 	}
 
 	userStoleDiff := newUser.HackedMoney - user.HackedMoney
-	if userStoleDiff != targetUnits.Miner {
+	if userStoleDiff != targetUser.Miner {
 		t.Log("The thief's HackedMoney wasn't updated properly.")
-		numLog(t, targetUnits.Miner, userStoleDiff)
+		numLog(t, targetUser.Miner, userStoleDiff)
 		t.Log(newUser.HackedMoney)
 		t.Error(output)
 	}
 
-	if newUserUnits.Hacker != userUnits.Hacker {
+	if newUser.Hacker != user.Hacker {
 		t.Log("The thief lost hackers on a successful hack!")
-		numLog(t, newUserUnits.Hacker, userUnits.Hacker)
+		numLog(t, newUser.Hacker, user.Hacker)
 		t.Error(output)
 	}
 
-	if newUserUnits.Botnet != userUnits.Botnet {
+	if newUser.Botnet != user.Botnet {
 		t.Log("The thief lost botnets on a successful hack!")
-		numLog(t, newUserUnits.Botnet, userUnits.Botnet)
+		numLog(t, newUser.Botnet, user.Botnet)
 		t.Error(output)
 	}
 
 	// verify the target's stats
-	targetStoleDiff := newTargetUser.StolenFromMoney - targetUser.StolenFromMoney
-	if targetStoleDiff != targetUnits.Miner {
+	targetStoleDiff := newTarget.StolenFromMoney - targetUser.StolenFromMoney
+	if targetStoleDiff != targetUser.Miner {
 		t.Log("The target's StolenFromMoney wasn't updated properly.")
-		numLog(t, targetUnits.Miner, targetStoleDiff)
+		numLog(t, targetUser.Miner, targetStoleDiff)
 		t.Log(newUser.HackedMoney)
 		t.Error(output)
 	}
 
-	if newTargetUnits.CollectTime == targetUnits.CollectTime {
+	if newTarget.CollectTime == targetUser.CollectTime {
 		t.Log("The target's CollectTime wasn't updated properly.")
 		t.Error(output)
 	}
 
-	if newTargetUnits.HackAttempts != 0 {
+	if newTarget.HackAttempts != 0 {
 		t.Log("The target's HackAttempts was not reset back to 0")
-		numLog(t, 0, newTargetUnits.HackAttempts)
+		numLog(t, 0, newTarget.HackAttempts)
 		t.Error(output)
 	}
 
-	if newTargetUnits.HackSeed != 0 {
+	if newTarget.HackSeed != 0 {
 		t.Log("The target's HackSeed was not reset")
-		t.Log("The seed was still: " + strconv.Itoa(int(newTargetUnits.HackSeed)))
+		t.Log("The seed was still: " + strconv.Itoa(int(newTarget.HackSeed)))
 		t.Error(output)
 	}
 
@@ -472,7 +470,7 @@ func TestHackWin(t *testing.T) {
 		t.Log("populationSize was not hardcapped to what we expected!")
 		t.Error(output)
 	}
-	expectedOutput := ("The hack was successful, " + user.Username + " stole " + humanize.Comma(int64(targetUnits.Miner)) + " dank memes from " + target.Username)
+	expectedOutput := ("The hack was successful, " + user.Username + " stole " + humanize.Comma(int64(targetUser.Miner)) + " dank memes from " + target.Username)
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Successful hacking output to channel was not what was expected.")
 		t.Error(output)
@@ -498,19 +496,17 @@ func TestHackLoss(t *testing.T) {
 	botnets := "2000"
 
 	user := handlers.UserGet(&author, db)
-	userUnits := handlers.UnitsGet(&author, db)
-	userUnits.Hacker = 300
-	userUnits.Botnet = 2000
-	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&author, db)
+	user.Hacker = 300
+	user.Botnet = 2000
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
 
 	targetUser := handlers.UserGet(&target, db)
-	targetUnits := handlers.UnitsGet(&target, db)
-	targetUnits.Miner = 14
-	targetUnits.Cypher = 307
-	targetUnits.HackSeed = seed
-	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
-	handlers.UpdateUnits(&targetUnits, db)
+	targetUser.Miner = 14
+	targetUser.Cypher = 307
+	targetUser.HackSeed = seed
+	targetUser.CollectTime = targetUser.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUser, db)
 
 	rand.Seed(seed)
 
@@ -521,59 +517,57 @@ func TestHackLoss(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
-	newUserUnits := handlers.UnitsGet(&author, db)
-	newTargetUser := handlers.UserGet(&target, db)
-	newTargetUnits := handlers.UnitsGet(&target, db)
+	newTarget := handlers.UserGet(&target, db)
 
 	// verify the thief's stats
 	userMoneyDiff := newUser.CurMoney - user.CurMoney
 	if userMoneyDiff != 0 {
 		t.Log("The thief's money wasn't updated properly.")
-		numLog(t, targetUnits.Miner, userMoneyDiff)
+		numLog(t, targetUser.Miner, userMoneyDiff)
 		t.Error(output)
 	}
 
 	userStoleDiff := newUser.HackedMoney - user.HackedMoney
 	if userStoleDiff != 0 {
 		t.Log("The thief's HackedMoney wasn't updated properly.")
-		numLog(t, targetUnits.Miner, userStoleDiff)
+		numLog(t, targetUser.Miner, userStoleDiff)
 		t.Log(newUser.HackedMoney)
 		t.Error(output)
 	}
 
-	if newUserUnits.Hacker != userUnits.Hacker-2 {
+	if newUser.Hacker != user.Hacker-2 {
 		t.Log("The thief did not lose hackers on a failed hack!")
-		numLog(t, newUserUnits.Hacker, userUnits.Hacker)
+		numLog(t, newUser.Hacker, user.Hacker)
 		t.Error(output)
 	}
 
-	if newUserUnits.Botnet != userUnits.Botnet-129 {
+	if newUser.Botnet != user.Botnet-129 {
 		t.Log("The thief did not lose botnets on a failed hack!")
-		numLog(t, newUserUnits.Botnet, newUserUnits.Botnet-129)
+		numLog(t, newUser.Botnet, newUser.Botnet-129)
 		t.Error(output)
 	}
 
 	// verify the target's stats
-	targetStoleDiff := newTargetUser.StolenFromMoney - targetUser.StolenFromMoney
+	targetStoleDiff := newTarget.StolenFromMoney - targetUser.StolenFromMoney
 	if targetStoleDiff != 0 {
 		t.Log("The target's StolenFromMoney was updated on a failed hack!")
-		numLog(t, targetUnits.Miner, targetStoleDiff)
+		numLog(t, targetUser.Miner, targetStoleDiff)
 		t.Log(newUser.HackedMoney)
 		t.Error(output)
 	}
 
-	if newTargetUnits.CollectTime != targetUnits.CollectTime {
+	if newTarget.CollectTime != targetUser.CollectTime {
 		t.Log("The target's CollectTime was reset on a failed hack!")
 		t.Error(output)
 	}
 
-	if newTargetUnits.HackAttempts != targetUnits.HackAttempts+1 {
+	if newTarget.HackAttempts != targetUser.HackAttempts+1 {
 		t.Log("The target's HackAttempts was not incremented.")
-		numLog(t, 0, newTargetUnits.HackAttempts)
+		numLog(t, 0, newTarget.HackAttempts)
 		t.Error(output)
 	}
 
-	if newTargetUnits.HackSeed != targetUnits.HackSeed {
+	if newTarget.HackSeed != targetUser.HackSeed {
 		t.Log("The target's HackSeed reset on a failed Hack!")
 		t.Error(output)
 	}
@@ -634,19 +628,17 @@ func TestHackInsufficientUnits(t *testing.T) {
 	botnets := "300"
 
 	user := handlers.UserGet(&author, db)
-	userUnits := handlers.UnitsGet(&author, db)
-	userUnits.Hacker = 100
-	userUnits.Botnet = 100
-	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&author, db)
+	user.Hacker = 100
+	user.Botnet = 100
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
 
 	targetUser := handlers.UserGet(&target, db)
-	targetUnits := handlers.UnitsGet(&target, db)
-	targetUnits.Miner = 14
-	targetUnits.Cypher = 307
-	targetUnits.HackSeed = seed
-	targetUnits.CollectTime = targetUnits.CollectTime.Add(-10 * time.Minute)
-	handlers.UpdateUnits(&targetUnits, db)
+	targetUser.Miner = 14
+	targetUser.Cypher = 307
+	targetUser.HackSeed = seed
+	targetUser.CollectTime = targetUser.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUser, db)
 
 	rand.Seed(seed)
 
@@ -657,35 +649,33 @@ func TestHackInsufficientUnits(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
-	newUserUnits := handlers.UnitsGet(&author, db)
-	newTargetUser := handlers.UserGet(&target, db)
-	newTargetUnits := handlers.UnitsGet(&target, db)
+	newTarget := handlers.UserGet(&target, db)
 
 	// compare old and new users, make sure nothing has changed.
 	if !reflect.DeepEqual(user, newUser) {
 		t.Log("user did not equal newUser")
 		t.Error(output)
 	}
-	if !reflect.DeepEqual(userUnits, newUserUnits) {
-		t.Log("userUnits did not equal newUserUnits")
+	if !reflect.DeepEqual(user, newUser) {
+		t.Log("user did not equal newUser")
 		t.Error(output)
 	}
-	if !reflect.DeepEqual(targetUser, newTargetUser) {
-		t.Log("targetUser did not equal newTargetUser")
+	if !reflect.DeepEqual(targetUser, newTarget) {
+		t.Log("targetUser did not equal newTarget")
 		t.Error(output)
 	}
-	if !reflect.DeepEqual(targetUnits, newTargetUnits) {
-		t.Log("targetUnits did not equal newTargetUnits")
+	if !reflect.DeepEqual(targetUser, newTarget) {
+		t.Log("targetUser did not equal newTarget")
 		t.Error(output)
 	}
 
 	// make sure output is correct
-	expectedOutput := ("You don't have enough botnets for the requested hack need: " + botnets + " have: " + humanize.Comma(int64(userUnits.Botnet)))
+	expectedOutput := ("You don't have enough botnets for the requested hack need: " + botnets + " have: " + humanize.Comma(int64(user.Botnet)))
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Hacking output did not report botnet mismatch.")
 		t.Error(output)
 	}
-	expectedOutput = ("You don't have enough hackers for the requested hack need: " + hackers + " have: " + humanize.Comma(int64(userUnits.Hacker)))
+	expectedOutput = ("You don't have enough hackers for the requested hack need: " + hackers + " have: " + humanize.Comma(int64(user.Hacker)))
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Hacking output did not report hacker mismatch.")
 		t.Error(output)
@@ -702,11 +692,13 @@ func TestCollectTenMinutes(t *testing.T) {
 		Username: "admin",
 	}
 
-	userUnits := handlers.UnitsGet(&author, db)
-	userUnits.Miner = 1000
-	userUnits.CollectTime = userUnits.CollectTime.Add(-10 * time.Minute)
-	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&author, db)
+	user := handlers.UserGet(&author, db)
+	user.Miner = 1000
+	user.HackAttempts = 2
+	user.HackSeed = int64(12301002)
+	user.CollectTime = user.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
 
 	text := "!collect"
 	message.Message.Content = text
@@ -714,14 +706,13 @@ func TestCollectTenMinutes(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
-	newUserUnits := handlers.UnitsGet(&author, db)
 
 	if newUser.CurMoney != (1000 + 1000) {
 		t.Log("User CurMoney was not updated with collected amount!")
 		t.Error(output)
 	}
 
-	if newUserUnits.CollectTime == userUnits.CollectTime {
+	if newUser.CollectTime == user.CollectTime {
 		t.Log("User CollectTime was not reset upon collection.")
 		t.Error(output)
 	}
@@ -729,6 +720,14 @@ func TestCollectTenMinutes(t *testing.T) {
 	expectedOutput := ("admin collected 1,000 memes!")
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Error(output)
+	}
+	if newUser.HackAttempts != 0 {
+		t.Log("HackAttempts were not reset to 0 after collection.")
+		t.Error(output)
+	}
+	if newUser.HackSeed != 0 {
+		t.Log("HackSeed was not reset to 0 after collection.")
 		t.Error(output)
 	}
 }
@@ -743,11 +742,11 @@ func TestCollectTwoHours(t *testing.T) {
 		Username: "admin",
 	}
 
-	userUnits := handlers.UnitsGet(&author, db)
-	userUnits.Miner = 1000
-	userUnits.CollectTime = userUnits.CollectTime.Add(-120 * time.Minute)
-	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&author, db)
+	user := handlers.UserGet(&author, db)
+	user.Miner = 1000
+	user.CollectTime = user.CollectTime.Add(-120 * time.Minute)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
 
 	text := "!collect"
 	message.Message.Content = text
@@ -755,14 +754,13 @@ func TestCollectTwoHours(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
-	newUserUnits := handlers.UnitsGet(&author, db)
 
 	if newUser.CurMoney != (1000 + 12545) {
 		t.Log("User CurMoney was not updated with collected amount!")
 		t.Error(output)
 	}
 
-	if newUserUnits.CollectTime == userUnits.CollectTime {
+	if newUser.CollectTime == user.CollectTime {
 		t.Log("User CollectTime was not reset upon collection.")
 		t.Error(output)
 	}
@@ -823,11 +821,10 @@ func TestMineWithUnits(t *testing.T) {
 	rand.Seed(37)
 
 	user := handlers.UserGet(&author, db)
-	userUnits := handlers.UnitsGet(&author, db)
-	userUnits.Miner = 1000
-	//userUnits.CollectTime = userUnits.CollectTime.Add(-120 * time.Minute)
-	handlers.UpdateUnits(&userUnits, db)
-	userUnits = handlers.UnitsGet(&author, db)
+	user.Miner = 1000
+	//user.CollectTime = user.CollectTime.Add(-120 * time.Minute)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
 
 	text := "!mine"
 	message.Message.Content = text
@@ -903,7 +900,6 @@ func TestBuyOverflow(t *testing.T) {
 	}
 
 	user := handlers.UserGet(&author, db)
-	userUnits := handlers.UnitsGet(&author, db)
 
 	text := "!buy 99999999999 fracker"
 	message.Message.Content = text
@@ -911,7 +907,6 @@ func TestBuyOverflow(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	newUser := handlers.UserGet(&author, db)
-	newUserUnits := handlers.UnitsGet(&author, db)
 
 	if !reflect.DeepEqual(user, newUser) {
 		t.Log(user)
@@ -920,9 +915,9 @@ func TestBuyOverflow(t *testing.T) {
 		t.Error(output)
 	}
 
-	if !reflect.DeepEqual(userUnits, newUserUnits) {
-		t.Log(userUnits)
-		t.Log(newUserUnits)
+	if !reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
 		t.Log("UserUnits was updated even though the transaction shouldn't have gone through.")
 		t.Error(output)
 	}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
+	"github.com/davecgh/go-spew/spew"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
@@ -32,7 +33,7 @@ func Ftoa(float float64) string {
 	return floatString
 }
 
-func processHackingLosses(units *UserUnits, usedHackers int, usedBotnets int, seed int64, db *sqlx.DB) string {
+func processHackingLosses(units *User, usedHackers int, usedBotnets int, seed int64, db *sqlx.DB) string {
 	rand.Seed(seed)
 	message := ""
 	hackerLosses := 0
@@ -81,11 +82,11 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		return
 	}
 	// set the vars we care about
-	totalMemes, _, targetUnits := totalMemesEarned(mentions[0], db)
+	totalMemes, _, target := totalMemesEarned(mentions[0], db)
 	strTotalMemes := humanize.Comma(int64(totalMemes))
 	lossChances = int(math.Floor(math.Abs(float64(float64((len(strTotalMemes) - 3)) * 6))))
-	hackAttempts = int((math.Floor(float64(targetUnits.Cypher/75.0) + 4)))
-	maxStringLength := targetUnits.Cypher + cypherPadding
+	hackAttempts = int((math.Floor(float64(target.Cypher/75.0) + 4)))
+	maxStringLength := target.Cypher + cypherPadding
 	maxStringCapped := maxStringLength
 	//if maxStringLength > 75 {
 	//maxStringLength = 75
@@ -94,29 +95,28 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		maxStringCapped = 80
 	}
 	hackerLimit := globalHackerLimit + int(math.Floor(float64(maxStringCapped)*float64(0.5)))
-	target := UserGet(mentions[0], db)
-	authorUnits := UnitsGet(m.Author, db)
 	author := UserGet(m.Author, db)
+	spew.Dump(author)
 
-	if targetUnits.HackSeed == 0 {
-		discordID, err := strconv.Atoi(targetUnits.DID)
+	if target.HackSeed == 0 {
+		discordID, err := strconv.Atoi(target.DID)
 		// shouldn't happen
 		if err != nil {
 			fmt.Println("SUPER BAD ERROR: ", err)
 			return
 		}
-		targetUnits.HackAttempts = 0
-		targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
-		UpdateUnits(&targetUnits, db)
+		target.HackAttempts = 0
+		target.HackSeed = (time.Now().UnixNano() + int64(discordID))
+		UpdateUnits(&target, db)
 	}
-	seed := targetUnits.HackSeed
+	seed := target.HackSeed
 
 	hackerCount, err := strconv.Atoi(args[1])
 	if err != nil || hackerCount < 1 {
 		message = "your amount of hackers argument (`!hack <this_argument> <amount_of_botnets>`) is too large, too small, or not a number.\r"
 	}
-	if hackerCount > authorUnits.Hacker {
-		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + humanize.Comma(int64(authorUnits.Hacker)) + "\r"
+	if hackerCount > author.Hacker {
+		message = message + "You don't have enough hackers for the requested hack need: " + args[1] + " have: " + humanize.Comma(int64(author.Hacker)) + "\r"
 	}
 	if hackerCount > hackerLimit {
 		hackerCount = hackerLimit
@@ -126,8 +126,8 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if err != nil || botnetCount < 1 {
 		message = message + "your amount of botnets argument (`!hack <amount_of_hackers> <this_argument>`) is too large, too small, or not a number.\r"
 	}
-	if botnetCount > authorUnits.Botnet {
-		message = message + "You don't have enough botnets for the requested hack need: " + args[2] + " have: " + humanize.Comma(int64(authorUnits.Botnet))
+	if botnetCount > author.Botnet {
+		message = message + "You don't have enough botnets for the requested hack need: " + args[2] + " have: " + humanize.Comma(int64(author.Botnet))
 	}
 	if botnetCount > botnetLimit {
 		botnetCount = botnetLimit
@@ -147,19 +147,19 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 	if fitnessPercentage == 1 && generationPercentage == 1 {
 		message = "The hack was successful, " + author.Username + " stole " + humanize.Comma(int64(totalMemes)) + " dank memes from " + target.Username
-		// reset targetUnits collectTime, HackSeed, and HackAttempts
-		targetUnits.CollectTime = time.Now()
-		targetUnits.HackSeed = 0
-		targetUnits.HackAttempts = 0
+		// reset target collectTime, HackSeed, and HackAttempts
+		target.CollectTime = time.Now()
+		target.HackSeed = 0
+		target.HackAttempts = 0
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
 		fmt.Println(message, lossChances)
 	} else {
 		// update the target's hacked count and possibly CollectTime
-		targetUnits.HackAttempts = targetUnits.HackAttempts + 1
+		target.HackAttempts = target.HackAttempts + 1
 		lossesMessage := ""
 		if target.DID != author.DID {
-			lossesMessage = processHackingLosses(&authorUnits, hackerCount, botnetCount, seed, db)
+			lossesMessage = processHackingLosses(&author, hackerCount, botnetCount, seed, db)
 		}
 		message = "`" + author.Username + " is trying to hack " + target.Username + "!\rhacking report:`"
 		message = message + "\r`hackers performed at: " + Ftoa(fitnessPercentage*100) + "%`\r"
@@ -168,20 +168,20 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		}
 		message = message + lossesMessage
 		// handle hackAttempts limit reached
-		if targetUnits.HackAttempts >= hackAttempts {
-			discordID, err := strconv.Atoi(targetUnits.DID)
+		if target.HackAttempts >= hackAttempts {
+			discordID, err := strconv.Atoi(target.DID)
 			// shouldn't happen
 			if err != nil {
 				fmt.Println("SUPER BAD ERROR: ", err)
 				return
 			}
-			targetUnits.HackAttempts = 0
-			targetUnits.HackSeed = (time.Now().UnixNano() + int64(discordID))
-			UpdateUnits(&targetUnits, db)
+			target.HackAttempts = 0
+			target.HackSeed = (time.Now().UnixNano() + int64(discordID))
+			UpdateUnits(&target, db)
 			message = message + "`Your hacking attempts were detected! The target's password has been reset!`"
 		}
 	}
-	UpdateUnits(&targetUnits, db)
+	UpdateUnits(&target, db)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
 }

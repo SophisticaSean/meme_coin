@@ -105,7 +105,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 }
 
-func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits) {
+func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 	memes := 0
 	message := ""
 	_, production, userUnits := ProductionSum(user, db)
@@ -142,16 +142,16 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, UserUnits
 // Collect is a function that moves uncollected memes into the memebank/user's balance CurMoney
 func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	user := UserGet(m.Author, db)
-	totalMemesEarned, message, userUnits := totalMemesEarned(m.Author, db)
+	totalMemesEarned, message, _ := totalMemesEarned(m.Author, db)
 	if message != "" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
-	userUnits.HackSeed = 0
-	userUnits.HackAttempts = 0
-	userUnits.CollectTime = time.Now()
-	UpdateUnits(&userUnits, db)
+	user.HackSeed = 0
+	user.HackAttempts = 0
+	user.CollectTime = time.Now()
+	UpdateUnits(&user, db)
 	message = user.Username + " collected " + humanize.Comma(int64(totalMemesEarned)) + " memes!"
 	fmt.Println(message)
 	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
@@ -162,8 +162,8 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 
 // ProductionSum computes the amount of memes/minute someone has and returns a message
 // with that information, the int of the memes/minute and the user's userUnits struct
-func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
-	userUnits := UnitsGet(user, db)
+func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, User) {
+	userUnits := UserGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
 	production := 0
@@ -195,8 +195,8 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, UserUnits) {
 	return message, production, userUnits
 }
 
-func militarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, UserUnits) {
-	userUnits := UnitsGet(user, db)
+func militarySum(user *discordgo.User, db *sqlx.DB) (string, int, int, int, User) {
+	userUnits := UserGet(user, db)
 	tempUnitList := UnitList()
 	message := ""
 	botnet := 0
@@ -319,7 +319,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 
 	MoneyDeduct(&user, totalCost, "buy", db)
-	userUnits := UnitsGet(m.Author, db)
+	userUnits := UserGet(m.Author, db)
 	// gross if statements to determine what number to increment
 	if unit.name == "miner" {
 		userUnits.Miner = userUnits.Miner + amount
@@ -343,7 +343,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		userUnits.Botnet = userUnits.Botnet + amount
 	}
 	userUnits.CollectTime = time.Now()
-	UpdateUnits(&userUnits, db)
+	UpdateUnits(&user, db)
 	message := user.Username + " successfully bought " + humanize.Comma(int64(amount)) + " " + unit.name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
