@@ -249,7 +249,7 @@ func MilitaryUnitInfo(s interaction.Session, m *interaction.MessageCreate, db *s
 // Buy handles unit buying for users
 func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
-	if args[0] != "!buy" {
+	if strings.ToLower(args[0]) != "!buy" {
 		return
 	}
 	if len(args) == 1 || len(args) != 3 {
