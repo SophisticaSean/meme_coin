@@ -21,5 +21,5 @@ test:
 psql:
 	docker exec -it meme_coin bash -c 'su postgres -c "psql money"'
 dump:
-	docker exec -it meme_coin bash -c 'su postgres -c "pg_dump money > /mnt/containers/meme_coin/money.psql.dump"'
-	cp /mnt/containers/meme_coin/money.psql.dump ./$(date +%F_%T)backup.psql
+	docker exec -it meme_coin bash -c 'su postgres -c "pg_dump money > /mnt/containers/meme_coin/pg/money.psql.dump"'
+	mv /mnt/containers/meme_coin/pg/money.psql.dump ./$(date +%F_%T)_backup.psql
