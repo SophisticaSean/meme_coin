@@ -20,3 +20,6 @@ test:
 	@docker exec -it meme_coin bash -c "export GOPATH=/builds/go; export TEST=true; cd /builds/go/src/github.com/SophisticaSean/meme_coin; /usr/local/go/bin/go get; /usr/local/go/bin/go test ./..."
 psql:
 	docker exec -it meme_coin bash -c 'su postgres -c "psql money"'
+dump:
+	docker exec -it meme_coin bash -c 'su postgres -c "pg_dump money > /mnt/containers/meme_coin/money.psql.dump"'
+	cp /mnt/containers/meme_coin/money.psql.dump ./$(date +%F_%T)backup.psql

@@ -134,11 +134,16 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 	if roundedDifference > 0 {
 		memes = memes + int(productionPerMinute*roundedDifference)
 	}
-	fmt.Println(memes)
-	if memes < 1.0 {
+	if memes == 0.0 {
 		message = "you don't have enough memes to collect right now."
 		return memes, message, userUnits
 	}
+
+	if memes < 0 {
+		message = "looks like you're trying to collect too many memes! You can fix this by `!buy`ing some units to reset your collect time. It's probably time for you to prestige and your meme production for a percentage bonus."
+		return memes, message, userUnits
+	}
+
 	return memes, message, userUnits
 }
 

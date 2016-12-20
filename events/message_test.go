@@ -1071,3 +1071,53 @@ func TestBuy(t *testing.T) {
 		t.Error(output)
 	}
 }
+
+func TestCollectOverflow(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	user.Fracker = 300000000000
+	user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+	spew.Dump(user)
+
+	text := "!collect"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+
+	spew.Dump(handlers.UserGet(&author, db))
+	user.Fracker = 90000000000000
+	user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	output = capStdout(botSess, message)
+	user = handlers.UserGet(&author, db)
+	spew.Dump(user)
+	if newUser.CurMoney != (1000 + 1000) {
+		t.Log("User CurMoney was not updated with collected amount!")
+		t.Error(output)
+	}
+
+	if newUser.CollectTime == user.CollectTime {
+		t.Log("User CollectTime was not reset upon collection.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin collected 1,000 memes!")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Error(output)
+	}
+}

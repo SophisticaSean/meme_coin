@@ -42,6 +42,7 @@ type User struct {
 	Botnet          int       `db:"botnets"`
 	HackSeed        int64     `db:"hack_seed"`
 	HackAttempts    int       `db:"hack_attempts"`
+	PrestigeLevel   int       `db:"prestige_level"`
 	CollectTime     time.Time `db:"collect_time"`
 	UnitsDID        string    `db:"units_discord_id"`
 }
@@ -64,7 +65,7 @@ type UserUnits struct {
 var schema = `
 CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, money_discord_id VARCHAR(100), name VARCHAR(100), current_money numeric DEFAULT(1000), total_money numeric DEFAULT(0), won_money numeric DEFAULT(0), lost_money numeric DEFAULT(0), given_money numeric DEFAULT(0), received_money numeric DEFAULT(0), earned_money numeric DEFAULT(1000), spent_money numeric DEFAULT(0), collected_money numeric DEFAULT(0), hacked_money numeric DEFAULT(0), stolen_money numeric DEFAULT(0), mine_time timestamptz NOT NULL DEFAULT(now()));
 
-CREATE TABLE IF NOT EXISTS units(units_discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS units(units_discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), prestige_level numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
 
 CREATE TABLE IF NOT EXISTS transactions(id SERIAL PRIMARY KEY, transactions_discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
 `
