@@ -134,6 +134,7 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 	if roundedDifference > 0 {
 		memes = memes + int(productionPerMinute*roundedDifference)
 	}
+	fmt.Println(memes)
 	if memes < 1.0 {
 		message = "you don't have enough memes to collect right now."
 		return memes, message, userUnits
