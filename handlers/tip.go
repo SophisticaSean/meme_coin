@@ -55,23 +55,32 @@ func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "amount is too large or not a number, try again.")
 			return
 		}
+
 		if intAmount <= 0 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "amount has to be more than 0")
 			return
 		}
+
 		totalDeduct := intAmount * len(m.Mentions)
 		from := UserGet(m.Author, db)
 		if totalDeduct > from.CurMoney {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "not enough funds to complete transaction, total: "+humanize.Comma(int64(from.CurMoney))+" needed:"+humanize.Comma(int64(totalDeduct)))
 			return
 		}
-		MoneyDeduct(&from, totalDeduct, "tip", db)
 		for _, to := range m.Mentions {
 			toUser := UserGet(to, db)
-			MoneyAdd(&toUser, intAmount, "tip", db)
-			message := from.Username + " gave " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username
-			_, _ = s.ChannelMessageSend(m.ChannelID, message)
-			fmt.Println(message)
+			// check prestige level to prevent prestige tip cheese
+			if from.PrestigeLevel >= toUser.PrestigeLevel {
+				MoneyDeduct(&from, intAmount, "tip", db)
+				MoneyAdd(&toUser, intAmount, "tip", db)
+				message := from.Username + " gave " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username
+				_, _ = s.ChannelMessageSend(m.ChannelID, message)
+				fmt.Println(message)
+			} else {
+				message := from.Username + " tried to give " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username + "; but " + from.Username + "'s prestige level is " + strconv.Itoa(from.PrestigeLevel) + " and " + toUser.Username + "'s prestige level is " + strconv.Itoa(toUser.PrestigeLevel) + ". Memes can not be tipped up prestige levels; only to equal and lower prestige levels."
+				_, _ = s.ChannelMessageSend(m.ChannelID, message)
+				fmt.Println(message)
+			}
 		}
 		return
 	}

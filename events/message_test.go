@@ -1083,41 +1083,132 @@ func TestCollectOverflow(t *testing.T) {
 	}
 
 	user := handlers.UserGet(&author, db)
-	user.Fracker = 300000000000
+	user.Fracker = 90000000000000
 	user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
 	handlers.UpdateUnits(&user, db)
 	user = handlers.UserGet(&author, db)
-	spew.Dump(user)
 
 	text := "!collect"
 	message.Message.Content = text
 	message.Message.Author = &author
 
 	output := capStdout(botSess, message)
+
 	newUser := handlers.UserGet(&author, db)
 
-	spew.Dump(handlers.UserGet(&author, db))
-	user.Fracker = 90000000000000
-	user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
-	handlers.UpdateUnits(&user, db)
-	user = handlers.UserGet(&author, db)
-
-	output = capStdout(botSess, message)
-	user = handlers.UserGet(&author, db)
-	spew.Dump(user)
-	if newUser.CurMoney != (1000 + 1000) {
-		t.Log("User CurMoney was not updated with collected amount!")
+	if newUser.CurMoney != 1000 {
+		t.Log("User CurMoney was updated with an invalid amount!")
 		t.Error(output)
 	}
 
-	if newUser.CollectTime == user.CollectTime {
-		t.Log("User CollectTime was not reset upon collection.")
+	if newUser.CollectTime != user.CollectTime {
+		t.Log("User CollectTime was reset on overflowed collection.")
 		t.Error(output)
 	}
 
-	expectedOutput := ("admin collected 1,000 memes!")
+	expectedOutput := ("looks like you're trying to collect too many memes!")
 	if !strings.Contains(output, expectedOutput) {
-		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Log("Collecting output did not report proper meme collection error!")
 		t.Error(output)
 	}
 }
+
+func TestPrestigeTip(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	id = strconv.Itoa(int(time.Now().UnixNano()))
+	tipeeDiscordUser := discordgo.User{
+		ID:       id,
+		Username: "tipee",
+	}
+
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000, "tip", db)
+	user = handlers.UserGet(&author, db)
+
+	tipee := handlers.UserGet(&tipeeDiscordUser, db)
+	tipee.PrestigeLevel = 1
+	handlers.UpdateUnits(&tipee, db)
+
+	text := "!tip 10000 memes @tipee"
+	message.Message.Content = text
+	message.Message.Author = &author
+	message.Message.Mentions = []*discordgo.User{&tipeeDiscordUser}
+
+	output := capStdout(botSess, message)
+
+	tipee = handlers.UserGet(&tipeeDiscordUser, db)
+	user = handlers.UserGet(&author, db)
+
+	if tipee.CurMoney != 1000 {
+		t.Log("tipee CurMoney was changed, it should have remained at 1000.")
+		t.Error(output)
+	}
+
+	if user.CurMoney != 11000 {
+		t.Log("User CurMoney was changed, it should have remained at 11000.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin tried to give 10,000 memes to tipee; but admin's prestige level is 0 and tipee's prestige level is 1. Memes can not be tipped up prestige levels; only to equal and lower prestige levels.")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Tipping output did not report proper prestige tipping error!")
+		t.Error(output)
+	}
+}
+
+//func PrestigeTest(t *testing.T) {
+//botSess := interaction.NewConsoleSession()
+//message := interaction.NewMessageEvent()
+//db := handlers.DbGet()
+//id := strconv.Itoa(int(time.Now().UnixNano()))
+//author := discordgo.User{
+//ID:       id,
+//Username: "admin",
+//}
+
+//user := handlers.UserGet(&author, db)
+//user.Fracker = 300000000000
+//user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
+//handlers.UpdateUnits(&user, db)
+//user = handlers.UserGet(&author, db)
+//spew.Dump(user)
+
+//text := "!prestige"
+//message.Message.Content = text
+//message.Message.Author = &author
+
+//output := capStdout(botSess, message)
+//newUser := handlers.UserGet(&author, db)
+
+//spew.Dump(handlers.UserGet(&author, db))
+//user.Fracker = 90000000000000
+//user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
+//handlers.UpdateUnits(&user, db)
+//user = handlers.UserGet(&author, db)
+
+//output = capStdout(botSess, message)
+//user = handlers.UserGet(&author, db)
+//spew.Dump(user)
+//if newUser.CurMoney != (1000 + 1000) {
+//t.Log("User CurMoney was not updated with collected amount!")
+//t.Error(output)
+//}
+
+//if newUser.CollectTime == user.CollectTime {
+//t.Log("User CollectTime was not reset upon collection.")
+//t.Error(output)
+//}
+
+//expectedOutput := ("admin collected 1,000 memes!")
+//if !strings.Contains(output, expectedOutput) {
+//t.Log("Collecting output did not report proper meme collection amount!")
+//t.Error(output)
+//}
+//}

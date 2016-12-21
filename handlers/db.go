@@ -49,17 +49,18 @@ type User struct {
 
 // UserUnits is a struct that maps 1 to 1 with units db table, keeps track of what units users have purchased
 type UserUnits struct {
-	DID          string    `db:"units_discord_id"`
-	Miner        int       `db:"miner"`
-	Robot        int       `db:"robot"`
-	Swarm        int       `db:"swarm"`
-	Fracker      int       `db:"fracker"`
-	Cypher       int       `db:"cyphers"`
-	Hacker       int       `db:"hackers"`
-	Botnet       int       `db:"botnets"`
-	HackSeed     int64     `db:"hack_seed"`
-	HackAttempts int       `db:"hack_attempts"`
-	CollectTime  time.Time `db:"collect_time"`
+	DID           string    `db:"units_discord_id"`
+	Miner         int       `db:"miner"`
+	Robot         int       `db:"robot"`
+	Swarm         int       `db:"swarm"`
+	Fracker       int       `db:"fracker"`
+	Cypher        int       `db:"cyphers"`
+	Hacker        int       `db:"hackers"`
+	Botnet        int       `db:"botnets"`
+	HackSeed      int64     `db:"hack_seed"`
+	HackAttempts  int       `db:"hack_attempts"`
+	PrestigeLevel int       `db:"prestige_level"`
+	CollectTime   time.Time `db:"collect_time"`
 }
 
 var schema = `
@@ -146,6 +147,7 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 		u.botnets as botnets,
 		u.hack_seed as hack_seed,
 		u.hack_attempts as hack_attempts,
+		u.prestige_level as prestige_level,
 		u.collect_time as collect_time
 	FROM money as m
 	INNER JOIN units as u on m.money_discord_id = u.units_discord_id
@@ -293,9 +295,9 @@ func idk() {
 
 // UpdateUnits updates all Units table information on a User
 func UpdateUnits(userUnits *User, db *sqlx.DB) {
-	dbString := `UPDATE units SET (miner, robot, swarm, fracker, collect_time, cyphers, hackers, botnets, hack_seed, hack_attempts) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) WHERE units_discord_id = `
+	dbString := `UPDATE units SET (miner, robot, swarm, fracker, collect_time, cyphers, hackers, botnets, hack_seed, hack_attempts, prestige_level) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) WHERE units_discord_id = `
 	dbString = dbString + `'` + userUnits.DID + `'`
-	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.CollectTime, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet, userUnits.HackSeed, userUnits.HackAttempts)
+	db.MustExec(dbString, userUnits.Miner, userUnits.Robot, userUnits.Swarm, userUnits.Fracker, userUnits.CollectTime, userUnits.Cypher, userUnits.Hacker, userUnits.Botnet, userUnits.HackSeed, userUnits.HackAttempts, userUnits.PrestigeLevel)
 }
 
 func createUserUnits(user *discordgo.User, db *sqlx.DB) {
