@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
-	"github.com/davecgh/go-spew/spew"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
@@ -96,7 +95,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 	hackerLimit := globalHackerLimit + int(math.Floor(float64(maxStringCapped)*float64(0.5)))
 	author := UserGet(m.Author, db)
-	spew.Dump(author)
 
 	if target.HackSeed == 0 {
 		discordID, err := strconv.Atoi(target.DID)
@@ -137,6 +135,14 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		return
 	}
 
+	// check prestige level to prevent prestige tip cheese
+	if author.PrestigeLevel != target.PrestigeLevel {
+		message := author.Username + " tried to hack " + target.Username + "; but " + author.Username + "'s prestige level is " + strconv.Itoa(author.PrestigeLevel) + " and " + target.Username + "'s prestige level is " + strconv.Itoa(target.PrestigeLevel) + ". Memes can not be hacked from different prestige levels."
+		s.ChannelMessageSend(m.ChannelID, message)
+		fmt.Println(message)
+		return
+	}
+
 	fitnessPercentage, generationPercentage := hackSimulate(seed, hackerCount, botnetCount, maxStringLength)
 	// randomize which direction we round in
 	roundedGenerationPercentage := 0.0
@@ -146,11 +152,12 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		roundedGenerationPercentage = math.Ceil(generationPercentage * 10)
 	}
 	if fitnessPercentage == 1 && generationPercentage == 1 {
-		message = "The hack was successful, " + author.Username + " stole " + humanize.Comma(int64(totalMemes)) + " dank memes from " + target.Username
 		// reset target collectTime, HackSeed, and HackAttempts
 		target.CollectTime = time.Now()
 		target.HackSeed = 0
 		target.HackAttempts = 0
+		totalMemes := PrestigeBonus(totalMemes, &author)
+		message = "The hack was successful, " + author.Username + " stole " + humanize.Comma(int64(totalMemes)) + " dank memes from " + target.Username
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
 		fmt.Println(message, lossChances)

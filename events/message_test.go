@@ -44,7 +44,7 @@ func numLog(t *testing.T, expected int, actual int) {
 }
 
 func TestHelp(t *testing.T) {
-	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp`"
+	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige`"
 	splitTargets := strings.Split(targetString, " ")
 	botSess := interaction.NewConsoleSession()
 	message := interaction.NewMessageEvent()
@@ -206,16 +206,16 @@ func TestGambleCoinWin(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
-	rand.Seed(38)
+	rand.Seed(37)
 	message.Message.Author = &author
 	gambleAmount := 1000
-	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin heads"
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin tails"
 	message.Message.Content = text
 	db := handlers.DbGet()
 	user := handlers.UserGet(&author, db)
 
 	output := capStdout(botSess, message)
-	if !strings.Contains(output, "result was heads.") {
+	if !strings.Contains(output, "result was tails.") {
 		t.Log("Coin game did not report result.")
 		t.Error(output)
 	}
@@ -244,16 +244,16 @@ func TestGambleCoinLoss(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
-	rand.Seed(37)
+	rand.Seed(38)
 	message.Message.Author = &author
 	gambleAmount := 1000
-	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin tails"
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin heads"
 	message.Message.Content = text
 	db := handlers.DbGet()
 	user := handlers.UserGet(&author, db)
 
 	output := capStdout(botSess, message)
-	if !strings.Contains(output, "result was heads.") {
+	if !strings.Contains(output, "result was tails.") {
 		t.Log("Coin game did not report result.")
 		t.Error(output)
 	}
@@ -1113,7 +1113,7 @@ func TestCollectOverflow(t *testing.T) {
 	}
 }
 
-func TestPrestigeTip(t *testing.T) {
+func TestPrestigeSuccess(t *testing.T) {
 	botSess := interaction.NewConsoleSession()
 	message := interaction.NewMessageEvent()
 	db := handlers.DbGet()
@@ -1122,16 +1122,89 @@ func TestPrestigeTip(t *testing.T) {
 		ID:       id,
 		Username: "admin",
 	}
-	id = strconv.Itoa(int(time.Now().UnixNano()))
-	tipeeDiscordUser := discordgo.User{
+
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000, "tip", db)
+	user.Miner = 100
+	user.Robot = 100
+	user.Swarm = 100
+	user.Fracker = 100
+	handlers.UpdateUnits(&user, db)
+
+	user = handlers.UserGet(&author, db)
+
+	text := "!prestige YESIMSURE"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+
+	if user.CurMoney != 11000 {
+		t.Log("User CurMoney was changed, it should have remained at 11000.")
+		t.Error(output)
+	}
+
+	expectedOutput := "You have been reset! Congratulations, you are now prestige level 1, which means you get a 100 percentage bonus on all new meme income!"
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Prestige output did not report proper prestige error!")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeFail(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
 		ID:       id,
-		Username: "tipee",
+		Username: "admin",
 	}
 
 	user := handlers.UserGet(&author, db)
 	handlers.MoneyAdd(&user, 10000, "tip", db)
 	user = handlers.UserGet(&author, db)
 
+	text := "!prestige"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+
+	user = handlers.UserGet(&author, db)
+
+	if user.CurMoney != 11000 {
+		t.Log("User CurMoney was changed, it should have remained at 11000.")
+		t.Error(output)
+	}
+
+	expectedOutputs := []string{"You do not have enough miners to Prestige, you need 100 more.", "You do not have enough robots to Prestige, you need 100 more.", "You do not have enough swarms to Prestige, you need 100 more.", "You do not have enough frackers to Prestige, you need 100 more."}
+	for _, expectedOutput := range expectedOutputs {
+		if !strings.Contains(output, expectedOutput) {
+			t.Log("Prestige output did not report proper prestige error!")
+			t.Error(output)
+		}
+	}
+}
+
+func TestPrestigeTipFail(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000, "tip", db)
+	user = handlers.UserGet(&author, db)
+
+	id = strconv.Itoa(int(time.Now().UnixNano()))
+	tipeeDiscordUser := discordgo.User{
+		ID:       id,
+		Username: "tipee",
+	}
 	tipee := handlers.UserGet(&tipeeDiscordUser, db)
 	tipee.PrestigeLevel = 1
 	handlers.UpdateUnits(&tipee, db)
@@ -1163,52 +1236,537 @@ func TestPrestigeTip(t *testing.T) {
 	}
 }
 
-//func PrestigeTest(t *testing.T) {
-//botSess := interaction.NewConsoleSession()
-//message := interaction.NewMessageEvent()
-//db := handlers.DbGet()
-//id := strconv.Itoa(int(time.Now().UnixNano()))
-//author := discordgo.User{
-//ID:       id,
-//Username: "admin",
-//}
+func TestPrestigeTipSuccess(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000, "tip", db)
+	user.PrestigeLevel = 1
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
 
-//user := handlers.UserGet(&author, db)
-//user.Fracker = 300000000000
-//user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
-//handlers.UpdateUnits(&user, db)
-//user = handlers.UserGet(&author, db)
-//spew.Dump(user)
+	id = strconv.Itoa(int(time.Now().UnixNano()))
+	tipeeDiscordUser := discordgo.User{
+		ID:       id,
+		Username: "tipee",
+	}
+	tipee := handlers.UserGet(&tipeeDiscordUser, db)
+	tipee.PrestigeLevel = 1
+	handlers.UpdateUnits(&tipee, db)
 
-//text := "!prestige"
-//message.Message.Content = text
-//message.Message.Author = &author
+	text := "!tip 10000 memes @tipee"
+	message.Message.Content = text
+	message.Message.Author = &author
+	message.Message.Mentions = []*discordgo.User{&tipeeDiscordUser}
 
-//output := capStdout(botSess, message)
-//newUser := handlers.UserGet(&author, db)
+	output := capStdout(botSess, message)
 
-//spew.Dump(handlers.UserGet(&author, db))
-//user.Fracker = 90000000000000
-//user.CollectTime = user.CollectTime.Add(-24 * time.Hour)
-//handlers.UpdateUnits(&user, db)
-//user = handlers.UserGet(&author, db)
+	tipee = handlers.UserGet(&tipeeDiscordUser, db)
+	user = handlers.UserGet(&author, db)
 
-//output = capStdout(botSess, message)
-//user = handlers.UserGet(&author, db)
-//spew.Dump(user)
-//if newUser.CurMoney != (1000 + 1000) {
-//t.Log("User CurMoney was not updated with collected amount!")
-//t.Error(output)
-//}
+	if tipee.CurMoney != 11000 {
+		t.Log("tipee CurMoney was not changed, it should be 11000.")
+		t.Error(output)
+	}
 
-//if newUser.CollectTime == user.CollectTime {
-//t.Log("User CollectTime was not reset upon collection.")
-//t.Error(output)
-//}
+	if user.CurMoney != 1000 {
+		t.Log("User CurMoney was not changed, it should be 0.")
+		t.Error(output)
+	}
 
-//expectedOutput := ("admin collected 1,000 memes!")
-//if !strings.Contains(output, expectedOutput) {
-//t.Log("Collecting output did not report proper meme collection amount!")
-//t.Error(output)
-//}
-//}
+	expectedOutput := ("admin gave 10,000 memes to tipeeadmin gave 10,000 memes to tipee")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Tipping output did not report proper prestige tipping error!")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeMineSuccess(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	user.PrestigeLevel = 1
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	text := "!mine"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+
+	user = handlers.UserGet(&author, db)
+
+	if user.CurMoney != 1000+((1+user.PrestigeLevel)*100) {
+		t.Log("User CurMoney was not changed, it should be 1200.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin mined for a while and managed to scrounge up 200 dusty memes")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Mining output did not report proper prestige mining output!")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeMineSuccessHighPrestige(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	user.PrestigeLevel = 1000
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	text := "!mine"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+
+	user = handlers.UserGet(&author, db)
+
+	if user.CurMoney != 1000+((1+user.PrestigeLevel)*300) {
+		t.Log("User CurMoney was not changed, it should be 301300.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin mined for a bit and found an uncommon pepe worth 300,300 memes!")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Mining output did not report proper prestige mining output!")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeHackWin(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	targetID := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "thief",
+	}
+	target := discordgo.User{
+		ID:       targetID,
+		Username: "target",
+	}
+	seed := int64(37)
+	hackers := "100"
+	botnets := "88"
+
+	rand.Seed(seed)
+
+	user := handlers.UserGet(&author, db)
+	user.Hacker = 100
+	user.Botnet = 100
+	user.PrestigeLevel = 1
+	handlers.UpdateUnits(&user, db)
+	//t.Fatal(user.Botnet)
+	//user = handlers.UserGet(&author, db)
+
+	targetUser := handlers.UserGet(&target, db)
+	targetUser.Miner = 14
+	targetUser.HackSeed = seed
+	targetUser.CollectTime = targetUser.CollectTime.Add(-10 * time.Minute)
+	targetUser.PrestigeLevel = 1
+	handlers.UpdateUnits(&targetUser, db)
+
+	text := "!hack " + hackers + " " + botnets + " @target"
+	message.Message.Content = text
+	message.Message.Mentions = append(message.Message.Mentions, &target)
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newTarget := handlers.UserGet(&target, db)
+
+	// verify the thief's stats
+	userMoneyDiff := newUser.CurMoney - user.CurMoney
+	if userMoneyDiff != targetUser.Miner*(1+user.PrestigeLevel) {
+		t.Log("The thief's money wasn't updated properly.")
+		numLog(t, targetUser.Miner*user.PrestigeLevel, userMoneyDiff)
+		t.Error(output)
+	}
+
+	userStoleDiff := newUser.HackedMoney - user.HackedMoney
+	if userStoleDiff != targetUser.Miner*(1+user.PrestigeLevel) {
+		t.Log("The thief's HackedMoney wasn't updated properly.")
+		numLog(t, targetUser.Miner*(1+user.PrestigeLevel), userStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newUser.Hacker != user.Hacker {
+		t.Log("The thief lost hackers on a successful hack!")
+		numLog(t, newUser.Hacker, user.Hacker)
+		t.Error(output)
+	}
+
+	if newUser.Botnet != user.Botnet {
+		t.Log("The thief lost botnets on a successful hack!")
+		numLog(t, newUser.Botnet, user.Botnet)
+		t.Error(output)
+	}
+
+	// verify the target's stats
+	targetStoleDiff := newTarget.StolenFromMoney - targetUser.StolenFromMoney
+	if targetStoleDiff != targetUser.Miner*(1+user.PrestigeLevel) {
+		t.Log("The target's StolenFromMoney wasn't updated properly.")
+		numLog(t, targetUser.Miner*(1+user.PrestigeLevel), targetStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newTarget.CollectTime == targetUser.CollectTime {
+		t.Log("The target's CollectTime wasn't updated properly.")
+		t.Error(output)
+	}
+
+	if newTarget.HackAttempts != 0 {
+		t.Log("The target's HackAttempts was not reset back to 0")
+		numLog(t, 0, newTarget.HackAttempts)
+		t.Error(output)
+	}
+
+	if newTarget.HackSeed != 0 {
+		t.Log("The target's HackSeed was not reset")
+		t.Log("The seed was still: " + strconv.Itoa(int(newTarget.HackSeed)))
+		t.Error(output)
+	}
+
+	// verify the output
+	if !strings.Contains(output, "totalIterations: "+botnets) {
+		t.Log("Number of iterations was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "iterationLimit: "+botnets) {
+		t.Log("IterationLimit was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "seed: "+strconv.Itoa(int(seed))) {
+		t.Log("The seed was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "totalFitness: 32") {
+		t.Log("totalFitness was not what we expected.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "targetLength: 32") {
+		t.Log("targetLength of password was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "populationSize: 9") {
+		t.Log("populationSize was not hardcapped to what we expected!")
+		t.Error(output)
+	}
+	expectedOutput := ("The hack was successful, " + user.Username + " stole " + humanize.Comma(int64(targetUser.Miner*(1+user.PrestigeLevel))) + " dank memes from " + target.Username)
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Successful hacking output to channel was not what was expected.")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeHackFail(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	targetID := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "thief",
+	}
+	target := discordgo.User{
+		ID:       targetID,
+		Username: "target",
+	}
+	seed := int64(37)
+	hackers := "100"
+	botnets := "88"
+
+	rand.Seed(seed)
+
+	user := handlers.UserGet(&author, db)
+	user.Hacker = 100
+	user.Botnet = 100
+	user.PrestigeLevel = 1
+	handlers.UpdateUnits(&user, db)
+	//t.Fatal(user.Botnet)
+	//user = handlers.UserGet(&author, db)
+
+	targetUser := handlers.UserGet(&target, db)
+	targetUser.Miner = 14
+	targetUser.HackSeed = seed
+	targetUser.CollectTime = targetUser.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&targetUser, db)
+
+	text := "!hack " + hackers + " " + botnets + " @target"
+	message.Message.Content = text
+	message.Message.Mentions = append(message.Message.Mentions, &target)
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newTarget := handlers.UserGet(&target, db)
+
+	// verify the thief's stats
+	userMoneyDiff := newUser.CurMoney - user.CurMoney
+	if userMoneyDiff != 0 {
+		t.Log("The thief's money was updated on an improper hack.")
+		numLog(t, targetUser.Miner*user.PrestigeLevel, userMoneyDiff)
+		t.Error(output)
+	}
+
+	userStoleDiff := newUser.HackedMoney - user.HackedMoney
+	if userStoleDiff != 0 {
+		t.Log("The thief's HackedMoney was update on an improper hack.")
+		numLog(t, targetUser.Miner*(1+user.PrestigeLevel), userStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newUser.Hacker != user.Hacker {
+		t.Log("The thief lost hackers on a improper hack!")
+		numLog(t, newUser.Hacker, user.Hacker)
+		t.Error(output)
+	}
+
+	if newUser.Botnet != user.Botnet {
+		t.Log("The thief lost botnets on a improper hack!")
+		numLog(t, newUser.Botnet, user.Botnet)
+		t.Error(output)
+	}
+
+	// verify the target's stats
+	targetStoleDiff := newTarget.StolenFromMoney - targetUser.StolenFromMoney
+	if targetStoleDiff != 0 {
+		t.Log("The target's StolenFromMoney was updated on an improper hack.")
+		numLog(t, targetUser.Miner*(1+user.PrestigeLevel), targetStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newTarget.CollectTime != targetUser.CollectTime {
+		t.Log("The target's CollectTime was changed on an improper hack.")
+		t.Error(output)
+	}
+
+	if newTarget.HackAttempts != 0 {
+		t.Log("The target's HackAttempts should remain as 0")
+		numLog(t, 0, newTarget.HackAttempts)
+		t.Error(output)
+	}
+
+	if newTarget.HackSeed == 0 {
+		t.Log("The target's HackSeed was reset")
+		t.Log("The seed was still: " + strconv.Itoa(int(newTarget.HackSeed)))
+		t.Error(output)
+	}
+
+	// verify the output
+	expectedOutput := ("thief tried to hack target; but thief's prestige level is 1 and target's prestige level is 0.")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Successful hacking output to channel was not what was expected.")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeHackWinHighPrestige(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	targetID := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "thief",
+	}
+	target := discordgo.User{
+		ID:       targetID,
+		Username: "target",
+	}
+	seed := int64(37)
+	hackers := "100"
+	botnets := "88"
+
+	rand.Seed(seed)
+
+	user := handlers.UserGet(&author, db)
+	user.Hacker = 100
+	user.Botnet = 100
+	user.PrestigeLevel = 1000
+	handlers.UpdateUnits(&user, db)
+	//t.Fatal(user.Botnet)
+	//user = handlers.UserGet(&author, db)
+
+	targetUser := handlers.UserGet(&target, db)
+	targetUser.Miner = 14
+	targetUser.HackSeed = seed
+	targetUser.CollectTime = targetUser.CollectTime.Add(-10 * time.Minute)
+	targetUser.PrestigeLevel = 1000
+	handlers.UpdateUnits(&targetUser, db)
+
+	text := "!hack " + hackers + " " + botnets + " @target"
+	message.Message.Content = text
+	message.Message.Mentions = append(message.Message.Mentions, &target)
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+	newTarget := handlers.UserGet(&target, db)
+
+	// verify the thief's stats
+	userMoneyDiff := newUser.CurMoney - user.CurMoney
+	if userMoneyDiff != targetUser.Miner*(1+user.PrestigeLevel) {
+		t.Log("The thief's money wasn't updated properly.")
+		numLog(t, targetUser.Miner*user.PrestigeLevel, userMoneyDiff)
+		t.Error(output)
+	}
+
+	userStoleDiff := newUser.HackedMoney - user.HackedMoney
+	if userStoleDiff != targetUser.Miner*(1+user.PrestigeLevel) {
+		t.Log("The thief's HackedMoney wasn't updated properly.")
+		numLog(t, targetUser.Miner*(1+user.PrestigeLevel), userStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newUser.Hacker != user.Hacker {
+		t.Log("The thief lost hackers on a successful hack!")
+		numLog(t, newUser.Hacker, user.Hacker)
+		t.Error(output)
+	}
+
+	if newUser.Botnet != user.Botnet {
+		t.Log("The thief lost botnets on a successful hack!")
+		numLog(t, newUser.Botnet, user.Botnet)
+		t.Error(output)
+	}
+
+	// verify the target's stats
+	targetStoleDiff := newTarget.StolenFromMoney - targetUser.StolenFromMoney
+	if targetStoleDiff != targetUser.Miner*(1+user.PrestigeLevel) {
+		t.Log("The target's StolenFromMoney wasn't updated properly.")
+		numLog(t, targetUser.Miner*(1+user.PrestigeLevel), targetStoleDiff)
+		t.Log(newUser.HackedMoney)
+		t.Error(output)
+	}
+
+	if newTarget.CollectTime == targetUser.CollectTime {
+		t.Log("The target's CollectTime wasn't updated properly.")
+		t.Error(output)
+	}
+
+	if newTarget.HackAttempts != 0 {
+		t.Log("The target's HackAttempts was not reset back to 0")
+		numLog(t, 0, newTarget.HackAttempts)
+		t.Error(output)
+	}
+
+	if newTarget.HackSeed != 0 {
+		t.Log("The target's HackSeed was not reset")
+		t.Log("The seed was still: " + strconv.Itoa(int(newTarget.HackSeed)))
+		t.Error(output)
+	}
+
+	// verify the output
+	if !strings.Contains(output, "totalIterations: "+botnets) {
+		t.Log("Number of iterations was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "iterationLimit: "+botnets) {
+		t.Log("IterationLimit was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "seed: "+strconv.Itoa(int(seed))) {
+		t.Log("The seed was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "totalFitness: 32") {
+		t.Log("totalFitness was not what we expected.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "targetLength: 32") {
+		t.Log("targetLength of password was incorrect.")
+		t.Error(output)
+	}
+	if !strings.Contains(output, "populationSize: 9") {
+		t.Log("populationSize was not hardcapped to what we expected!")
+		t.Error(output)
+	}
+	expectedOutput := ("The hack was successful, " + user.Username + " stole " + humanize.Comma(int64(targetUser.Miner*(1+user.PrestigeLevel))) + " dank memes from " + target.Username)
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Successful hacking output to channel was not what was expected.")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeCollect(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	user.Miner = 1000
+	user.HackAttempts = 2
+	user.HackSeed = int64(12301002)
+	user.CollectTime = user.CollectTime.Add(-10 * time.Minute)
+	user.PrestigeLevel = 1000
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	text := "!collect"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+
+	if newUser.CurMoney != (1000 + 1000*(1+user.PrestigeLevel)) {
+		t.Log("User CurMoney was not updated with collected amount!")
+		t.Error(output)
+	}
+
+	if newUser.CollectTime == user.CollectTime {
+		t.Log("User CollectTime was not reset upon collection.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin collected " + humanize.Comma(int64((1000 * (1 + user.PrestigeLevel)))) + " memes!")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Collecting output did not report proper meme collection amount!")
+		t.Error(output)
+	}
+	if newUser.HackAttempts != 0 {
+		t.Log("HackAttempts were not reset to 0 after collection.")
+		t.Error(output)
+	}
+	if newUser.HackSeed != 0 {
+		t.Log("HackSeed was not reset to 0 after collection.")
+		t.Error(output)
+	}
+}

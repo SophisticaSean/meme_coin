@@ -155,6 +155,7 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
+	totalMemesEarned = PrestigeBonus(totalMemesEarned, &user)
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
 	user.HackSeed = 0
 	user.HackAttempts = 0

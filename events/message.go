@@ -60,9 +60,9 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		if strings.Contains(lowerMessage, "!ban") {
 			handlers.TempBan(s, m, db)
 		}
-    if m.Author.ID == botID {
-      return
-    }
+		if m.Author.ID == botID {
+			return
+		}
 	}
 
 	if strings.Contains(lowerMessage, "!tip") {
@@ -99,6 +99,10 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 
 	if strings.Contains(lowerMessage, "!hack") {
 		handlers.Hack(s, m, db)
+	}
+
+	if strings.Contains(lowerMessage, "!prestige") {
+		handlers.Prestige(s, m, db)
 	}
 
 	if lowerMessage == "!help" || lowerMessage == "!memehelp" {

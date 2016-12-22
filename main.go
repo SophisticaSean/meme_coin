@@ -73,6 +73,7 @@ func main() {
 	if Console == "" {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	db, router := api.RouterConfigure()
 	defer db.Close()
 	go router.Run(":8080")

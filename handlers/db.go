@@ -178,6 +178,7 @@ func GetAllUsers(db *sqlx.DB) []User {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// censor the hackseed
 	for i := range users {
 		users[i].HackSeed = 0
 	}
@@ -234,6 +235,7 @@ func MoneyDeduct(user *User, amount int, deduction string, db *sqlx.DB) {
 // MoneyAdd handles all possible meme additions
 func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 	newCurrentMoney := user.CurMoney + amount
+
 	newAdditionAmount := -1
 	dbString := ``
 	additionRecord := -1
@@ -323,6 +325,15 @@ func Reset(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	return
 }
 
+// ResetUser is for internal Go usage of reseting a user, whereas Reset is for the !reset command
+func ResetUser(resetUser *discordgo.User, db *sqlx.DB) {
+	// reset their money
+	db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where money_discord_id = '` + resetUser.ID + `'`)
+	// reset their units
+	db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = (0,0,0,0,0,0,0,0,0) where units_discord_id = '` + resetUser.ID + `'`)
+	return
+}
+
 // TempBan blocks a user from mining or collecting for the amount of days passed in
 func TempBan(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
@@ -340,4 +351,16 @@ func TempBan(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 	return
+}
+
+// PrestigeBonus calculates the total memes a person receives when their prestigebonus is taken into account.
+func PrestigeBonus(amount int, user *User) (total int) {
+	// process prestige bonus
+	prestigeBonus := user.PrestigeLevel * amount
+	total = amount
+	// protect from overflow
+	if prestigeBonus > 0 {
+		total = total + prestigeBonus
+	}
+	return total
 }

@@ -68,9 +68,9 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 		// Coin flip game
 		if game == "coin" || game == "flip" {
 			if gameInput == "heads" || gameInput == "tails" {
-				num := rand.Intn(9)
+				num := rand.Intn(99)
 				answer := ""
-				if num > 4 {
+				if num > 47 {
 					answer = gameInput
 				} else {
 					if gameInput == "heads" {
