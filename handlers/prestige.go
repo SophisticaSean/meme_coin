@@ -9,8 +9,9 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func init() {
-	infoMessage = `
+// Prestige handles resetting a user and giving them a bonus
+func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
+	infoMessage := `
 	usage: !prestige <are_you_sure>
 	!prestige
 	!prestige YESIMSURE
@@ -19,10 +20,6 @@ func init() {
 		meme income.
 	every prestige level doubles the amount of units you need to proceed
 	`
-}
-
-// Prestige handles resetting a user and giving them a bonus
-func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if strings.ToLower(args[0]) != "!prestige" {
 		return
