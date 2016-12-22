@@ -61,7 +61,7 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 			message = "You have been reset! Congratulations, you are now prestige level " + strconv.Itoa(user.PrestigeLevel) + ", which means you get a " + strconv.Itoa(user.PrestigeLevel*100) + " percentage bonus on all new meme income!"
 
 			s.ChannelMessageSend(m.ChannelID, message)
-			fmt.Println(user.Username + " prestiged to level " + user.PrestigeLevel)
+			fmt.Println(user.Username + " prestiged to level " + strconv.Itoa(user.PrestigeLevel))
 			return
 		}
 	}
