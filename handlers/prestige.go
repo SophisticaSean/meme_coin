@@ -54,9 +54,12 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 				return
 			}
 
-			ResetUser(m.Author, db)
+			ResetUser(user, db)
+			// get fresh reset user before updating units
+			user = UserGet(m.Author, db)
 			user.PrestigeLevel = user.PrestigeLevel + 1
 			UpdateUnits(&user, db)
+
 			message = "You have been reset! Congratulations, you are now prestige level " + strconv.Itoa(user.PrestigeLevel) + ", which means you get a " + strconv.Itoa(user.PrestigeLevel*100) + " percentage bonus on all new meme income!"
 
 			s.ChannelMessageSend(m.ChannelID, message)

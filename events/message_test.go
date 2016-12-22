@@ -1139,9 +1139,15 @@ func TestPrestigeSuccess(t *testing.T) {
 
 	output := capStdout(botSess, message)
 
-	if user.CurMoney != 11000 {
-		t.Log("User CurMoney was changed, it should have remained at 11000.")
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 1000 {
+		t.Log("User CurMoney was not changed, it should have reset to 1000.")
 		t.Error(output)
+	}
+
+	if user.Miner != 0 {
+		t.Log("User Miner count was not reset to 0.")
+		t.Error(user.Miner)
 	}
 
 	expectedOutput := "You have been reset! Congratulations, you are now prestige level 1, which means you get a 100 percentage bonus on all new meme income!"

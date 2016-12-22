@@ -326,11 +326,11 @@ func Reset(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 }
 
 // ResetUser is for internal Go usage of reseting a user, whereas Reset is for the !reset command
-func ResetUser(resetUser *discordgo.User, db *sqlx.DB) {
+func ResetUser(resetUser User, db *sqlx.DB) {
 	// reset their money
-	db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where money_discord_id = '` + resetUser.ID + `'`)
+	db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where money_discord_id = '` + resetUser.DID + `'`)
 	// reset their units
-	db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = (0,0,0,0,0,0,0,0,0) where units_discord_id = '` + resetUser.ID + `'`)
+	db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts) = (0,0,0,0,0,0,0,0,0) where units_discord_id = '` + resetUser.DID + `'`)
 	return
 }
 
