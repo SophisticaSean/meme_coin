@@ -151,14 +151,9 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 	return memes, message, userUnits
 }
 
-// Collect is a function that moves uncollected memes into the memebank/user's balance CurMoney
-func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
-	user := UserGet(m.Author, db)
-	totalMemesEarned, message, _ := totalMemesEarned(m.Author, db)
-	if message != "" {
-		_, _ = s.ChannelMessageSend(m.ChannelID, message)
-		return
-	}
+func collectHelper(author *discordgo.User, db *sqlx.DB) (message string) {
+	user := UserGet(author, db)
+	totalMemesEarned, _, _ := totalMemesEarned(author, db)
 	totalMemesEarned = PrestigeBonus(totalMemesEarned, &user)
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
 	user.HackSeed = 0
@@ -167,9 +162,21 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	UpdateUnits(&user, db)
 	message = user.Username + " collected " + humanize.Comma(int64(totalMemesEarned)) + " memes!"
 	fmt.Println(message)
-	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% multiplier for every hour you let your memes stay uncollected."
+	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% compound interest for every hour you let your memes stay uncollected."
+	return message
+}
 
-	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+// Collect is a function that moves uncollected memes into the memebank/user's balance CurMoney
+func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
+	_, message, _ := totalMemesEarned(m.Author, db)
+	if message != "" {
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+		return
+	}
+
+	message = collectHelper(m.Author, db)
+
+	s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
@@ -344,6 +351,8 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			return
 		}
 	}
+
+	collectHelper(m.Author, db)
 
 	MoneyDeduct(&user, totalCost, "buy", db)
 	userUnits := UserGet(m.Author, db)
