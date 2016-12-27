@@ -102,7 +102,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message := "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
 		if (production) < 10 {
-			message = message + "\ntotal memes per minute: " + Ftoa((float64(production)))
+			message = message + "\ntotal memes per minute: " + Ftoa((float64(production) / 10))
 		} else {
 			message = message + "\ntotal memes per minute: " + humanize.Comma(int64((float64(production) / 10)))
 		}
