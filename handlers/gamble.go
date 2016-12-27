@@ -87,9 +87,9 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 		}
 	} else if args[0] == "!gamble" {
 		message = `
-			Gamble command is used as follows: '!gamble <amount> <game> <gameInput>
-			 '!gamble <amount> coin|flip heads|tails' payout is 1x
-			 '!gamble <amount> number <numberToGuess>:<highestNumberInRange>' payout is whatever the <highestNumberInRange> is.`
+			Gamble command is used as follows: ` + "`" + `'!gamble <amount> <game> <gameInput>` + "`" + `
+			 ` + "`" + `'!gamble <amount> coin|flip heads|tails` + "`" + ` payout is 1x
+			 ` + "`" + `!gamble <amount> number <numberToGuess>:<highestNumberInRange>` + "`" + ` payout is whatever the <highestNumberInRange - 1> is.`
 		return message
 	}
 	return message
