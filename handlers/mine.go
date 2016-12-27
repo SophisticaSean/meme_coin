@@ -84,8 +84,13 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 
 	// check to make sure user is not trying to mine before timeLimit has passed
 	if difference.Minutes() < float64(timeLimit) {
-		waitTime := humanize.Comma(int64(math.Ceil((float64(timeLimit) - difference.Minutes()))))
-		_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
+		if difference.Minutes() > 1 {
+			waitTime := humanize.Comma(int64(math.Ceil((float64(timeLimit) - difference.Minutes()))))
+			s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
+		} else {
+			waitTime := humanize.Comma(int64(math.Ceil((60 - difference.Seconds()))))
+			s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more second(s)")
+		}
 		return
 	}
 
