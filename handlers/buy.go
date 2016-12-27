@@ -352,7 +352,12 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		}
 	}
 
-	collectHelper(m.Author, db)
+	message := ""
+	totalMemesEarned, _, _ := totalMemesEarned(m.Author, db)
+	if totalMemesEarned > 0 {
+		message = collectHelper(m.Author, db)
+		message = message + "\n"
+	}
 
 	MoneyDeduct(&user, totalCost, "buy", db)
 	userUnits := UserGet(m.Author, db)
@@ -380,7 +385,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	}
 	userUnits.CollectTime = time.Now()
 	UpdateUnits(&userUnits, db)
-	message := user.Username + " successfully bought " + humanize.Comma(int64(amount)) + " " + unit.Name + "(s)"
+	message = message + user.Username + " successfully bought " + humanize.Comma(int64(amount)) + " " + unit.Name + "(s)"
 	fmt.Println(message)
 	_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	return
