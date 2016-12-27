@@ -44,7 +44,7 @@ func numLog(t *testing.T, expected int, actual int) {
 }
 
 func TestHelp(t *testing.T) {
-	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige`"
+	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige` `!fakecollect`"
 	splitTargets := strings.Split(targetString, " ")
 	botSess := interaction.NewConsoleSession()
 	message := interaction.NewMessageEvent()
