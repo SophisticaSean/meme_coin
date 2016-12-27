@@ -65,7 +65,7 @@ func GenerateResponseList() []MineResponse {
 func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []MineResponse, db *sqlx.DB) {
 	author := UserGet(m.Author, db)
 	difference := time.Now().Sub(author.MineTime)
-	timeLimit := 5
+	timeLimit := 1
 	channel, err := s.Channel(m.ChannelID)
 	_, originalProduction, _ := ProductionSum(m.Author, db)
 	productionMultiplier := int(math.Floor(float64(originalProduction) / float64(rand.Intn(160)+40)))
