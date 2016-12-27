@@ -169,6 +169,20 @@ func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	return
 }
 
+// FakeCollect is a function that reports how many uncollected memes could be collected at the time it was called
+func FakeCollect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
+	user := UserGet(m.Author, db)
+	totalMemesEarned, message, _ := totalMemesEarned(m.Author, db)
+	if message != "" {
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+		return
+	}
+	totalMemesEarned = PrestigeBonus(totalMemesEarned, &user)
+	message = user.Username + " can collect " + humanize.Comma(int64(totalMemesEarned)) + " memes right now."
+	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	return
+}
+
 // ProductionSum computes the amount of memes/minute someone has and returns a message
 // with that information, the int of the memes/minute and the user's userUnits struct
 func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, User) {
@@ -267,7 +281,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	unit := Unit{}
 	validUnit := false
 	for _, i := range unitList {
-		if args[2] == i.Name || args[2] == i.Name+"s" {
+		if strings.ToLower(args[2]) == i.Name || strings.ToLower(args[2]) == i.Name+"s" {
 			unit = i
 			validUnit = true
 		}

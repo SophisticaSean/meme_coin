@@ -97,6 +97,10 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		handlers.Collect(s, m, db)
 	}
 
+	if lowerMessage == "!fakecollect" {
+		handlers.FakeCollect(s, m, db)
+	}
+
 	if strings.Contains(lowerMessage, "!hack") {
 		handlers.Hack(s, m, db)
 	}
