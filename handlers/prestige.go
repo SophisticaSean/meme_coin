@@ -15,8 +15,9 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 	usage: !prestige <are_you_sure>
 	!prestige
 	!prestige YESIMSURE
+	!prestige help
 	if you have enough of the requisite units, prestige will reset all your accumulated wealth
-		and start you off at the beginning with 1000 memes and a flat % bonus multiplier for all future
+		and start you off at the beginning with 1000 memes and a flat +100% bonus multiplier for all future
 		meme income.
 	every prestige level doubles the amount of units you need to proceed
 	`
@@ -44,6 +45,10 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 	}
 
 	if len(args) == 2 {
+		if args[1] == "help" {
+			s.ChannelMessageSend(m.ChannelID, infoMessage)
+			return
+		}
 		if args[1] == "YESIMSURE" {
 			message := canPrestige(&user, necessaryUnitAmount)
 
@@ -70,7 +75,7 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 }
 
 func canPrestige(user *User, necessaryUnitAmount int) (message string) {
-	message = ""
+	message = user.Username + " is prestige level " + strconv.Itoa(user.PrestigeLevel) + " which is a bonus of +" + strconv.Itoa(user.PrestigeLevel*100) + " percent to all meme income"
 	if user.Miner < (necessaryUnitAmount) {
 		message = (message + "You do not have enough miners to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Miner) + " more.\n")
 	}
