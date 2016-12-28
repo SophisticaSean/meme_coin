@@ -45,7 +45,6 @@ func numLog(t *testing.T, expected int, actual int) {
 
 func TestHelp(t *testing.T) {
 	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige` `!fakecollect`"
-	splitTargets := strings.Split(targetString, " ")
 	botSess := interaction.NewConsoleSession()
 	message := interaction.NewMessageEvent()
 	author := discordgo.User{
@@ -58,13 +57,11 @@ func TestHelp(t *testing.T) {
 
 	output := capStdout(botSess, message)
 
-	outputSplit := strings.Split(output, " ")
-	for i := range outputSplit {
-		if outputSplit[i] != splitTargets[i] {
-			t.Log("Help string was not what we expected!")
-			t.Error(outputSplit[i], splitTargets[i])
-		}
+	if !strings.Contains(output, targetString) {
+		t.Log("help output didn't report what we expected.")
+		t.Error(output)
 	}
+
 }
 
 func TestNewUser(t *testing.T) {
@@ -886,6 +883,54 @@ func TestMineFrequency(t *testing.T) {
 	expectedOutput := ("admin mined")
 	if strings.Contains(output, expectedOutput) {
 		t.Log("Mining reported success before time limit!")
+		t.Error(output)
+	}
+}
+
+func TestBuyAutoCollect(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	user.Robot = 10
+	user.CollectTime = user.CollectTime.Add(-10 * time.Minute)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	text := "!buy 1 miner"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+	newUser := handlers.UserGet(&author, db)
+
+	if reflect.DeepEqual(user, newUser) {
+		t.Log(user)
+		t.Log(newUser)
+		t.Log("User was not updated.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin successfully bought 1 miner")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Buying did not report success.")
+		t.Error(output)
+	}
+
+	if newUser.Miner != 1 {
+		t.Log("Users miner count was not updated on successful purchase.")
+		t.Error(output)
+	}
+
+	if newUser.CurMoney != 600 {
+		t.Log("Users current money was not updated on successful purchase.")
+		spew.Dump(newUser)
 		t.Error(output)
 	}
 }

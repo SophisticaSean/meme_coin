@@ -357,6 +357,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if totalMemesEarned > 0 {
 		message = collectHelper(m.Author, db)
 		message = message + "\n"
+		user = UserGet(m.Author, db)
 	}
 
 	MoneyDeduct(&user, totalCost, "buy", db)

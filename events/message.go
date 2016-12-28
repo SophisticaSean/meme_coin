@@ -69,7 +69,7 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		handlers.Tip(s, m, db)
 	}
 
-	if lowerMessage == "!balance" || lowerMessage == "!memes" {
+	if lowerMessage == "!balance" || lowerMessage == "!memes" || lowerMessage == "!maymays" || lowerMessage == "!memez" {
 		handlers.Balance(s, m, db)
 	}
 
