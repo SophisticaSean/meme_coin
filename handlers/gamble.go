@@ -67,41 +67,49 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 		if loopAmount == 1 {
 			// Pick a number game
 			if game == "number" {
-				message = numberGame(gameInput, bet, author, db)
+				message, _ = numberGame(gameInput, bet, author, db)
 				fmt.Println(message)
 				return message
 			}
 
 			// Coin flip game
 			if game == "coin" || game == "flip" {
-				message = coinGame(gameInput, bet, author, db)
+				message, _ = coinGame(gameInput, bet, author, db)
 				fmt.Println(message)
 				return message
 			}
 		} else {
 			wins := 0
+			winAmount := 0
 			losses := 0
+			lossAmount := 0
 			loop := loopAmount
 			for loop > 0 {
 				curMessage := ""
+				curAmount := 0
 				if game == "number" {
-					curMessage = numberGame(gameInput, bet, author, db)
+					curMessage, curAmount = numberGame(gameInput, bet, author, db)
 				}
 
 				// Coin flip game
 				if game == "coin" || game == "flip" {
-					curMessage = coinGame(gameInput, bet, author, db)
+					curMessage, curAmount = coinGame(gameInput, bet, author, db)
 				}
 
 				if strings.Contains(curMessage, "won") {
 					wins++
+					winAmount = winAmount + curAmount
 				} else if strings.Contains(curMessage, "lost") {
 					losses++
+					lossAmount = lossAmount + curAmount
+				} else {
+					loop = 0
+					return curMessage
 				}
 				loop--
 			}
 			message = author.Username + " gambled " + strconv.Itoa(loopAmount) + " times. You won " + strconv.Itoa(wins) + " times, and lost " + strconv.Itoa(losses) + ".\r"
-			message = message + "Your net gamble gain was " + humanize.Comma(int64((wins*bet)-(losses*bet)))
+			message = message + "Your net gamble gain was " + humanize.Comma(int64((winAmount)-(lossAmount)))
 			fmt.Println(message)
 			return message
 		}
@@ -118,17 +126,17 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 	return message
 }
 
-func winLoseProcessor(answer string, pickedItem string, payout float64, bet int, author *User, db *sqlx.DB) string {
+func winLoseProcessor(answer string, pickedItem string, payout float64, bet int, author *User, db *sqlx.DB) (string, int) {
 	message := "The result was " + answer
 	if answer == pickedItem {
 		payout := betToPayout(bet, payout)
 		MoneyAdd(author, payout, "gamble", db)
 		message = message + ". Congrats, " + author.Username + " won " + humanize.Comma(int64(payout)) + " memes."
-		return message
+		return message, payout
 	}
 	MoneyDeduct(author, bet, "gamble", db)
 	message = message + ". Bummer, " + author.Username + " lost " + humanize.Comma(int64(bet)) + " memes. :("
-	return message
+	return message, bet
 }
 
 // Gamble is the function that handles the interaction of a user and gambling their memes
@@ -139,34 +147,35 @@ func Gamble(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	return
 }
 
-func numberGame(gameInput string, bet int, author *User, db *sqlx.DB) string {
+func numberGame(gameInput string, bet int, author *User, db *sqlx.DB) (string, int) {
 	numberErrMessage := "!gamble <amount> number <numberToGuess>:<highestNumberInRange>. So !gamble 100 number 10:100 will run a pick a number game between 1 and 100 and the payout will be x100, because you have a 1  in 100 chance to win."
 	message := ""
 	gameInputs := strings.Split(gameInput, ":")
 
 	if len(gameInputs) != 2 {
-		return numberErrMessage
+		return numberErrMessage, 0
 	}
 	pickedNumber, err := strconv.Atoi(gameInputs[0])
 	if err != nil || pickedNumber < 1 {
-		return numberErrMessage
+		return numberErrMessage, 0
 	}
 	rangeNumber, err := strconv.Atoi(gameInputs[1])
 	if err != nil || rangeNumber < pickedNumber {
-		return numberErrMessage
+		return numberErrMessage, 0
 	}
 	if rangeNumber <= 1 {
 		message = "your highestNumberInRange needs to be greater than 1"
-		return message
+		return message, 0
 	}
 
 	answer := humanize.Comma(int64(rand.Intn(rangeNumber) + 1))
 	strPickedNumber := humanize.Comma(int64(pickedNumber))
-	message = winLoseProcessor(answer, strPickedNumber, float64(rangeNumber-1), bet, author, db)
-	return message
+	amount := 0
+	message, amount = winLoseProcessor(answer, strPickedNumber, float64(rangeNumber-1), bet, author, db)
+	return message, amount
 }
 
-func coinGame(gameInput string, bet int, author *User, db *sqlx.DB) string {
+func coinGame(gameInput string, bet int, author *User, db *sqlx.DB) (string, int) {
 	message := ""
 	if gameInput == "heads" || gameInput == "tails" {
 		num := rand.Intn(99)
@@ -180,9 +189,10 @@ func coinGame(gameInput string, bet int, author *User, db *sqlx.DB) string {
 				answer = "heads"
 			}
 		}
-		message = winLoseProcessor(answer, gameInput, 1.0, bet, author, db)
-		return message
+		amount := 0
+		message, amount = winLoseProcessor(answer, gameInput, 1.0, bet, author, db)
+		return message, amount
 	}
 	message = "pick heads or tails bud. `!gamble <amount> coin heads|tails`"
-	return message
+	return message, 0
 }
