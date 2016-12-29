@@ -36,14 +36,14 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 
 		loopAmount := 1
 
-		//if len(args) == 5 {
-		//convertedLoopAmount, err := strconv.Atoi(args[4])
-		//if err != nil || convertedLoopAmount < 1 || convertedLoopAmount > 500 {
-		//message = "amount of times to run the gamble is too high or not a number, try again."
-		//return message
-		//}
-		//loopAmount = convertedLoopAmount
-		//}
+		if len(args) == 5 {
+			convertedLoopAmount, err := strconv.Atoi(args[4])
+			if err != nil || convertedLoopAmount < 1 || convertedLoopAmount > 500 {
+				message = "amount of times to run the gamble is too high or not a number, try again."
+				return message
+			}
+			loopAmount = convertedLoopAmount
+		}
 
 		totalBet := bet
 		if len(args) == 5 {
@@ -181,7 +181,7 @@ func coinGame(gameInput string, bet int, author *User, db *sqlx.DB) (string, int
 	if gameInput == "heads" || gameInput == "tails" {
 		num := rand.Intn(99)
 		answer := ""
-		if num > 47 {
+		if num > 53 {
 			answer = gameInput
 		} else {
 			if gameInput == "heads" {
