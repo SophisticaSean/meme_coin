@@ -109,9 +109,10 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 				loop--
 			}
 			message = author.Username + " gambled " + strconv.Itoa(loopAmount) + " times. You won " + strconv.Itoa(wins) + " times, and lost " + strconv.Itoa(losses) + ".\r"
-			message = message + "Your net gamble gain was " + humanize.Comma(int64((winAmount)-(lossAmount)))
 			fmt.Println(message)
-			return message
+			message2 := "Your net gamble gain was " + humanize.Comma(int64((winAmount)-(lossAmount)))
+			fmt.Println(message2)
+			return (message + message2)
 		}
 	} else if args[0] == "!gamble" {
 		message = `
