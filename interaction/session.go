@@ -58,6 +58,16 @@ func NewDiscordSession(email string, pass string) (DiscordSession, error) {
 	}, nil
 }
 
+func NewDiscordSessionToken(token string) (DiscordSession, error) {
+	s, e := discordgo.New(token)
+	if e != nil {
+		return DiscordSession{}, e
+	}
+	return DiscordSession{
+		Session: s,
+	}, nil
+}
+
 func (cs *ConsoleSession) ChannelMessageSend(id string, message string) (string, error) {
 	fmt.Printf(message)
 	return message, nil
