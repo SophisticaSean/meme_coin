@@ -38,7 +38,7 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 
 		if len(args) == 5 {
 			convertedLoopAmount, err := strconv.Atoi(args[4])
-			if err != nil || convertedLoopAmount < 1 {
+			if err != nil || convertedLoopAmount < 1 || convertedLoopAmount > 500 {
 				message = "amount of times to run the gamble is too high or not a number, try again."
 				return message
 			}
@@ -47,7 +47,7 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 
 		totalBet := bet
 		if len(args) == 5 {
-			totalBet := totalBet * loopAmount
+			totalBet = totalBet * loopAmount
 			if totalBet < 1 {
 				message = "your bet * loopamount is too big, or not a number, try lowering the loop amount or bet amount"
 				return message
