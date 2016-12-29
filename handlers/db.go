@@ -347,7 +347,26 @@ func TempBan(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where money_discord_id = '` + resetUser.ID + `'`)
 		// tmp ban their collect timer
 		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where units_discord_id = '` + resetUser.ID + `'`)
-		message := resetUser.Username + " has been banned for " + days + "(s)."
+		message := resetUser.Username + " has been banned for " + days + " day(s)."
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
+	return
+}
+
+// Unban unblocks a user from mining or collecting
+func Unban(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
+	args := strings.Split(m.Content, " ")
+	days := args[1]
+	_, err := strconv.Atoi(days)
+	if err != nil {
+		days = "1"
+	}
+	for _, resetUser := range m.Mentions {
+		// tmp ban their mine timeer
+		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp) where money_discord_id = '` + resetUser.ID + `'`)
+		// tmp ban their collect timer
+		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp) where units_discord_id = '` + resetUser.ID + `'`)
+		message := resetUser.Username + " has been unbanned."
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 	return

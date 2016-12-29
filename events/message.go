@@ -60,6 +60,9 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		if strings.Contains(lowerMessage, "!ban") {
 			handlers.TempBan(s, m, db)
 		}
+		if strings.Contains(lowerMessage, "!unban") {
+			handlers.Unban(s, m, db)
+		}
 		if m.Author.ID == botID {
 			return
 		}
