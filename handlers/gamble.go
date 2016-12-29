@@ -36,14 +36,14 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 
 		loopAmount := 1
 
-		if len(args) == 5 {
-			convertedLoopAmount, err := strconv.Atoi(args[4])
-			if err != nil || convertedLoopAmount < 1 || convertedLoopAmount > 500 {
-				message = "amount of times to run the gamble is too high or not a number, try again."
-				return message
-			}
-			loopAmount = convertedLoopAmount
-		}
+		//if len(args) == 5 {
+		//convertedLoopAmount, err := strconv.Atoi(args[4])
+		//if err != nil || convertedLoopAmount < 1 || convertedLoopAmount > 500 {
+		//message = "amount of times to run the gamble is too high or not a number, try again."
+		//return message
+		//}
+		//loopAmount = convertedLoopAmount
+		//}
 
 		totalBet := bet
 		if len(args) == 5 {
