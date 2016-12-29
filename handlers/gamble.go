@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
 	humanize "github.com/dustin/go-humanize"
@@ -63,6 +64,8 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 			message = "not enough funds to complete transaction, total: " + humanize.Comma(int64(author.CurMoney)) + " needed:" + humanize.Comma(int64(totalBet))
 			return message
 		}
+
+		rand.Seed(time.Now().UnixNano())
 
 		if loopAmount == 1 {
 			// Pick a number game
