@@ -184,7 +184,7 @@ func coinGame(gameInput string, bet int, author *User, db *sqlx.DB) (string, int
 	if gameInput == "heads" || gameInput == "tails" {
 		num := rand.Intn(99)
 		answer := ""
-		if num > 53 {
+		if num > 50 {
 			answer = gameInput
 		} else {
 			if gameInput == "heads" {
