@@ -1821,3 +1821,42 @@ func TestPrestigeCollect(t *testing.T) {
 		t.Error(output)
 	}
 }
+
+func TestTipSelf(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000, "tip", db)
+	user.PrestigeLevel = 1
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	text := "!tip 10000 memes @tipee"
+	message.Message.Content = text
+	message.Message.Author = &author
+	message.Message.Mentions = []*discordgo.User{&author}
+
+	output := capStdout(botSess, message)
+
+	user = handlers.UserGet(&author, db)
+
+	if user.CurMoney != 11000 {
+		t.Log("author CurMoney was changed, it should be 11000.")
+		t.Error(user.CurMoney)
+		t.Error(output)
+	}
+
+	expectedOutput := ("admin gave 10,000 memes to adminadmin gave 10,000 memes to admin")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Tipping output did not report proper prestige tipping error!")
+		t.Error(output)
+	}
+	//spew.Dump(user)
+	//t.Error(output)
+}

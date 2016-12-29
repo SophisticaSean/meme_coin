@@ -72,6 +72,8 @@ func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			// check prestige level to prevent prestige tip cheese
 			if from.PrestigeLevel >= toUser.PrestigeLevel {
 				MoneyDeduct(&from, intAmount, "tip", db)
+				// refresh the touser, handles the tipping self problem
+				toUser = UserGet(to, db)
 				MoneyAdd(&toUser, intAmount, "tip", db)
 				message := from.Username + " gave " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)

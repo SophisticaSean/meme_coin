@@ -35,6 +35,7 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 		message := canPrestige(&user, necessaryUnitAmount)
 
 		if message != "" {
+			message = user.Username + " is prestige level " + strconv.Itoa(user.PrestigeLevel) + " which is a bonus of +" + strconv.Itoa(user.PrestigeLevel*100) + " percent to all meme income.\r" + message
 			s.ChannelMessageSend(m.ChannelID, message)
 			return
 		}
@@ -75,7 +76,7 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 }
 
 func canPrestige(user *User, necessaryUnitAmount int) (message string) {
-	message = user.Username + " is prestige level " + strconv.Itoa(user.PrestigeLevel) + " which is a bonus of +" + strconv.Itoa(user.PrestigeLevel*100) + " percent to all meme income.\r"
+	message = ""
 	if user.Miner < (necessaryUnitAmount) {
 		message = (message + "You do not have enough miners to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Miner) + " more.\n")
 	}
