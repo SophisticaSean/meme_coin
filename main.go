@@ -41,7 +41,7 @@ func main() {
 		botSess = interaction.NewConsoleSession()
 	} else {
 		var err error
-		botSess, err = interaction.NewDiscordSessionToken(Token)
+		botSess, err = interaction.NewDiscordSessionToken("Bot "+Token)
 		if err != nil {
 			fmt.Println("Unable to create Discord session with given Email and Password,", err)
 			return

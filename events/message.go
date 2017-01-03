@@ -109,7 +109,8 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 	}
 
 	if strings.Contains(lowerMessage, "!prestige") {
-		handlers.Prestige(s, m, db)
+		//handlers.Prestige(s, m, db)
+		s.ChannelMessageSend(m.ChannelID, "prestiging is currently disabled because of an UNDANK BUG, daddy is working on it.")
 	}
 
 	if lowerMessage == "!help" || lowerMessage == "!memehelp" {
