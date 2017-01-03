@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -65,7 +66,10 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 			return message
 		}
 
-		rand.Seed(time.Now().UnixNano())
+		isTest, _ := os.LookupEnv("TEST")
+		if isTest == "" {
+			rand.Seed(time.Now().UnixNano())
+		}
 
 		if loopAmount == 1 {
 			// Pick a number game

@@ -44,7 +44,7 @@ func numLog(t *testing.T, expected int, actual int) {
 }
 
 func TestHelp(t *testing.T) {
-	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige` `!fakecollect`"
+	targetString := "yo, whaddup. Here are the commands I know:\r`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige` `!fakecollect` `!check`"
 	botSess := interaction.NewConsoleSession()
 	message := interaction.NewMessageEvent()
 	author := discordgo.User{
@@ -78,14 +78,6 @@ func TestNewUser(t *testing.T) {
 
 	output := capStdout(botSess, message)
 	if !strings.Contains(output, "total balance is: 1,000") {
-		t.Error(output)
-	}
-	if !strings.Contains(output, "creating user: "+id) {
-		t.Log("user table creation didn't fire")
-		t.Error(output)
-	}
-	if !strings.Contains(output, "creating user in units table: "+id) {
-		t.Log("user units creation didn't fire")
 		t.Error(output)
 	}
 	db := handlers.DbGet()
@@ -206,13 +198,14 @@ func TestGambleCoinWin(t *testing.T) {
 	rand.Seed(37)
 	message.Message.Author = &author
 	gambleAmount := 1000
-	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin tails"
+	result := "tails"
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin " + result
 	message.Message.Content = text
 	db := handlers.DbGet()
 	user := handlers.UserGet(&author, db)
 
 	output := capStdout(botSess, message)
-	if !strings.Contains(output, "result was tails.") {
+	if !strings.Contains(output, "result was "+result+".") {
 		t.Log("Coin game did not report result.")
 		t.Error(output)
 	}
@@ -244,7 +237,8 @@ func TestGambleCoinLoss(t *testing.T) {
 	rand.Seed(38)
 	message.Message.Author = &author
 	gambleAmount := 1000
-	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin heads"
+	result := "heads"
+	text := "!gamble " + strconv.Itoa(gambleAmount) + " coin " + result
 	message.Message.Content = text
 	db := handlers.DbGet()
 	user := handlers.UserGet(&author, db)
