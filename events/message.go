@@ -100,7 +100,7 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		handlers.Collect(s, m, db)
 	}
 
-	if lowerMessage == "!fakecollect" {
+	if lowerMessage == "!fakecollect" || lowerMessage == "!check" {
 		handlers.FakeCollect(s, m, db)
 	}
 

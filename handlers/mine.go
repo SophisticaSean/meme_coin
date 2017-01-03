@@ -102,7 +102,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	MoneyAdd(&author, amount, "mined", db)
 	amountRegex := regexp.MustCompile(`\$AMOUNT\$`)
 	response := amountRegex.ReplaceAllString(mineResponse.response, humanize.Comma(int64(amount)))
-	_, _ = s.ChannelMessageSend(m.ChannelID, author.Username+response)
+	s.ChannelMessageSend(m.ChannelID, author.Username+response)
 	fmt.Println(author.Username + " mined " + humanize.Comma(int64(amount)))
 	return
 }
