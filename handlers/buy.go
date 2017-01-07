@@ -99,7 +99,8 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
-    message := author.Username + "\r"
+		message := author.Username + "\r"
+		message = message + "Prestige Level " + strconv.Itoa(author.PrestigeLevel) + "\r"
 		message = message + "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
 		if (production) < 10 {
