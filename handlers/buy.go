@@ -164,7 +164,7 @@ func collectHelper(author *discordgo.User, db *sqlx.DB) (message string) {
 	UpdateUnits(&user, db)
 	message = user.Username + " collected " + humanize.Comma(int64(totalMemesEarned)) + " memes!"
 	fmt.Println(message)
-	message = message + "\rYou now get a " + strconv.Itoa(multiplier) + "% compound interest for every hour you let your memes stay uncollected."
+	message = message + "\rDon't forget, you get a " + strconv.Itoa(multiplier) + "% compound interest for every hour you let your memes stay uncollected (up to 24 hours)."
 	return message
 }
 
