@@ -56,6 +56,8 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 			}
 		}
 
+		loopAmount = 1
+
 		if bet > author.CurMoney {
 			message = "not enough funds to complete transaction, total: " + humanize.Comma(int64(author.CurMoney)) + " needed:" + humanize.Comma(int64(bet))
 			return message
