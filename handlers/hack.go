@@ -34,8 +34,8 @@ func Ftoa(float float64) string {
 func processHackingLosses(units *User, usedHackers int, usedBotnets int, seed int64, db *sqlx.DB) string {
 	rand.Seed(seed)
 	message := ""
-	hackerLosses := ((units.Hacker / 20) / (rand.Intn(lossChances) + 1))
-	botnetLosses := ((units.Botnet / 10) / (rand.Intn(lossChances) + 1))
+	hackerLosses := ((usedHackers / 20) / (rand.Intn(lossChances) + 1))
+	botnetLosses := ((usedBotnets / 10) / (rand.Intn(lossChances) + 1))
 	if hackerLosses != 0 {
 		units.Hacker = units.Hacker - hackerLosses
 		message = message + "`Your hacking got " + humanize.Comma(int64(hackerLosses)) + " hackers arrested by the FBI!`\r`You now have " + humanize.Comma(int64(units.Hacker)) + " hackers left.`\r"
@@ -127,11 +127,11 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	roundedHackerPercentage := 0.0
 	roundedBotnetPercentage := 0.0
 	if rand.Intn(1) == 1 {
-		roundedBotnetPercentage = math.Floor(botnetPercentage * 10)
-		roundedHackerPercentage = math.Floor(hackerPercentage * 10)
+		roundedBotnetPercentage = math.Floor(botnetPercentage * 100)
+		roundedHackerPercentage = math.Floor(hackerPercentage * 100)
 	} else {
-		roundedBotnetPercentage = math.Ceil(botnetPercentage * 10)
-		roundedHackerPercentage = math.Ceil(hackerPercentage * 10)
+		roundedBotnetPercentage = math.Ceil(botnetPercentage * 100)
+		roundedHackerPercentage = math.Ceil(hackerPercentage * 100)
 	}
 	if hackerPercentage == 1 && botnetPercentage == 1 {
 		// reset target collectTime, HackSeed, and HackAttempts
@@ -153,9 +153,9 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		}
 		message = "`" + author.Username + " is trying to hack " + target.Username + "!\rhacking report:`"
 		//message = message + "\r`hackers performed at: " + Ftoa(roundedHackerPercentage*100) + "%`\r"
-		message = message + "\r`hackers performed at: " + Ftoa(hackerPercentage) + "%`\r"
+		message = message + "\r`hackers performed at: " + Ftoa(roundedHackerPercentage) + "%`\r"
 		if hackerPercentage == 1 {
-			message = message + "`botnets overperformed at: ~" + Ftoa(roundedBotnetPercentage*100) + "%`\r"
+			message = message + "`botnets overperformed at: ~" + Ftoa(roundedBotnetPercentage) + "%`\r"
 		}
 		message = message + lossesMessage
 		// handle hackAttempts limit reached
