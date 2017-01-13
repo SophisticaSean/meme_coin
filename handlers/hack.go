@@ -187,5 +187,5 @@ func hackSimulate(seed int64, hackerAmount int, botnetAmount int, cypherStrength
 	spew.Dump(hackTarget)
 	spew.Dump(botnetTarget)
 
-	return (float64(hackTarget) / float64(hackerAmount)), (float64(botnetTarget) / float64(botnetAmount))
+	return (float64(hackerAmount) / float64(hackTarget)), (float64(botnetAmount) / float64(botnetTarget))
 }
