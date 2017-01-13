@@ -103,6 +103,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message = message + "Prestige Level " + strconv.Itoa(author.PrestigeLevel) + "\r"
 		message = message + "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
+		production := PrestigeBonus(production, author)
 		if (production) < 10 {
 			message = message + "\ntotal memes per minute: " + Ftoa((float64(production) / 10))
 		} else {
@@ -192,7 +193,7 @@ func FakeCollect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.D
 	}
 	totalMemesEarned = PrestigeBonus(totalMemesEarned, &user)
 	message = user.Username + " can collect " + humanize.Comma(int64(totalMemesEarned)) + " memes right now."
-	_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	s.ChannelMessageSend(m.ChannelID, message)
 	return
 }
 
