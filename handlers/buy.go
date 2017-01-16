@@ -228,7 +228,8 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, User) {
 		}
 		productionUnit = false
 	}
-	message = message + "total memes per minute: " + humanize.Comma(int64(float64(production)/10))
+  prestigeProduction := PrestigeBonus(production, &userUnits)
+	message = message + "total memes per minute: " + humanize.Comma(int64(float64(prestigeProduction)/10))
 	return message, production, userUnits
 }
 
