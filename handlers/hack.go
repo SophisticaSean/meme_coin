@@ -133,6 +133,16 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		roundedBotnetPercentage = math.Ceil(botnetPercentage * 100)
 		roundedHackerPercentage = math.Ceil(hackerPercentage * 100)
 	}
+
+	// if our rounding gets us to 100; just give out the straight percentage
+	if roundedBotnetPercentage == 100 {
+		roundedBotnetPercentage = botnetPercentage
+	}
+
+	if roundedHackerPercentage == 100 {
+		roundedHackerPercentage = hackerPercentage
+	}
+
 	if hackerPercentage == 1 && botnetPercentage == 1 {
 		// reset target collectTime, HackSeed, and HackAttempts
 		target.CollectTime = time.Now()
@@ -152,7 +162,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			lossesMessage = processHackingLosses(&author, hackerCount, botnetCount, seed, db)
 		}
 		message = "`" + author.Username + " is trying to hack " + target.Username + "!\rhacking report:`"
-		//message = message + "\r`hackers performed at: " + Ftoa(roundedHackerPercentage*100) + "%`\r"
 		message = message + "\r`hackers performed at: " + Ftoa(roundedHackerPercentage) + "%`\r"
 		if hackerPercentage == 1 {
 			message = message + "`botnets overperformed at: ~" + Ftoa(roundedBotnetPercentage) + "%`\r"
