@@ -60,11 +60,12 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 
 			ResetUser(user, db)
 			// get fresh reset user before updating units
-			user = UserGet(m.Author, db)
-			user.PrestigeLevel = user.PrestigeLevel + 1
-			UpdateUnits(&user, db)
+			newUser := UserGet(m.Author, db)
+			newUser.PrestigeLevel = user.PrestigeLevel + 1
+			fmt.Println(newUser.PrestigeLevel)
+			UpdateUnits(&newUser, db)
 
-			message = "You have been reset! Congratulations, you are now prestige level " + strconv.Itoa(user.PrestigeLevel) + ", which means you get a " + strconv.Itoa(user.PrestigeLevel*100) + " percentage bonus on all new meme income!"
+			message = "You have been reset! Congratulations, you are now prestige level " + strconv.Itoa(newUser.PrestigeLevel) + ", which means you get a " + strconv.Itoa(newUser.PrestigeLevel*100) + " percentage bonus on all new meme income!"
 
 			s.ChannelMessageSend(m.ChannelID, message)
 			fmt.Println(user.Username + " prestiged to level " + strconv.Itoa(user.PrestigeLevel))

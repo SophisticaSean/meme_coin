@@ -1167,6 +1167,11 @@ func TestPrestigeSuccess(t *testing.T) {
 		t.Error(user.Miner)
 	}
 
+	if user.PrestigeLevel != 1 {
+		t.Log("User prestige level was not set to 1.")
+		t.Error(user.Miner)
+	}
+
 	expectedOutput := "You have been reset! Congratulations, you are now prestige level 1, which means you get a 100 percentage bonus on all new meme income!"
 	if !strings.Contains(output, expectedOutput) {
 		t.Log("Prestige output did not report proper prestige error!")
@@ -1740,6 +1745,56 @@ func TestPrestigeCollect(t *testing.T) {
 	}
 	if newUser.HackSeed != 0 {
 		t.Log("HackSeed was not reset to 0 after collection.")
+		t.Error(output)
+	}
+}
+
+func TestPrestigeTwoSuccess(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 10000, "tip", db)
+	user.Miner = 400
+	user.Robot = 400
+	user.Swarm = 400
+	user.Fracker = 400
+	user.PrestigeLevel = 1
+	handlers.UpdateUnits(&user, db)
+
+	user = handlers.UserGet(&author, db)
+
+	text := "!prestige YESIMSURE"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+
+	user = handlers.UserGet(&author, db)
+	if user.CurMoney != 1000 {
+		t.Log("User CurMoney was not changed, it should have reset to 1000.")
+		t.Error(output)
+	}
+
+	if user.Miner != 0 {
+		t.Log("User Miner count was not reset to 0.")
+		t.Error(user.Miner)
+	}
+
+	if user.PrestigeLevel != 2 {
+		t.Log(output)
+		t.Error("User Prestige level is not 2.")
+	}
+
+	expectedOutput := "You have been reset! Congratulations, you are now prestige level 2, which means you get a 200 percentage bonus on all new meme income!"
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Prestige output did not report proper prestige error!")
 		t.Error(output)
 	}
 }

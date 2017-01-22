@@ -12,6 +12,6 @@ func Help(s interaction.Session, m *interaction.MessageCreate) {
 func help() string {
 	message := "yo, whaddup. Here are the commands I know:\r"
 	message = message + "`!military` `!hack` `!buy` `!mine` `!units` `!collect` `!gamble` `!tip` `!balance` `!memes` `!memehelp` `!prestige` `!fakecollect` `!check` `!invite`\r"
-	message = message + "report problems, or ask questions to MEMETHAN BRADBERRY with the kermit picture"
+	message = message + "report problems, or ask questions to MEMETHAN DANKBERRY with the kermit picture"
 	return message
 }
