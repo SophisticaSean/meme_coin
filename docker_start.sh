@@ -16,7 +16,7 @@ su -c "psql -c 'alter user memebot password \$\$password\$\$;'" -m postgres
 
 if [[ $TEST != "" ]]; then
   cd /builds/go/src/github.com/SophisticaSean/meme_coin/.
-  go get
+  go get -v
   go test ./...
 else
   /meme_coin
