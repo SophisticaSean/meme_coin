@@ -34,13 +34,11 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 	if len(args) == 1 {
 		message := canPrestige(&user, necessaryUnitAmount)
 
-		if message != "" {
-			message = user.Username + " is prestige level " + strconv.Itoa(user.PrestigeLevel) + " which is a bonus of +" + strconv.Itoa(user.PrestigeLevel*100) + " percent to all meme income.\r" + message
-			s.ChannelMessageSend(m.ChannelID, message)
-			return
+		if message == "" {
+			message = "You have enough units to prestige. If you are sure you want to prestige, type `!prestige YESIMSURE`"
 		}
 
-		message = "If you are sure you want to prestige, type `!prestige YESIMSURE`"
+		message = user.Username + " is prestige level " + strconv.Itoa(user.PrestigeLevel) + " which is a bonus of +" + strconv.Itoa(user.PrestigeLevel*100) + " percent to all meme income.\r" + message
 		s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
