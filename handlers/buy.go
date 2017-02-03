@@ -150,11 +150,11 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 		return memes, message, userUnits
 	}
 
-	if memes < 0 {
-		//message = "looks like you're trying to collect too many memes! You can fix this by `!buy`ing some units to reset your collect time. It's probably time for you to prestige and reset your meme production for a percentage bonus."
-		//return memes, message, userUnits
-		memes = 9223372036854775807
-	}
+	//if memes < 0 {
+	////message = "looks like you're trying to collect too many memes! You can fix this by `!buy`ing some units to reset your collect time. It's probably time for you to prestige and reset your meme production for a percentage bonus."
+	////return memes, message, userUnits
+	//memes = 9223372036854775807
+	//}
 
 	return memes, message, userUnits
 }
@@ -163,6 +163,9 @@ func collectHelper(author *discordgo.User, db *sqlx.DB) (message string) {
 	user := UserGet(author, db)
 	totalMemesEarned, _, _ := totalMemesEarned(author, db)
 	totalMemesEarned = PrestigeBonus(totalMemesEarned, &user)
+	if totalMemesEarned < 0 {
+		totalMemesEarned = 9223372036854775807
+	}
 	MoneyAdd(&user, totalMemesEarned, "collected", db)
 	user.HackSeed = 0
 	user.HackAttempts = 0
