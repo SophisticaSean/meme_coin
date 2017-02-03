@@ -288,6 +288,13 @@ func MoneyAdd(user *User, amount int, addition string, db *sqlx.DB) {
 	}
 }
 
+// MoneySet handles setting curmoney directly
+func MoneySet(user *User, amount int, db *sqlx.DB) {
+	dbString := `UPDATE money SET (current_money) = ($1) WHERE money_discord_id = `
+	dbString = dbString + `'` + user.DID + `'`
+	db.MustExec(dbString, amount)
+}
+
 // Make spew available in testing
 func idk() {
 	spew.Dump("yo whaddup")

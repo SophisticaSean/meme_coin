@@ -1,6 +1,7 @@
 package events
 
 import (
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -1836,4 +1837,90 @@ func TestTipSelf(t *testing.T) {
 	}
 	//spew.Dump(user)
 	//t.Error(output)
+}
+
+func TestTipOverflow(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, 1000000000000000000, "tip", db)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	id = strconv.Itoa(int(time.Now().UnixNano()))
+	tipeeDiscordUser := discordgo.User{
+		ID:       id,
+		Username: "tipee",
+	}
+	tipee := handlers.UserGet(&tipeeDiscordUser, db)
+	handlers.MoneyAdd(&tipee, 9000000000000000000, "tip", db)
+	handlers.UpdateUnits(&tipee, db)
+
+	text := "!tip 1000000000000000000 memes @tipee"
+	message.Message.Content = text
+	message.Message.Author = &author
+	message.Message.Mentions = []*discordgo.User{&tipeeDiscordUser}
+
+	output := capStdout(botSess, message)
+
+	tipee = handlers.UserGet(&tipeeDiscordUser, db)
+	user = handlers.UserGet(&author, db)
+
+	fmt.Println(tipee.CurMoney)
+	if tipee.CurMoney != 9000000000000001000 {
+		t.Log("tipee CurMoney was changed, it should have remained at 1000000000000001000.")
+		t.Error(output)
+	}
+
+	if user.CurMoney != 1000000000000001000 {
+		t.Log("User CurMoney was changed, it should have remained at 1000000000000001000.")
+		t.Error(output)
+	}
+
+	expectedOutput := ("You're trying to tip too many memes, try tipping less memes.")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Tipping output did not report proper prestige tipping error!")
+		t.Error(output)
+	}
+}
+
+func TestNegativeBalanceReset(t *testing.T) {
+	botSess := interaction.NewConsoleSession()
+	message := interaction.NewMessageEvent()
+	db := handlers.DbGet()
+	id := strconv.Itoa(int(time.Now().UnixNano()))
+	author := discordgo.User{
+		ID:       id,
+		Username: "admin",
+	}
+	user := handlers.UserGet(&author, db)
+	handlers.MoneyAdd(&user, -20000, "tip", db)
+	handlers.UpdateUnits(&user, db)
+	user = handlers.UserGet(&author, db)
+
+	text := "!balance"
+	message.Message.Content = text
+	message.Message.Author = &author
+
+	output := capStdout(botSess, message)
+
+	user = handlers.UserGet(&author, db)
+
+	if user.CurMoney != 19000 {
+		t.Log("User CurMoney was not changed, it should 19000.")
+		t.Log(user.CurMoney)
+		t.Error(output)
+	}
+
+	expectedOutput := ("19,000")
+	if !strings.Contains(output, expectedOutput) {
+		t.Log("Tipping output did not report meme amount.")
+		t.Error(output)
+	}
 }

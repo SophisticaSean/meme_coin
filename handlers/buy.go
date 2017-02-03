@@ -99,6 +99,10 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
+		if author.CurMoney < 0 {
+			author.CurMoney = (author.CurMoney * -1)
+			MoneySet(&author, author.CurMoney, db)
+		}
 		message := author.Username + "\r"
 		message = message + "Prestige Level " + strconv.Itoa(author.PrestigeLevel) + "\r"
 		message = message + "total balance is: " + humanize.Comma(int64(author.CurMoney))
@@ -228,7 +232,7 @@ func ProductionSum(user *discordgo.User, db *sqlx.DB) (string, int, User) {
 		}
 		productionUnit = false
 	}
-  prestigeProduction := PrestigeBonus(production, &userUnits)
+	prestigeProduction := PrestigeBonus(production, &userUnits)
 	message = message + "total memes per minute: " + humanize.Comma(int64(float64(prestigeProduction)/10))
 	return message, production, userUnits
 }
