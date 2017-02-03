@@ -151,8 +151,9 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 	}
 
 	if memes < 0 {
-		message = "looks like you're trying to collect too many memes! You can fix this by `!buy`ing some units to reset your collect time. It's probably time for you to prestige and reset your meme production for a percentage bonus."
-		return memes, message, userUnits
+		//message = "looks like you're trying to collect too many memes! You can fix this by `!buy`ing some units to reset your collect time. It's probably time for you to prestige and reset your meme production for a percentage bonus."
+		//return memes, message, userUnits
+		memes = 9223372036854775807
 	}
 
 	return memes, message, userUnits
@@ -177,7 +178,7 @@ func collectHelper(author *discordgo.User, db *sqlx.DB) (message string) {
 func Collect(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	_, message, _ := totalMemesEarned(m.Author, db)
 	if message != "" {
-		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+		s.ChannelMessageSend(m.ChannelID, message)
 		return
 	}
 
