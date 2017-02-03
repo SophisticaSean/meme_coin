@@ -99,6 +99,9 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	mineResponse := responseList[pickedIndex]
 	amount := (mineResponse.amount * productionMultiplier)
 	amount = PrestigeBonus(amount, &author)
+	if amount < 0 {
+		amount = 9223372036854775807
+	}
 	MoneyAdd(&author, amount, "mined", db)
 	amountRegex := regexp.MustCompile(`\$AMOUNT\$`)
 	response := amountRegex.ReplaceAllString(mineResponse.response, humanize.Comma(int64(amount)))
