@@ -77,7 +77,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 		return
 	}
 
-	if channel.IsPrivate {
+	if channel.Type != 0 {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you think you're slick, eh? gotta mine in a public room, bro.")
 		return
 	}
