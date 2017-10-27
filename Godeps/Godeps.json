@@ -9,8 +9,8 @@
 		},
 		{
 			"ImportPath": "github.com/bwmarrin/discordgo",
-			"Comment": "v0.13.0-5-gc5abbfa",
-			"Rev": "c5abbfa42ecd88bf8718d50329e41a6a04a364a7"
+			"Comment": "v0.13.0",
+			"Rev": "11fa9dc906c531a85cd969b7b6b77c2f452a61b3"
 		},
 		{
 			"ImportPath": "github.com/gin-gonic/gin",
