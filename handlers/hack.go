@@ -134,15 +134,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		roundedHackerPercentage = math.Ceil(hackerPercentage * 100)
 	}
 
-	// if our rounding gets us to 100; just give out the straight percentage
-	if roundedBotnetPercentage == 100 {
-		roundedBotnetPercentage = botnetPercentage
-	}
-
-	if roundedHackerPercentage == 100 {
-		roundedHackerPercentage = hackerPercentage
-	}
-
 	if hackerPercentage == 1 && botnetPercentage == 1 {
 		// reset target collectTime, HackSeed, and HackAttempts
 		target.CollectTime = time.Now()
@@ -152,8 +143,6 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message = "The hack was successful, " + author.Username + " stole " + humanize.Comma(int64(totalMemes)) + " dank memes from " + target.Username
 		MoneyAdd(&author, totalMemes, "hacked", db)
 		MoneyDeduct(&target, totalMemes, "hacked", db)
-		fmt.Println(message, lossChances)
-		fmt.Println(roundedHackerPercentage)
 	} else {
 		// update the target's hacked count and possibly CollectTime
 		target.HackAttempts = target.HackAttempts + 1
