@@ -9,7 +9,7 @@ import (
 
 	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/bwmarrin/discordgo"
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -55,37 +55,37 @@ func init() {
 // UnitList returns a struct of Units with defined values
 func UnitList() []Unit {
 	unitList := []Unit{
-		Unit{
+		{
 			Name:       "miner",
 			Cost:       1000,
 			Production: 1,
 		},
-		Unit{
+		{
 			Name:       "robot",
 			Cost:       50000,
 			Production: 60,
 		},
-		Unit{
+		{
 			Name:       "swarm",
 			Cost:       2500000,
 			Production: 3600,
 		},
-		Unit{
+		{
 			Name:       "fracker",
 			Cost:       125000000,
 			Production: 216000,
 		},
-		Unit{
+		{
 			Name:       "cypher",
 			Cost:       10000,
 			Production: 2,
 		},
-		Unit{
+		{
 			Name:       "hacker",
 			Cost:       500,
 			Production: 5,
 		},
-		Unit{
+		{
 			Name:       "botnet",
 			Cost:       100,
 			Production: 1,
@@ -100,7 +100,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	if len(args) == 1 {
 		author := UserGet(m.Author, db)
 		if author.CurMoney < 0 {
-			author.CurMoney = (author.CurMoney * -1)
+			author.CurMoney = author.CurMoney * -1
 			MoneySet(&author, author.CurMoney, db)
 		}
 		message := author.Username + "\r"
@@ -108,13 +108,11 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message = message + "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
 		production = PrestigeBonus(production, &author)
-		if (production) < 10 {
-			message = message + "\ntotal memes per minute: " + Ftoa((float64(production) / 10))
-		} else {
-			message = message + "\ntotal memes per minute: " + humanize.Comma(int64((float64(production) / 10)))
-		}
+		message = message + "\ntotal memes per minute: " + Ftoa(float64(production) / 10)
 		message = message + "\nnet gambling balance: " + humanize.Comma(int64(author.WonMoney-author.LostMoney))
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	} else {
+		_, _ = s.ChannelMessageSend(m.ChannelID, "usage: !balance [user]")
 	}
 }
 
@@ -138,7 +136,7 @@ func totalMemesEarned(user *discordgo.User, db *sqlx.DB) (int, string, User) {
 	productionPerMinute := float64(production) / 10.0
 	if int(roundedHours) > 0 {
 		for i := 0; i < int(roundedHours); i++ {
-			memes = int((((int(60*productionPerMinute) + memes) * productionMultiplier) / 100))
+			memes = int(((int(60*productionPerMinute) + memes) * productionMultiplier) / 100)
 			roundedDifference = roundedDifference - 60
 		}
 	}
@@ -323,7 +321,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 
 	if strings.ToUpper(args[1]) == strings.ToUpper("max") {
 		if maxAmountToBuy > 0 {
-			totalCost = (unit.Cost * maxAmountToBuy)
+			totalCost = unit.Cost * maxAmountToBuy
 			amount = maxAmountToBuy
 			if totalCost < 0 {
 				// handle the totalCost overflow case
@@ -349,7 +347,7 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			return
 		}
 
-		totalCost = (unit.Cost * amount)
+		totalCost = unit.Cost * amount
 
 		if totalCost < 0 {
 			// handle the totalCost overflow case

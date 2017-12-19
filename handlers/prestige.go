@@ -29,7 +29,7 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 	user := UserGet(m.Author, db)
 
 	unitMultiplier := (1 + user.PrestigeLevel) * (1 + user.PrestigeLevel)
-	necessaryUnitAmount := (unitMultiplier * 100)
+	necessaryUnitAmount := unitMultiplier * 100
 
 	if len(args) == 1 {
 		message := canPrestige(&user, necessaryUnitAmount)
@@ -77,16 +77,16 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 func canPrestige(user *User, necessaryUnitAmount int) (message string) {
 	message = ""
 	if user.Miner < (necessaryUnitAmount) {
-		message = (message + "You do not have enough miners to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Miner) + " more.\n")
+		message = message + "You do not have enough miners to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Miner) + " more.\n"
 	}
 	if user.Robot < (necessaryUnitAmount) {
-		message = (message + "You do not have enough robots to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Robot) + " more.\n")
+		message = message + "You do not have enough robots to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Robot) + " more.\n"
 	}
 	if user.Swarm < (necessaryUnitAmount) {
-		message = (message + "You do not have enough swarms to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Swarm) + " more.\n")
+		message = message + "You do not have enough swarms to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Swarm) + " more.\n"
 	}
 	if user.Fracker < (necessaryUnitAmount) {
-		message = (message + "You do not have enough frackers to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Fracker) + " more.\n")
+		message = message + "You do not have enough frackers to Prestige, you need " + strconv.Itoa(necessaryUnitAmount-user.Fracker) + " more.\n"
 	}
 	return message
 }

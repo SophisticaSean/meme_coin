@@ -23,27 +23,27 @@ type MineResponse struct {
 // and returns it
 func GenerateResponseList() []MineResponse {
 	mineResponses := []MineResponse{
-		MineResponse{
+		{
 			amount:   100,
 			response: " mined for a while and managed to scrounge up $AMOUNT$ dusty memes",
 			chance:   150,
 		},
-		MineResponse{
+		{
 			amount:   300,
 			response: " mined for a bit and found an uncommon pepe worth $AMOUNT$ memes!",
 			chance:   60,
 		},
-		MineResponse{
+		{
 			amount:   1000,
 			response: " fell down a meme-shaft and found a very dank rare pepe worth $AMOUNT$ memes!",
 			chance:   15,
 		},
-		MineResponse{
+		{
 			amount:   5000,
 			response: " wandered in the meme mine for what seems like forever, eventually stumbling upon a vintage 1980's pepe worth $AMOUNT$ memes!",
 			chance:   5,
 		},
-		MineResponse{
+		{
 			amount:   25000,
 			response: "'s meme mining has made the Maymay gods happy, they rewarded them with a MLG-shiny-holofoil-dankasheck Pepe Diamond worth $AMOUNT$ memes!",
 			chance:   1,
@@ -85,10 +85,10 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	// check to make sure user is not trying to mine before timeLimit has passed
 	if difference.Minutes() < float64(timeLimit) {
 		if difference.Minutes() > 1 {
-			waitTime := humanize.Comma(int64(math.Ceil((float64(timeLimit) - difference.Minutes()))))
+			waitTime := humanize.Comma(int64(math.Ceil(float64(timeLimit) - difference.Minutes())))
 			s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more minute(s)")
 		} else {
-			waitTime := humanize.Comma(int64(math.Ceil((60 - difference.Seconds()))))
+			waitTime := humanize.Comma(int64(math.Ceil(60 - difference.Seconds())))
 			s.ChannelMessageSend(m.ChannelID, author.Username+" is too tired to mine, they must rest their meme muscles for "+waitTime+" more second(s)")
 		}
 		return
@@ -97,7 +97,7 @@ func Mine(s interaction.Session, m *interaction.MessageCreate, responseList []Mi
 	// pick a response out of the responses in responseList
 	pickedIndex := rand.Intn(len(responseList))
 	mineResponse := responseList[pickedIndex]
-	amount := (mineResponse.amount * productionMultiplier)
+	amount := mineResponse.amount * productionMultiplier
 	amount = PrestigeBonus(amount, &author)
 	if amount < 0 {
 		amount = 9223372036854775807

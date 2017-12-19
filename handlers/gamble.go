@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -121,7 +121,7 @@ func gambleProcess(content string, author *User, db *sqlx.DB) string {
 			fmt.Println(message)
 			message2 := "Your net gamble gain was " + humanize.Comma(int64((winAmount)-(lossAmount)))
 			fmt.Println(message2)
-			return (message + message2)
+			return message + message2
 		}
 	} else if args[0] == "!gamble" {
 		message = `

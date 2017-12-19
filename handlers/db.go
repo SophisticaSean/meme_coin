@@ -11,7 +11,6 @@ import (
 	"github.com/SophisticaSean/meme_coin/interaction"
 	_ "github.com/bmizerany/pq" // necessary for sqlx
 	"github.com/bwmarrin/discordgo"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -293,11 +292,6 @@ func MoneySet(user *User, amount int, db *sqlx.DB) {
 	dbString := `UPDATE money SET (current_money) = ($1) WHERE money_discord_id = `
 	dbString = dbString + `'` + user.DID + `'`
 	db.MustExec(dbString, amount)
-}
-
-// Make spew available in testing
-func idk() {
-	spew.Dump("yo whaddup")
 }
 
 // UpdateUnits updates all Units table information on a User

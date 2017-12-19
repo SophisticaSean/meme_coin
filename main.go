@@ -21,42 +21,55 @@ import (
 
 // Import vars and init vars
 var (
-	Console string
-	Token   string
-	Email   string
-	PW      string
+	Console  string
+	Token    string
+	Email    string
+	Password string
 )
 
 func init() {
 	Console, _ = os.LookupEnv("console")
 	Token, _ = os.LookupEnv("bot_token")
 	Email, _ = os.LookupEnv("email")
-	PW, _ = os.LookupEnv("pw")
+	Password, _ = os.LookupEnv("password")
 }
 
 func main() {
 	// more sample text
 	var botSess interaction.Session
-	if Console != "" {
+	if Console != "" && Console != "false" {
 		botSess = interaction.NewConsoleSession()
-	} else {
+	} else if Token != "" {
+		gin.SetMode(gin.ReleaseMode)
 		var err error
-		botSess, err = interaction.NewDiscordSessionToken("Bot "+Token)
+		botSess, err = interaction.NewDiscordSessionToken("Bot " + Token)
 		if err != nil {
-			fmt.Println("Unable to create Discord session with given Email and Password,", err)
+			fmt.Println("Unable to create Discord session with given token,", err)
 			return
 		}
+	} else if Email != "" && Password != "" {
+		gin.SetMode(gin.ReleaseMode)
+		var err error
+		botSess, err = interaction.NewDiscordSession(Email, Password)
+		if err != nil {
+			fmt.Println("Unable to create Discord session with given email and password,", err)
+			return
+		}
+	} else {
+		fmt.Println("Please provide either a bot token or an email and password")
+		return
 	}
+
 	// generate a new rand seed, else all results will be deterministic
 	rand.Seed(time.Now().UnixNano())
 
 	u, err := botSess.User("@me")
 	if err != nil {
-		fmt.Println("error obtaining account details,", err)
+		fmt.Println("Error obtaining account details,", err)
 	}
 
 	// set var BotID so events know the ID of the bot
-	if Console != "" {
+	if Console != "" && Console != "false" {
 		botSess.AddHandler(events.MessageHandler)
 		os.Setenv("BotID", "1")
 	} else {
@@ -66,12 +79,8 @@ func main() {
 
 	err = botSess.Open()
 	if err != nil {
-		fmt.Println("error opening connection:", err)
+		fmt.Println("Error opening connection:", err)
 		return
-	}
-
-	if Console == "" {
-		gin.SetMode(gin.ReleaseMode)
 	}
 
 	db, router := api.RouterConfigure()
@@ -79,9 +88,9 @@ func main() {
 	go router.Run(":8080")
 
 	fmt.Println("Bot is now running!")
-	if Console != "" {
+	if Console != "" && Console != "false" {
 		reader := bufio.NewReader(os.Stdin)
-		// TODO: parse text and pass it into botSess as an MessageCreate event so our handlers can handle it and respond in kind
+		// TODO: parse text and pass it into botSess as a MessageCreate event so our handlers can handle it and respond in kind
 		//var message *interaction.MessageCreate
 		message := interaction.NewMessageEvent()
 		author := discordgo.User{

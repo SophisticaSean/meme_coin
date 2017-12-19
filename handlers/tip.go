@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 

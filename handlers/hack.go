@@ -10,7 +10,7 @@ import (
 
 	"github.com/SophisticaSean/meme_coin/interaction"
 	"github.com/davecgh/go-spew/spew"
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -34,8 +34,8 @@ func Ftoa(float float64) string {
 func processHackingLosses(units *User, usedHackers int, usedBotnets int, seed int64, db *sqlx.DB) string {
 	rand.Seed(seed)
 	message := ""
-	hackerLosses := ((usedHackers / 20) / (rand.Intn(lossChances) + 1))
-	botnetLosses := ((usedBotnets / 10) / (rand.Intn(lossChances) + 1))
+	hackerLosses := (usedHackers / 20) / (rand.Intn(lossChances) + 1)
+	botnetLosses := (usedBotnets / 10) / (rand.Intn(lossChances) + 1)
 	if hackerLosses != 0 {
 		units.Hacker = units.Hacker - hackerLosses
 		message = message + "`Your hacking got " + humanize.Comma(int64(hackerLosses)) + " hackers arrested by the FBI!`\r`You now have " + humanize.Comma(int64(units.Hacker)) + " hackers left.`\r"
@@ -88,7 +88,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 			return
 		}
 		target.HackAttempts = 0
-		target.HackSeed = (time.Now().UnixNano() + int64(discordID))
+		target.HackSeed = time.Now().UnixNano() + int64(discordID)
 		UpdateUnits(&target, db)
 	}
 	seed := target.HackSeed
@@ -165,7 +165,7 @@ func Hack(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 				return
 			}
 			target.HackAttempts = 0
-			target.HackSeed = (time.Now().UnixNano() + int64(discordID))
+			target.HackSeed = time.Now().UnixNano() + int64(discordID)
 			UpdateUnits(&target, db)
 			message = message + "`Your hacking attempts were detected! The target's password has been reset!`"
 		}
@@ -185,5 +185,5 @@ func hackSimulate(seed int64, hackerAmount int, botnetAmount int, cypherStrength
 	spew.Dump(hackTarget)
 	spew.Dump(botnetTarget)
 
-	return (float64(hackerAmount) / float64(hackTarget)), (float64(botnetAmount) / float64(botnetTarget))
+	return float64(hackerAmount) / float64(hackTarget), float64(botnetAmount) / float64(botnetTarget)
 }
