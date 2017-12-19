@@ -108,17 +108,7 @@ func Balance(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		message = message + "total balance is: " + humanize.Comma(int64(author.CurMoney))
 		_, production, _ := ProductionSum(m.Author, db)
 		production = PrestigeBonus(production, &author)
-
-		// The user will probably want to know their meme balance down to the tenth regardless of whether they have less
-		// than one meme per second or not
-
-		//if production < 10 {
 		message = message + "\ntotal memes per minute: " + Ftoa(float64(production) / 10)
-		//} else {
-		//	message = message + "\ntotal memes per minute: " + humanize.Comma(int64(float64(production) / 10))
-		//}
-
-
 		message = message + "\nnet gambling balance: " + humanize.Comma(int64(author.WonMoney-author.LostMoney))
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	} else {
