@@ -319,6 +319,11 @@ func Buy(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	var err error
 	var totalCost int
 
+  if user.CollectTime.After(time.Now().Add(time.Minute * 10))  {
+    s.ChannelMessageSend(m.ChannelID, "looks like you can't collect for at least 10 minutes.")
+  }
+
+
 	if strings.ToUpper(args[1]) == strings.ToUpper("max") {
 		if maxAmountToBuy > 0 {
 			totalCost = unit.Cost * maxAmountToBuy

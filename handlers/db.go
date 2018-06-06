@@ -7,12 +7,21 @@ import (
 	"strconv"
 	"strings"
 	"time"
+  "fmt"
 
 	"github.com/SophisticaSean/meme_coin/interaction"
 	_ "github.com/bmizerany/pq" // necessary for sqlx
 	"github.com/bwmarrin/discordgo"
 	"github.com/jmoiron/sqlx"
 )
+
+type TipObj struct {
+  ID int `db:"id"`
+  FromID string `db:"from_discord_id"`
+  ToID string `db:"to_discord_id"`
+  Amount int `db:"amount"`
+  Timestamp time.Time `db:"time"`
+}
 
 // User is a struct that maps 1 to 1 with 'money' db table
 type User struct {
@@ -67,6 +76,7 @@ CREATE TABLE IF NOT EXISTS money(id SERIAL PRIMARY KEY, money_discord_id VARCHAR
 CREATE TABLE IF NOT EXISTS units(units_discord_id VARCHAR(100) PRIMARY KEY, miner numeric DEFAULT(0), robot numeric DEFAULT(0), swarm numeric DEFAULT(0), fracker numeric DEFAULT(0), hackers numeric DEFAULT(0), botnets numeric DEFAULT(0), cyphers numeric DEFAULT(0), hack_seed numeric DEFAULT(0), hack_attempts numeric DEFAULT(0), prestige_level numeric DEFAULT(0), collect_time timestamptz NOT NULL DEFAULT(now()));
 
 CREATE TABLE IF NOT EXISTS transactions(id SERIAL PRIMARY KEY, transactions_discord_id VARCHAR(100), amount numeric DEFAULT(0), type VARCHAR(100), time timestamptz NOT NULL DEFAULT(now()));
+CREATE TABLE IF NOT EXISTS tips(id SERIAL PRIMARY KEY, from_discord_id VARCHAR(100), to_discord_id VARCHAR(100), amount numeric DEFAULT(0), time timestamptz NOT NULL DEFAULT(now()));
 `
 
 var dropSchema = `
@@ -310,6 +320,33 @@ func createUserUnits(user *discordgo.User, db *sqlx.DB) {
 	}
 }
 
+// RecordTip will put all tips into a table with both user ids
+func RecordTip(db *sqlx.DB, from *discordgo.User, to *discordgo.User, amount int) {
+		db.MustExec(`INSERT INTO tips (from_discord_id, to_discord_id, amount) VALUES ($1, $2, $3)`, from.ID, to.ID, amount)
+}
+
+// CheckTips will check if a user is a schill account just dumping memes into another acc.
+// checks percentage of memes tipped to which accounts
+// returns a bool if that person is sketchy or not
+func CheckTips(from *discordgo.User, to *discordgo.User, db *sqlx.DB) bool {
+	var fromTips []TipObj
+	err := db.Select(&fromTips, `SELECT * FROM tips where from_discord_id = $1 LIMIT 1000;`, from.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var comboTips []TipObj
+	err = db.Select(&comboTips, `SELECT * FROM tips where from_discord_id = $1 AND to_discord_id = $2 LIMIT 1000;`, from.ID, to.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+  if len(comboTips) > 30 {
+    if (float64(len(comboTips))/float64(len(fromTips))) >= 0.75 {
+      return true
+    }
+  }
+  return false
+}
+
 // Reset is a helper that makes setting a user back to scratch super easy
 func Reset(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	for _, resetUser := range m.Mentions {
@@ -324,13 +361,35 @@ func Reset(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	return
 }
 
+// ResetID completely resets a user
+func ResetID(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
+	args := strings.Split(m.Content, " ")
+  userIDs := args[1:]
+	for _, id := range userIDs {
+    ResetUserID(id, db)
+		message := id + " has been reset."
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
+	return
+}
+
+// ResetUserID is for internal Go usage of reseting a user, whereas Reset is for the !reset command
+func ResetUserID(id string, db *sqlx.DB) {
+	// reset their money
+	db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where money_discord_id = '` + id + `'`)
+	// reset their units
+	db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts, prestige_level) = (0,0,0,0,0,0,0,0,0,0) where units_discord_id = '` + id + `'`)
+  //db.MustExec(`DELETE FROM transactions where transactions_discord_id = '` + id + `'`)
+	return
+}
+
 // ResetUser is for internal Go usage of reseting a user, whereas Reset is for the !reset command
 func ResetUser(resetUser User, db *sqlx.DB) {
 	// reset their money
 	db.MustExec(`UPDATE money set (current_money, total_money, won_money, lost_money, given_money, received_money, earned_money, spent_money, collected_money) = (1000,0,0,0,0,0,0,0,0) where money_discord_id = '` + resetUser.DID + `'`)
 	// reset their units
 	db.MustExec(`UPDATE units set (miner, robot, swarm, fracker, cyphers, hackers, botnets, hack_seed, hack_attempts, prestige_level) = (0,0,0,0,0,0,0,0,0,0) where units_discord_id = '` + resetUser.DID + `'`)
-	db.MustExec(`DELETE FROM transactions where transactions_discord_id = '` + resetUser.DID + `'`)
+  //db.MustExec(`DELETE FROM transactions where transactions_discord_id = '` + resetUser.DID + `'`)
 	return
 }
 
@@ -338,19 +397,40 @@ func ResetUser(resetUser User, db *sqlx.DB) {
 func TempBan(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 	args := strings.Split(m.Content, " ")
 	days := args[1]
-	_, err := strconv.Atoi(days)
-	if err != nil {
-		days = "1"
-	}
 	for _, resetUser := range m.Mentions {
-		// tmp ban their mine timeer
-		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where money_discord_id = '` + resetUser.ID + `'`)
-		// tmp ban their collect timer
-		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where units_discord_id = '` + resetUser.ID + `'`)
+    TempBanHandler(days, resetUser.ID, db)
 		message := resetUser.Username + " has been banned for " + days + " day(s)."
 		_, _ = s.ChannelMessageSend(m.ChannelID, message)
 	}
 	return
+}
+
+// TempBanID blocks a user from mining or collecting for the amount of days passed in
+func TempBanID(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
+	args := strings.Split(m.Content, " ")
+  fmt.Println(args)
+	days := args[1]
+  userIDs := args[2:]
+  fmt.Println(userIDs)
+	for _, id := range userIDs {
+    TempBanHandler(days, id, db)
+		message := id + " has been banned for " + days + " day(s)."
+		_, _ = s.ChannelMessageSend(m.ChannelID, message)
+	}
+	return
+}
+
+// TempBanHandler handles temporarily banning someone
+func TempBanHandler(days string, id string, db *sqlx.DB) {
+    _, err := strconv.Atoi(days)
+    if err != nil {
+      days = "1"
+    }
+		// tmp ban their mine timeer
+		db.MustExec(`UPDATE money set (mine_time) = (current_timestamp + interval '` + days + ` days') where money_discord_id = '` + id + `'`)
+		// tmp ban their collect timer
+		db.MustExec(`UPDATE units set (collect_time) = (current_timestamp + interval '` + days + ` days') where units_discord_id = '` + id + `'`)
+    fmt.Printf("%s has been banned for %s days\n", id, days)
 }
 
 // Unban unblocks a user from mining or collecting

@@ -25,3 +25,5 @@ psql:
 dump:
 	docker exec -it meme_coin bash -c 'su postgres -c "pg_dump money > /mnt/containers/meme_coin/pg/money.psql.dump"'
 	sudo mv ~/mnt/containers/meme_coin/pg/money.psql.dump ./$(shell date +%F_%T)_backup.psql
+log:
+	docker logs -f meme_coin

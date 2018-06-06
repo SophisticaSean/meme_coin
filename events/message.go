@@ -3,6 +3,7 @@ package events
 import (
 	"os"
 	"strings"
+  "fmt"
 
 	"github.com/SophisticaSean/meme_coin/handlers"
 	"github.com/SophisticaSean/meme_coin/interaction"
@@ -53,11 +54,21 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		adminID, _ = os.LookupEnv("AdminID")
 	}
 
+  if strings.Contains(lowerMessage, "!admin") {
+	  fmt.Println(m.Author.ID == botID || m.Author.ID == adminID)
+  }
+
 	if m.Author.ID == botID || m.Author.ID == adminID {
-		if strings.Contains(lowerMessage, "!reset") {
+		if strings.Contains(lowerMessage, "!reset ") {
 			handlers.Reset(s, m, db)
 		}
-		if strings.Contains(lowerMessage, "!ban") {
+		if strings.Contains(lowerMessage, "!resetid ") {
+			handlers.ResetID(s, m, db)
+		}
+		if strings.Contains(lowerMessage, "!banid ") {
+			handlers.TempBanID(s, m, db)
+		}
+		if strings.Contains(lowerMessage, "!ban ") {
 			handlers.TempBan(s, m, db)
 		}
 		if strings.Contains(lowerMessage, "!unban") {

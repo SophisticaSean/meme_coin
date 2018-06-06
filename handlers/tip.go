@@ -69,6 +69,12 @@ func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 		}
 		for _, to := range m.Mentions {
 			toUser := UserGet(to, db)
+      if CheckTips(m.Author, to, db) {
+        message := "You've tipped this person too many times, here's a 1 day ban."
+        s.ChannelMessageSend(m.ChannelID, message)
+        TempBanHandler("1", m.Author.ID, db)
+        return
+      }
 			// check prestige level to prevent prestige tip cheese
 			if from.PrestigeLevel >= toUser.PrestigeLevel {
 				if (toUser.CurMoney + intAmount) < 1 {
@@ -80,9 +86,10 @@ func Tip(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) {
 				// refresh the touser, handles the tipping self problem
 				toUser = UserGet(to, db)
 				MoneyAdd(&toUser, intAmount, "tip", db)
+        RecordTip(db, m.Author, to, intAmount)
 				message := from.Username + " gave " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)
-				fmt.Println(message)
+				fmt.Printf("user: %s id: %s gave %v memes to user: %s id: %s", from.Username, from.DID, intAmount, toUser.Username, toUser.DID)
 			} else {
 				message := from.Username + " tried to give " + humanize.Comma(int64(intAmount)) + " " + currencyName + " to " + to.Username + "; but " + from.Username + "'s prestige level is " + strconv.Itoa(from.PrestigeLevel) + " and " + toUser.Username + "'s prestige level is " + strconv.Itoa(toUser.PrestigeLevel) + ". Memes can not be tipped up prestige levels; only to equal and lower prestige levels."
 				_, _ = s.ChannelMessageSend(m.ChannelID, message)
