@@ -131,6 +131,10 @@ func MessageHandler(s interaction.Session, m *interaction.MessageCreate) {
 		handlers.Invite(s, m)
 	}
 
+	if lowerMessage == "!leaderboard" {
+		handlers.Leaderboard(s, m)
+	}
+
 	if lowerMessage == "meme" {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "you're a dank maymay-er, harry")
 	}

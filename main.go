@@ -87,6 +87,8 @@ func main() {
 	defer db.Close()
 	go router.Run(":8080")
 
+  adminID := os.Getenv("AdminID")
+  fmt.Printf("AdminID is: %s\n", adminID)
 	fmt.Println("Bot is now running!")
 	if Console != "" && Console != "false" {
 		reader := bufio.NewReader(os.Stdin)
