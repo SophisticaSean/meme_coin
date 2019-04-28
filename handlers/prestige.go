@@ -19,7 +19,7 @@ func Prestige(s interaction.Session, m *interaction.MessageCreate, db *sqlx.DB) 
 	if you have enough of the requisite units, prestige will reset all your accumulated wealth
 		and start you off at the beginning with 1000 memes and a flat +100% bonus multiplier for all future
 		meme income.
-	every prestige level doubles the amount of units you need to proceed
+	the required number of each unit to prestige is equal to (your prestige level + 1)² x100
 	`
 	args := strings.Split(m.Content, " ")
 	if strings.ToLower(args[0]) != "!prestige" {
