@@ -15,6 +15,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type Stats struct {
+  TotalUsers int
+  TotalUsers90 int
+  TotalTransactions int
+  TotalTransactions90 int
+}
+
 type TipObj struct {
   ID int `db:"id"`
   FromID string `db:"from_discord_id"`
@@ -178,10 +185,36 @@ func UserGet(discordUser *discordgo.User, db *sqlx.DB) User {
 	return user
 }
 
+// GetStats returns the stats of all users and total amount of transactions in the db. Used for the API
+func GetStats(db *sqlx.DB) Stats {
+  var stats Stats
+	row := db.QueryRow(`SELECT count(*) FROM money;`)
+  err := row.Scan(&stats.TotalUsers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	row = db.QueryRow(`SELECT count(*) FROM money where mine_time > (CURRENT_DATE - 90);`)
+  err = row.Scan(&stats.TotalUsers90)
+	if err != nil {
+		log.Fatal(err)
+	}
+	row = db.QueryRow(`SELECT count(*) FROM transactions;`)
+  err = row.Scan(&stats.TotalTransactions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	row = db.QueryRow(`SELECT count(*) FROM transactions where time > (CURRENT_DATE - 90);`)
+  err = row.Scan(&stats.TotalTransactions90)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return stats
+}
+
 // GetAllUsers returns a []User slice of all users in the db. Used for the API
 func GetAllUsers(db *sqlx.DB) []User {
 	var users []User
-	err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.money_discord_id = units.units_discord_id);`)
+	err := db.Select(&users, `SELECT * FROM money INNER JOIN units ON (money.money_discord_id = units.units_discord_id) WHERE mine_time > (CURRENT_DATE - 90);`)
 	if err != nil {
 		log.Fatal(err)
 	}

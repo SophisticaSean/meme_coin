@@ -28,5 +28,16 @@ func RouterConfigure() (*sqlx.DB, *gin.Engine) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.String(http.StatusOK, string(usersJSON))
 	})
+
+	router.GET("/stats", func(c *gin.Context) {
+		stats := handlers.GetStats(db)
+    statsArr := []handlers.Stats{stats}
+		statsJSON, err := json.Marshal(statsArr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.String(http.StatusOK, string(statsJSON))
+	})
 	return db, router
 }

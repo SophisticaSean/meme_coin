@@ -22,16 +22,22 @@ func betToPayout(bet int, payoutMultiplier float64) int {
 func gambleProcess(content string, author *User, db *sqlx.DB) string {
 	message := ""
 	args := strings.Split(content, " ")
+  var err error
 	if len(args) == 4 || len(args) == 5 {
-		bet, err := strconv.Atoi(args[1])
-		if err != nil {
-			message = "amount is too large or not a number, try again."
-			return message
-		}
-		if bet <= 0 {
-			message = "amount has to be more than 0"
-			return message
-		}
+    bet := 0
+    if args[1] == "max" {
+      bet = author.CurMoney
+    } else {
+      bet, err = strconv.Atoi(args[1])
+      if err != nil {
+        message = "amount is too large or not a number, try again."
+        return message
+      }
+    }
+    if bet <= 0 {
+      message = "amount has to be more than 0"
+      return message
+    }
 
 		game := args[2]
 		gameInput := args[3]
